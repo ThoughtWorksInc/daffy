@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from daffy import df_out
+from daffy import df_in, df_out
 
 
 @pytest.fixture
@@ -43,3 +43,27 @@ def test_missing_column_in_return(basic_df):
         wrapped_test_fn()
 
     assert "Column FooColumn missing" in str(excinfo.value)
+
+
+def test_wrong_input_type_unnamed():
+    def test_fn(my_input):
+        return my_input
+
+    wrapped_test_fn = df_in(test_fn)
+
+    with pytest.raises(AssertionError) as excinfo:
+        wrapped_test_fn("foobar")
+
+    assert "Wrong parameter type" in str(excinfo.value)
+
+
+def test_wrong_input_type_named():
+    def test_fn(my_input):
+        return my_input
+
+    wrapped_test_fn = df_in(test_fn, name="my_input")
+
+    with pytest.raises(AssertionError) as excinfo:
+        wrapped_test_fn(my_input="foobar")
+
+    assert "Wrong parameter type" in str(excinfo.value)

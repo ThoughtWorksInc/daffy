@@ -16,3 +16,22 @@ def df_out(func, columns=None):
             _check_columns(result, columns)
 
     return wrapper_df_out
+
+
+def _get_parameter(name=None, *args, **kwargs):
+    if not name:
+        return args[0]
+    return kwargs[name]
+
+
+def df_in(func, name=None, columns=None):
+    def wrapper_df_out(*args, **kwargs):
+        df = _get_parameter(name, *args, **kwargs)
+        assert isinstance(
+            df, pd.DataFrame
+        ), f"Wrong parameter type. Expected pandas dataframe, got {type(df)}"
+        if columns:
+            _check_columns(df, columns)
+        return func(*args, **kwargs)
+
+    return wrapper_df_out
