@@ -1,4 +1,4 @@
-name: Python package
+name: test
 
 on: [push]
 
@@ -24,6 +24,11 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
+    - name: Lint with flake8, black and isort
+      run: |
+        poetry run isort --check .
+        poetry run black --check .
+        poetry run flake8 .
     - name: Test with pytest
       run: |
         poetry run pytest
