@@ -1,5 +1,5 @@
 # DAFFY DataFrame Column Validator
-
+![test](https://github.com/fourkind/daffy/workflows/test/badge.svg)
 
 ## Description 
 
