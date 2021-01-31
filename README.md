@@ -31,6 +31,12 @@ poetry add daffy
 
 ## Usage 
 
+Start by importing the needed decorators:
+
+```
+from daffy import df_in, df_out
+```
+
 To check a DataFrame input to a function, annotate the function with `@df_in`. For example the following function expects to get
 a DataFrame with columns `Brand` and `Price`:
 
