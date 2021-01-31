@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "daffy"
-version = "0.1.0"
+version = "0.2.0"
 description = "Function decorators for Pandas Dataframe column name and data type validation"
 authors = ["Janne Sinivirta <janne.sinivirta@gmail.com>"]
 license = "MIT"
