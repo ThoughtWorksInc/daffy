@@ -30,7 +30,6 @@ poetry add daffy
 
 
 ## Usage 
-### Input checking
 
 To check a DataFrame input to a function, annotate the function with `@df_in`. For example the following function expects to get
 a DataFrame with columns `Brand` and `Price`:
@@ -49,15 +48,23 @@ def process_cars(year, style, car_df):
     # do stuff with cars
 ```
 
-### Output checking
-
-To check that function returns a DataFrame with specific columns, use `@df_out` decorator:
+To check that a function returns a DataFrame with specific columns, use `@df_out` decorator:
 
 ```python
 @df_out(columns=["Brand", "Price"])
-def get_all_cars(car_df):
+def get_all_cars():
     # get those cars
     return all_cars_df
+```
+
+To check both input and output, just use both annotations on the same function:
+
+```python
+@df_in(columns=["Brand", "Price"])
+@df_out(columns=["Brand", "Price"])
+def filter_cars(car_df):
+    # filter some cars
+    return filtered_cars_df
 ```
 
 
