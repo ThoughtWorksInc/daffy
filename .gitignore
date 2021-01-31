@@ -1,3 +1,6 @@
+# ignore poetry.lock as this is a library project
+poetry.lock
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
