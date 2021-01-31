@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from daffy.decorators import df_out
+from daffy import df_out
 
 
 @pytest.fixture
