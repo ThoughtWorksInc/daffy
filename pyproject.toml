@@ -9,7 +9,14 @@ python = "^3.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+isort = "^5.7.0"
+black = "^20.8b1"
+flake8 = "^3.8.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
