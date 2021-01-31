@@ -13,92 +13,128 @@ def basic_df():
     return pd.DataFrame(cars, columns=["Brand", "Price"])
 
 
+@pytest.fixture
+def extended_df():
+    cars = {
+        "Brand": ["Honda Civic", "Toyota Corolla", "Ford Focus", "Audi A4"],
+        "Price": [22000, 25000, 27000, 35000],
+        "Year": [2020, 1998, 2001, 2021],
+    }
+    return pd.DataFrame(cars, columns=["Brand", "Price", "Year"])
+
+
 def test_wrong_return_type():
+    @df_out()
     def test_fn():
         return 1
 
-    wrapped_test_fn = df_out(test_fn)
-
     with pytest.raises(AssertionError) as excinfo:
-        wrapped_test_fn()
+        test_fn()
 
     assert "Wrong return type" in str(excinfo.value)
 
 
 def test_correct_return_type_and_columns(basic_df):
+    @df_out(columns=["Brand", "Price"])
     def test_fn():
         return basic_df
 
-    wrapped_test_fn = df_out(test_fn, columns=["Brand", "Price"])
-    wrapped_test_fn()
+    test_fn()
 
 
 def test_missing_column_in_return(basic_df):
+    @df_out(columns=["Brand", "FooColumn"])
     def test_fn():
         return basic_df
 
-    wrapped_test_fn = df_out(test_fn, columns=["Brand", "FooColumn"])
-
     with pytest.raises(AssertionError) as excinfo:
-        wrapped_test_fn()
+        test_fn()
 
     assert "Column FooColumn missing" in str(excinfo.value)
 
 
 def test_wrong_input_type_unnamed():
+    @df_in()
     def test_fn(my_input):
         return my_input
 
-    wrapped_test_fn = df_in(test_fn)
-
     with pytest.raises(AssertionError) as excinfo:
-        wrapped_test_fn("foobar")
+        test_fn("foobar")
 
     assert "Wrong parameter type" in str(excinfo.value)
 
 
 def test_wrong_input_type_named():
+    @df_in(name="my_input")
     def test_fn(my_input):
         return my_input
 
-    wrapped_test_fn = df_in(test_fn, name="my_input")
-
     with pytest.raises(AssertionError) as excinfo:
-        wrapped_test_fn(my_input="foobar")
+        test_fn(my_input="foobar")
 
     assert "Wrong parameter type" in str(excinfo.value)
 
 
 def test_correct_input_with_columns(basic_df):
+    @df_in(columns=["Brand", "Price"])
     def test_fn(my_input):
         return my_input
 
-    wrapped_test_fn = df_in(test_fn, columns=["Brand", "Price"])
-    wrapped_test_fn(basic_df)
+    test_fn(basic_df)
 
 
 def test_correct_named_input_with_columns(basic_df):
+    @df_in(name="df", columns=["Brand", "Price"])
     def test_fn(my_input, df):
         return df
 
-    wrapped_test_fn = df_in(test_fn, name="df", columns=["Brand", "Price"])
-    wrapped_test_fn("foo", df=basic_df)
+    test_fn("foo", df=basic_df)
 
 
 def test_correct_input_with_columns_and_dtypes(basic_df):
+    @df_in(columns={"Brand": "object", "Price": "int64"})
     def test_fn(my_input):
         return my_input
 
-    wrapped_test_fn = df_in(test_fn, columns={"Brand": "object", "Price": "int64"})
-    wrapped_test_fn(basic_df)
+    test_fn(basic_df)
 
 
 def test_dtype_mismatch(basic_df):
+    @df_in(columns={"Brand": "object", "Price": "float64"})
     def test_fn(my_input):
         return my_input
 
-    wrapped_test_fn = df_in(test_fn, columns={"Brand": "object", "Price": "float64"})
     with pytest.raises(AssertionError) as excinfo:
-        wrapped_test_fn(basic_df)
+        test_fn(basic_df)
 
     assert "Column Price has wrong dtype" in str(excinfo.value)
+
+
+def test_df_in_incorrect_input(basic_df):
+    @df_in(columns=["Brand", "Price"])
+    def test_fn(my_input):
+        return my_input
+
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn(basic_df[["Brand"]])
+    assert "Column Price missing" in str(excinfo.value)
+
+
+def test_df_out_with_df_modification(basic_df, extended_df):
+    @df_out(columns=["Brand", "Price", "Year"])
+    def test_fn(my_input):
+        my_input["Year"] = list(extended_df["Year"])
+        return my_input
+
+    assert list(basic_df.columns) == ["Brand", "Price"]  # For sanity
+    pd.testing.assert_frame_equal(extended_df, test_fn(basic_df.copy()))
+
+
+def test_decorator_combinations(basic_df, extended_df):
+    @df_in(columns=["Brand", "Price"])
+    @df_out(columns=["Brand", "Price", "Year"])
+    def test_fn(my_input):
+        my_input["Year"] = list(extended_df["Year"])
+        return my_input
+
+    pd.testing.assert_frame_equal(extended_df, test_fn(basic_df.copy()))
