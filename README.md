@@ -67,6 +67,20 @@ def filter_cars(car_df):
     return filtered_cars_df
 ```
 
+If you want to also check the data types of each column, you can replace the column array:
+
+```python
+columns=["Brand", "Price"]
+```
+
+with a dict:
+
+```python
+columns={"Brand": "object", "Price": "int64"}
+```
+
+This will not only check that the specified columns are found from the DataFrame but also that their `dtype` is the expected.
+
 
 ## Contributing
 

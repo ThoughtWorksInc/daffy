@@ -2,8 +2,16 @@ import pandas as pd
 
 
 def _check_columns(df, columns):
-    for column in columns:
-        assert column in df.columns, f"Column {column} missing from DataFrame"
+    if isinstance(columns, list):
+        for column in columns:
+            assert column in df.columns, f"Column {column} missing from DataFrame"
+    if isinstance(columns, dict):
+        for column, dtype in columns.items():
+            assert column in df.columns, f"Column {column} missing from DataFrame"
+            assert df[column].dtype == dtype, (
+                f"Column {column} has wrong dtype. "
+                f"Was {df[column].dtype}, expected {dtype}"
+            )
 
 
 def df_out(func, columns=None):
