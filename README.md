@@ -86,7 +86,7 @@ This will not only check that the specified columns are found from the DataFrame
 
 Contributions are accepted. Include tests in PR's.
 
-## Tests
+## Development
 
 To run the tests, clone the repository, install dependencies with Poetry and run tests with PyTest:
 
@@ -96,6 +96,7 @@ poetry shell
 pytest
 ```
 
+To enable linting on each commit, run `pre-commit install`. After that, your every commit will be checked with `isort`, `black` and `flake8`.
 
 ## License
 
