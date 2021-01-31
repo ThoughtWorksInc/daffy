@@ -67,3 +67,19 @@ def test_wrong_input_type_named():
         wrapped_test_fn(my_input="foobar")
 
     assert "Wrong parameter type" in str(excinfo.value)
+
+
+def test_correct_input_with_columns(basic_df):
+    def test_fn(my_input):
+        return my_input
+
+    wrapped_test_fn = df_in(test_fn, columns=["Brand", "Price"])
+    wrapped_test_fn(basic_df)
+
+
+def test_correct_named_input_with_columns(basic_df):
+    def test_fn(my_input, df):
+        return df
+
+    wrapped_test_fn = df_in(test_fn, name="df", columns=["Brand", "Price"])
+    wrapped_test_fn("foo", df=basic_df)
