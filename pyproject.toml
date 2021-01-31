@@ -5,7 +5,8 @@ description = "Pandas Dataframe function decorator"
 authors = ["Janne Sinivirta <janne.sinivirta@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.7.1"
+pandas = "^1.2.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
