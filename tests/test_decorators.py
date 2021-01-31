@@ -25,9 +25,21 @@ def test_wrong_return_type():
     assert "Wrong return type" in str(excinfo.value)
 
 
-def test_correct_return_type(basic_df):
+def test_correct_return_type_and_columns(basic_df):
     def test_fn():
         return basic_df
 
-    wrapped_test_fn = df_out(test_fn)
+    wrapped_test_fn = df_out(test_fn, columns=["Brand", "Price"])
     wrapped_test_fn()
+
+
+def test_missing_column_in_return(basic_df):
+    def test_fn():
+        return basic_df
+
+    wrapped_test_fn = df_out(test_fn, columns=["Brand", "FooColumn"])
+
+    with pytest.raises(AssertionError) as excinfo:
+        wrapped_test_fn()
+
+    assert "Column FooColumn missing" in str(excinfo.value)
