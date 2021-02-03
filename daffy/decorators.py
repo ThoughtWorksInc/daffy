@@ -1,9 +1,12 @@
 from functools import wraps
+from typing import Any, Callable, Dict, List, Union
 
 import pandas as pd
 
+ColumnsDef = Union[List, Dict]
 
-def _check_columns(df, columns):
+
+def _check_columns(df: pd.DataFrame, columns: ColumnsDef) -> None:
     if isinstance(columns, list):
         for column in columns:
             assert column in df.columns, f"Column {column} missing from DataFrame"
@@ -16,10 +19,10 @@ def _check_columns(df, columns):
             )
 
 
-def df_out(columns=None):
-    def wrapper_df_out(func):
+def df_out(columns: ColumnsDef = None) -> Callable:
+    def wrapper_df_out(func: Callable) -> Callable:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: str, **kwargs: Any) -> Any:
             result = func(*args, **kwargs)
             assert isinstance(
                 result, pd.DataFrame
@@ -33,16 +36,16 @@ def df_out(columns=None):
     return wrapper_df_out
 
 
-def _get_parameter(name=None, *args, **kwargs):
+def _get_parameter(name: str = None, *args: str, **kwargs: Any) -> pd.DataFrame:
     if not name:
         return args[0]
     return kwargs[name]
 
 
-def df_in(name=None, columns=None):
-    def wrapper_df_out(func):
+def df_in(name: str = None, columns: ColumnsDef = None) -> Callable:
+    def wrapper_df_out(func: Callable) -> Callable:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: str, **kwargs: Any) -> Any:
             df = _get_parameter(name, *args, **kwargs)
             assert isinstance(
                 df, pd.DataFrame
