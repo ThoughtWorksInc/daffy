@@ -29,6 +29,7 @@ jobs:
         poetry run isort --check .
         poetry run black --check .
         poetry run flake8 .
+        poetry run mypy .
     - name: Test with pytest
       run: |
         poetry run pytest
