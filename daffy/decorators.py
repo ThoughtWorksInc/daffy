@@ -1,9 +1,9 @@
 from functools import wraps
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
 
-ColumnsDef = Union[List, Dict]
+ColumnsDef = Optional[Union[List, Dict]]
 
 
 def _check_columns(df: pd.DataFrame, columns: ColumnsDef) -> None:
@@ -36,13 +36,15 @@ def df_out(columns: ColumnsDef = None) -> Callable:
     return wrapper_df_out
 
 
-def _get_parameter(name: str = None, *args: str, **kwargs: Any) -> pd.DataFrame:
+def _get_parameter(
+    name: Optional[str] = None, *args: str, **kwargs: Any
+) -> pd.DataFrame:
     if not name:
         return args[0]
     return kwargs[name]
 
 
-def df_in(name: str = None, columns: ColumnsDef = None) -> Callable:
+def df_in(name: Optional[str] = None, columns: ColumnsDef = None) -> Callable:
     def wrapper_df_out(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
