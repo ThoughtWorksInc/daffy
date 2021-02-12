@@ -1,5 +1,6 @@
+import logging
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 import pandas as pd
 
@@ -59,3 +60,23 @@ def df_in(name: Optional[str] = None, columns: ColumnsDef = None) -> Callable:
         return wrapper
 
     return wrapper_df_out
+
+
+def _log_pd(level: int, maybe_df: Any):
+    if not isinstance(maybe_df, pd.DataFrame):
+        return
+    df = cast(pd.DataFrame, maybe_df)
+    logging.log(level, f"Columns: {list(df.columns)}")
+
+
+def df_log() -> Callable:
+    def wrapper_df_log(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args: str, **kwargs: Any) -> Any:
+            result = func(*args, **kwargs)
+            _log_pd(logging.DEBUG, result)
+            logging
+
+        return wrapper
+
+    return wrapper_df_log

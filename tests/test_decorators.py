@@ -1,9 +1,12 @@
+import logging
 from typing import Any
 
 import pandas as pd
 import pytest
+from pytest_mock import MockerFixture
 
 from daffy import df_in, df_out
+from daffy.decorators import df_log
 
 
 @pytest.fixture
@@ -144,3 +147,14 @@ def test_decorator_combinations(
         return my_input
 
     pd.testing.assert_frame_equal(extended_df, test_fn(basic_df.copy()))
+
+
+def test_log_returned_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
+    @df_log()
+    def test_fn():
+        return basic_df
+
+    mock_log = mocker.patch("daffy.decorators.logging.log")
+    test_fn()
+
+    mock_log.assert_called_with(logging.DEBUG, "Columns: ['Brand', 'Price']")
