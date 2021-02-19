@@ -14,9 +14,9 @@ def _check_columns(df: pd.DataFrame, columns: ColumnsDef) -> None:
     if isinstance(columns, dict):
         for column, dtype in columns.items():
             assert column in df.columns, f"Column {column} missing from DataFrame. Got {_describe_pd(df)}"
-            assert df[column].dtype == dtype, (
-                f"Column {column} has wrong dtype. " f"Was {df[column].dtype}, expected {dtype}"
-            )
+            assert (
+                df[column].dtype == dtype
+            ), f"Column {column} has wrong dtype. Was {df[column].dtype}, expected {dtype}"
 
 
 def df_out(columns: ColumnsDef = None) -> Callable:
@@ -68,7 +68,7 @@ def _log_input(level: int, func_name: str, df: Any) -> None:
     if isinstance(df, pd.DataFrame):
         logging.log(
             level,
-            (f"Function {func_name} parameters contained a DataFrame: " f"{_describe_pd(df)}"),
+            f"Function {func_name} parameters contained a DataFrame: {_describe_pd(df)}",
         )
 
 
@@ -76,7 +76,7 @@ def _log_output(level: int, func_name: str, df: Any) -> None:
     if isinstance(df, pd.DataFrame):
         logging.log(
             level,
-            (f"Function {func_name} returned a DataFrame: " f"{_describe_pd(df)}"),
+            f"Function {func_name} returned a DataFrame: {_describe_pd(df)}",
         )
 
 

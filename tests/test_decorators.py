@@ -166,7 +166,7 @@ def test_log_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
         [
             call(
                 logging.DEBUG,
-                ("Function test_fn parameters contained a " "DataFrame: columns: ['Brand', 'Price']"),
+                ("Function test_fn parameters contained a DataFrame: columns: ['Brand', 'Price']"),
             ),
             call(
                 logging.DEBUG,
