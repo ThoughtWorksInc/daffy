@@ -53,3 +53,6 @@ source = ["daffy"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 95
+
+[tool.black]
+line-length = 120

@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+from unittest.mock import call
 
 import pandas as pd
 import pytest
@@ -37,6 +38,14 @@ def test_wrong_return_type() -> None:
         test_fn()
 
     assert "Wrong return type" in str(excinfo.value)
+
+
+def test_correct_return_type_and_no_column_constraints(basic_df: pd.DataFrame) -> None:
+    @df_out()
+    def test_fn() -> pd.DataFrame:
+        return basic_df
+
+    test_fn()
 
 
 def test_correct_return_type_and_columns(basic_df: pd.DataFrame) -> None:
@@ -125,9 +134,7 @@ def test_df_in_incorrect_input(basic_df: pd.DataFrame) -> None:
     assert "Column Price missing" in str(excinfo.value)
 
 
-def test_df_out_with_df_modification(
-    basic_df: pd.DataFrame, extended_df: pd.DataFrame
-) -> None:
+def test_df_out_with_df_modification(basic_df: pd.DataFrame, extended_df: pd.DataFrame) -> None:
     @df_out(columns=["Brand", "Price", "Year"])
     def test_fn(my_input: Any) -> Any:
         my_input["Year"] = list(extended_df["Year"])
@@ -137,9 +144,7 @@ def test_df_out_with_df_modification(
     pd.testing.assert_frame_equal(extended_df, test_fn(basic_df.copy()))
 
 
-def test_decorator_combinations(
-    basic_df: pd.DataFrame, extended_df: pd.DataFrame
-) -> None:
+def test_decorator_combinations(basic_df: pd.DataFrame, extended_df: pd.DataFrame) -> None:
     @df_in(columns=["Brand", "Price"])
     @df_out(columns=["Brand", "Price", "Year"])
     def test_fn(my_input: Any) -> Any:
@@ -149,12 +154,23 @@ def test_decorator_combinations(
     pd.testing.assert_frame_equal(extended_df, test_fn(basic_df.copy()))
 
 
-def test_log_returned_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
+def test_log_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
     @df_log()
-    def test_fn():
+    def test_fn(foo_df):
         return basic_df
 
     mock_log = mocker.patch("daffy.decorators.logging.log")
-    test_fn()
+    test_fn(basic_df)
 
-    mock_log.assert_called_with(logging.DEBUG, "Columns: ['Brand', 'Price']")
+    mock_log.assert_has_calls(
+        [
+            call(
+                logging.DEBUG,
+                ("Function test_fn parameters contained a " "DataFrame: columns: ['Brand', 'Price']"),
+            ),
+            call(
+                logging.DEBUG,
+                "Function test_fn returned a DataFrame: columns: ['Brand', 'Price']",
+            ),
+        ]
+    )

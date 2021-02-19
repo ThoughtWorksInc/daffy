@@ -66,6 +66,12 @@ def get_all_cars():
     return all_cars_df
 ```
 
+In case one of the listed columns is missing from the DataFrame, a helpful assertion error is thrown:
+
+```python
+AssertionError("Column Price missing from DataFrame. Got columns: ['Brand']")
+```
+
 To check both input and output, just use both annotations on the same function:
 
 ```python
@@ -90,6 +96,13 @@ columns={"Brand": "object", "Price": "int64"}
 
 This will not only check that the specified columns are found from the DataFrame but also that their `dtype` is the expected.
 
+To quickly check what the incoming and outgoing dataframes contain, you can add a `@df_log` annotation to the function. For
+example adding `@df_log` to the above `filter_cars` function will product log lines:
+
+```
+Function filter_cars parameters contained a DataFrame:columns: ['Brand', 'Price']
+Function filter_cars returned a DataFrame: columns: ['Brand', 'Price']
+```
 
 ## Contributing
 
