@@ -126,20 +126,25 @@ MIT
 
 ## Changelog
 
+### 0.4.0
+
+Added `@df_log` for logging.
+Improved assertion messages.
+
 ### 0.3.0
 
-Add type hints
+Added type hints.
 
 ### 0.2.1
 
-Add Pypi classifiers 
+Added Pypi classifiers. 
 
 ### 0.2.0
 
-Fix decorator usage.
-Add functools wraps.
+Fixed decorator usage.
+Added functools wraps.
 
 ### 0.1.0
 
-Initial release
+Initial release.
 
