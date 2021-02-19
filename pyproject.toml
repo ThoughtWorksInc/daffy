@@ -49,3 +49,7 @@ multi_line_output = 3
 [tool.coverage.run]
 branch = true
 source = ["daffy"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95
