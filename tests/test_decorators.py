@@ -176,6 +176,31 @@ def test_log_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
     )
 
 
+def test_log_df_with_dtypes(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
+    @df_log(include_dtypes=True)
+    def test_fn(foo_df: pd.DataFrame) -> pd.DataFrame:
+        return basic_df
+
+    mock_log = mocker.patch("daffy.decorators.logging.log")
+    test_fn(basic_df)
+
+    mock_log.assert_has_calls(
+        [
+            call(
+                logging.DEBUG,
+                (
+                    "Function test_fn parameters contained a DataFrame: "
+                    "columns: ['Brand', 'Price'] with dtypes ['object', 'int64']"
+                ),
+            ),
+            call(
+                logging.DEBUG,
+                "Function test_fn returned a DataFrame: columns: ['Brand', 'Price'] with dtypes ['object', 'int64']",
+            ),
+        ]
+    )
+
+
 def test_log_non_df(mocker: MockerFixture) -> None:
     @df_log()
     def test_fn(foo: str) -> int:

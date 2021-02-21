@@ -57,36 +57,37 @@ def df_in(name: Optional[str] = None, columns: ColumnsDef = None) -> Callable:
     return wrapper_df_out
 
 
-def _describe_pd(df: pd.DataFrame, list_columns: Optional[bool] = True) -> str:
-    result = ""
-    if list_columns:
-        result += f"columns: {list(df.columns)}"
+def _describe_pd(df: pd.DataFrame, include_dtypes: bool = False) -> str:
+    result = f"columns: {list(df.columns)}"
+    if include_dtypes:
+        readable_dtypes = [dtype.name for dtype in df.dtypes]
+        result += f" with dtypes {readable_dtypes}"
     return result
 
 
-def _log_input(level: int, func_name: str, df: Any) -> None:
+def _log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, pd.DataFrame):
         logging.log(
             level,
-            f"Function {func_name} parameters contained a DataFrame: {_describe_pd(df)}",
+            f"Function {func_name} parameters contained a DataFrame: {_describe_pd(df, include_dtypes)}",
         )
 
 
-def _log_output(level: int, func_name: str, df: Any) -> None:
+def _log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, pd.DataFrame):
         logging.log(
             level,
-            f"Function {func_name} returned a DataFrame: {_describe_pd(df)}",
+            f"Function {func_name} returned a DataFrame: {_describe_pd(df, include_dtypes)}",
         )
 
 
-def df_log(level: int = logging.DEBUG) -> Callable:
+def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable:
     def wrapper_df_log(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
-            _log_input(level, func.__name__, _get_parameter(None, *args, **kwargs))
+            _log_input(level, func.__name__, _get_parameter(None, *args, **kwargs), include_dtypes)
             result = func(*args, **kwargs)
-            _log_output(level, func.__name__, result)
+            _log_output(level, func.__name__, result, include_dtypes)
 
         return wrapper
 
