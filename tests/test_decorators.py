@@ -156,7 +156,7 @@ def test_decorator_combinations(basic_df: pd.DataFrame, extended_df: pd.DataFram
 
 def test_log_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
     @df_log()
-    def test_fn(foo_df):
+    def test_fn(foo_df: pd.DataFrame) -> pd.DataFrame:
         return basic_df
 
     mock_log = mocker.patch("daffy.decorators.logging.log")

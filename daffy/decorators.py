@@ -57,7 +57,7 @@ def df_in(name: Optional[str] = None, columns: ColumnsDef = None) -> Callable:
     return wrapper_df_out
 
 
-def _describe_pd(df: pd.DataFrame, list_columns: Optional[bool] = True):
+def _describe_pd(df: pd.DataFrame, list_columns: Optional[bool] = True) -> str:
     result = ""
     if list_columns:
         result += f"columns: {list(df.columns)}"
@@ -80,7 +80,7 @@ def _log_output(level: int, func_name: str, df: Any) -> None:
         )
 
 
-def df_log(level: Optional[int] = logging.DEBUG) -> Callable:
+def df_log(level: int = logging.DEBUG) -> Callable:
     def wrapper_df_log(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
