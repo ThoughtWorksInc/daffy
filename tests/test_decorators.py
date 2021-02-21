@@ -121,7 +121,7 @@ def test_dtype_mismatch(basic_df: pd.DataFrame) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn(basic_df)
 
-    assert "Column Price has wrong dtype" in str(excinfo.value)
+    assert "Column Price has wrong dtype. Was int64, expected float64" in str(excinfo.value)
 
 
 def test_df_in_incorrect_input(basic_df: pd.DataFrame) -> None:

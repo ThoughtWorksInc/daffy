@@ -96,6 +96,11 @@ columns={"Brand": "object", "Price": "int64"}
 ```
 
 This will not only check that the specified columns are found from the DataFrame but also that their `dtype` is the expected.
+In case of a wrong `dtype`, an error message similar to following will explain the mismatch:
+
+```
+AssertionError("Column Price has wrong dtype. Was int64, expected float64")
+```
 
 To quickly check what the incoming and outgoing dataframes contain, you can add a `@df_log` annotation to the function. For
 example adding `@df_log` to the above `filter_cars` function will product log lines:
