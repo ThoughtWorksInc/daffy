@@ -17,6 +17,7 @@ so that they document themselves and that documentation is kept up-to-date by va
 * [Contributing](#contributing)
 * [Tests](#tests)
 * [License](#license)
+* [Changelog](#changelog)
 
 ## Installation
 
@@ -26,18 +27,11 @@ Install with your favorite Python dependency manager like
 pip install daffy
 ```
 
-or
-
-```sh
-poetry add daffy
-```
-
-
 ## Usage 
 
 Start by importing the needed decorators:
 
-```
+```python
 from daffy import df_in, df_out
 ```
 
@@ -141,28 +135,28 @@ MIT
 
 ### 0.4.1
 
-Add `include_dtypes` parameter for `@df_log`.
-Fix handling of empty signature with `@df_in`.
+- Add `include_dtypes` parameter for `@df_log`.
+- Fix handling of empty signature with `@df_in`.
 
 ### 0.4.0
 
-Added `@df_log` for logging.
-Improved assertion messages.
+- Added `@df_log` for logging.
+- Improved assertion messages.
 
 ### 0.3.0
 
-Added type hints.
+- Added type hints.
 
 ### 0.2.1
 
-Added Pypi classifiers. 
+- Added Pypi classifiers. 
 
 ### 0.2.0
 
-Fixed decorator usage.
-Added functools wraps.
+- Fixed decorator usage.
+- Added functools wraps.
 
 ### 0.1.0
 
-Initial release.
+- Initial release.
 
