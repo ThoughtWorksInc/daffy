@@ -174,3 +174,14 @@ def test_log_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
             ),
         ]
     )
+
+
+def test_log_non_df(mocker: MockerFixture) -> None:
+    @df_log()
+    def test_fn(foo: str) -> int:
+        return 123
+
+    mock_log = mocker.patch("daffy.decorators.logging.log")
+    test_fn("foo")
+
+    mock_log.assert_not_called()
