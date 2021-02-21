@@ -11,6 +11,17 @@ In projects using Pandas, it's very common to have functions that take Pandas Da
 It's hard to figure out quickly what these DataFrames contain. This library offers simple decorators to annotate your functions
 so that they document themselves and that documentation is kept up-to-date by validating the input and output on runtime.
 
+For example,
+
+```python
+@df_in(columns=["Brand", "Price"])     # the function expects a DataFrame as input parameter with columns Brand and Price
+@df_out(columns=["Brand", "Price"])    # the function will return a DataFrame with columns Brand and Price
+def filter_cars(car_df):
+    # before this code is executed, the input DataFrame is validated according to the above decorator
+    # filter some cars..
+    return filtered_cars_df
+```
+
 ## Table of Contents
 * [Installation](#installation)
 * [Usage](#usage)
