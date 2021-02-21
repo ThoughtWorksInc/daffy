@@ -31,7 +31,7 @@ jobs:
     - name: Install dependencies
       run: |
         poetry install
-    - name: Lint with flake8, black and isort
+    - name: Lint with flake8, black, isort and mypy
       run: |
         poetry run isort --check .
         poetry run black --check .
