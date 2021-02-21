@@ -86,7 +86,7 @@ def test_wrong_input_type_named() -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn(my_input="foobar")
 
-    assert "Wrong parameter type" in str(excinfo.value)
+    assert "Wrong parameter type. Expected Pandas DataFrame, got str instead." in str(excinfo.value)
 
 
 def test_correct_input_with_columns(basic_df: pd.DataFrame) -> None:
@@ -95,6 +95,25 @@ def test_correct_input_with_columns(basic_df: pd.DataFrame) -> None:
         return my_input
 
     test_fn(basic_df)
+
+
+def test_correct_input_with_no_column_constraints(basic_df: pd.DataFrame) -> None:
+    @df_in()
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    test_fn(basic_df)
+
+
+def test_dfin_with_no_inputs() -> None:
+    @df_in()
+    def test_fn() -> Any:
+        return
+
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn()
+
+    assert "Wrong parameter type. Expected Pandas DataFrame, got NoneType instead." in str(excinfo.value)
 
 
 def test_correct_named_input_with_columns(basic_df: pd.DataFrame) -> None:

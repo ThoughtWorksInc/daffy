@@ -47,7 +47,9 @@ def df_in(name: Optional[str] = None, columns: ColumnsDef = None) -> Callable:
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
             df = _get_parameter(name, *args, **kwargs)
-            assert isinstance(df, pd.DataFrame), f"Wrong parameter type. Expected pandas dataframe, got {type(df)}"
+            assert isinstance(
+                df, pd.DataFrame
+            ), f"Wrong parameter type. Expected Pandas DataFrame, got {type(df).__name__} instead."
             if columns:
                 _check_columns(df, columns)
             return func(*args, **kwargs)
