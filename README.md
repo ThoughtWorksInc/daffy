@@ -106,8 +106,15 @@ To quickly check what the incoming and outgoing dataframes contain, you can add 
 example adding `@df_log` to the above `filter_cars` function will product log lines:
 
 ```
-Function filter_cars parameters contained a DataFrame:columns: ['Brand', 'Price']
+Function filter_cars parameters contained a DataFrame: columns: ['Brand', 'Price']
 Function filter_cars returned a DataFrame: columns: ['Brand', 'Price']
+```
+
+or with `@df_log(include_dtypes=True)` you get:
+
+```
+Function filter_cars parameters contained a DataFrame: columns: ['Brand', 'Price'] with dtypes ['object', 'int64']
+Function filter_cars returned a DataFrame: columns: ['Brand', 'Price'] with dtypes ['object', 'int64']
 ```
 
 ## Contributing
@@ -131,6 +138,11 @@ To enable linting on each commit, run `pre-commit install`. After that, your eve
 MIT
 
 ## Changelog
+
+### 0.4.1
+
+Add `include_dtypes` parameter for `@df_log`.
+Fix handling of empty signature with `@df_in`.
 
 ### 0.4.0
 
