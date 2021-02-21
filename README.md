@@ -3,6 +3,7 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
 ![test](https://github.com/fourkind/daffy/workflows/test/badge.svg)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![codecov](https://codecov.io/gh/fourkind/daffy/branch/master/graph/badge.svg?token=2FYBMT65A6)](https://codecov.io/gh/fourkind/daffy)
 
 ## Description 
 
