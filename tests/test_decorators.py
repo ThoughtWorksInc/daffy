@@ -6,8 +6,7 @@ import pandas as pd
 import pytest
 from pytest_mock import MockerFixture
 
-from daffy import df_in, df_out
-from daffy.decorators import df_log
+from daffy import df_in, df_log, df_out
 
 
 @pytest.fixture
