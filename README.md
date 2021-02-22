@@ -144,6 +144,11 @@ MIT
 
 ## Changelog
 
+### 0.4.2
+
+- Added docstrings for the decorators
+- Fix import of `@df_log`
+
 ### 0.4.1
 
 - Add `include_dtypes` parameter for `@df_log`.
