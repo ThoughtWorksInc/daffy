@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
 
-ColumnsDef = Optional[Union[List, Dict]]
+ColumnsDef = Union[List, Dict]
 
 
 def _check_columns(df: pd.DataFrame, columns: ColumnsDef, strict: bool) -> None:
@@ -25,7 +25,7 @@ def _check_columns(df: pd.DataFrame, columns: ColumnsDef, strict: bool) -> None:
         ), f"DataFrame contained unexpected column(s): {', '.join(set(df.columns) - set(columns))}"
 
 
-def df_out(columns: ColumnsDef = None, strict: bool = False) -> Callable:
+def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callable:
     """Decorate a function that returns a Pandas DataFrame.
 
     Document the return value of a function. The return value will be validated in runtime.
@@ -60,7 +60,7 @@ def _get_parameter(name: Optional[str] = None, *args: str, **kwargs: Any) -> pd.
     return kwargs[name]
 
 
-def df_in(name: Optional[str] = None, columns: ColumnsDef = None, strict: bool = False) -> Callable:
+def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callable:
     """Decorate a function parameter that is a Pandas DataFrame.
 
     Document the contents of an inpute parameter. The parameter will be validated in runtime.
