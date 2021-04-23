@@ -107,6 +107,21 @@ In case of a wrong `dtype`, an error message similar to following will explain t
 AssertionError("Column Price has wrong dtype. Was int64, expected float64")
 ```
 
+You can enable strict-mode for both `@df_in` and `@df_out`. This will raise an error if the DataFrame contains columns
+not defined in the annotation:
+
+```python
+@df_in(columns=["Brand"], strict=True)
+def process_cars(car_df):
+    # do stuff with cars
+```
+
+will, when `car_df` contains columns `["Brand", "Price"]` raise an error:
+
+```
+AssertionError: DataFrame contained unexpected column(s): Price
+```
+
 To quickly check what the incoming and outgoing dataframes contain, you can add a `@df_log` annotation to the function. For
 example adding `@df_log` to the above `filter_cars` function will product log lines:
 
@@ -143,6 +158,10 @@ To enable linting on each commit, run `pre-commit install`. After that, your eve
 MIT
 
 ## Changelog
+
+### 0.5.0
+
+- Added `strict` parameter for `@df_in` and `@df_out`
 
 ### 0.4.2
 
