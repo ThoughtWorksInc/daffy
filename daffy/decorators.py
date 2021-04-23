@@ -7,7 +7,7 @@ import pandas as pd
 ColumnsDef = Optional[Union[List, Dict]]
 
 
-def _check_columns(df: pd.DataFrame, columns: ColumnsDef) -> None:
+def _check_columns(df: pd.DataFrame, columns: ColumnsDef, strict: bool) -> None:
     if isinstance(columns, list):
         for column in columns:
             assert column in df.columns, f"Column {column} missing from DataFrame. Got {_describe_pd(df)}"
@@ -17,14 +17,19 @@ def _check_columns(df: pd.DataFrame, columns: ColumnsDef) -> None:
             assert (
                 df[column].dtype == dtype
             ), f"Column {column} has wrong dtype. Was {df[column].dtype}, expected {dtype}"
+    if strict:
+        assert len(df.columns) == len(
+            columns
+        ), f"DataFrame contained unexpected column(s): {', '.join(set(df.columns) - set(columns))}"
 
 
-def df_out(columns: ColumnsDef = None) -> Callable:
+def df_out(columns: ColumnsDef = None, strict: bool = False) -> Callable:
     """Decorator used to document a function that returns a Pandas DataFrame.
     The return value will be validated in runtime.
 
     Args:
         columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame. Defaults to None.
+        strict (bool, optional): If True, columns must match exactly with no extra columns. Defaults to False.
 
     Returns:
         Callable: Decorated function
@@ -36,7 +41,7 @@ def df_out(columns: ColumnsDef = None) -> Callable:
             result = func(*args, **kwargs)
             assert isinstance(result, pd.DataFrame), f"Wrong return type. Expected pandas dataframe, got {type(result)}"
             if columns:
-                _check_columns(result, columns)
+                _check_columns(result, columns, strict)
             return result
 
         return wrapper
@@ -52,13 +57,14 @@ def _get_parameter(name: Optional[str] = None, *args: str, **kwargs: Any) -> pd.
     return kwargs[name]
 
 
-def df_in(name: Optional[str] = None, columns: ColumnsDef = None) -> Callable:
+def df_in(name: Optional[str] = None, columns: ColumnsDef = None, strict: bool = False) -> Callable:
     """Decorator used to document a function parameter that is a Pandas DataFrame.
     The parameter will be validated in runtime.
 
     Args:
         name (Optional[str], optional): Name of the parameter that contains a DataFrame. Defaults to None.
         columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame. Defaults to None.
+        strict (bool, optional): If True, columns must match exactly with no extra columns. Defaults to False.
 
     Returns:
         Callable: Decorated function
@@ -72,7 +78,7 @@ def df_in(name: Optional[str] = None, columns: ColumnsDef = None) -> Callable:
                 df, pd.DataFrame
             ), f"Wrong parameter type. Expected Pandas DataFrame, got {type(df).__name__} instead."
             if columns:
-                _check_columns(df, columns)
+                _check_columns(df, columns, strict)
             return func(*args, **kwargs)
 
         return wrapper

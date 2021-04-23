@@ -55,6 +55,33 @@ def test_correct_return_type_and_columns(basic_df: pd.DataFrame) -> None:
     test_fn()
 
 
+def test_allow_extra_columns_out(basic_df: pd.DataFrame) -> None:
+    @df_out(columns=["Brand"])
+    def test_fn() -> pd.DataFrame:
+        return basic_df
+
+    test_fn()
+
+
+def test_correct_return_type_and_columns_strict(basic_df: pd.DataFrame) -> None:
+    @df_out(columns=["Brand", "Price"], strict=True)
+    def test_fn() -> pd.DataFrame:
+        return basic_df
+
+    test_fn()
+
+
+def test_extra_column_in_return_strict(basic_df: pd.DataFrame) -> None:
+    @df_out(columns=["Brand"], strict=True)
+    def test_fn() -> pd.DataFrame:
+        return basic_df
+
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn()
+
+    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+
+
 def test_missing_column_in_return(basic_df: pd.DataFrame) -> None:
     @df_out(columns=["Brand", "FooColumn"])
     def test_fn() -> pd.DataFrame:
@@ -121,6 +148,33 @@ def test_correct_named_input_with_columns(basic_df: pd.DataFrame) -> None:
         return df
 
     test_fn("foo", df=basic_df)
+
+
+def test_correct_named_input_with_columns_strict(basic_df: pd.DataFrame) -> None:
+    @df_in(name="df", columns=["Brand", "Price"], strict=True)
+    def test_fn(my_input: Any, df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    test_fn("foo", df=basic_df)
+
+
+def test_in_allow_extra_columns(basic_df: pd.DataFrame) -> None:
+    @df_in(name="df", columns=["Brand"])
+    def test_fn(my_input: Any, df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    test_fn("foo", df=basic_df)
+
+
+def test_in_strict_extra_columns(basic_df: pd.DataFrame) -> None:
+    @df_in(name="df", columns=["Brand"], strict=True)
+    def test_fn(my_input: Any, df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn("foo", df=basic_df)
+
+    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
 
 
 def test_correct_input_with_columns_and_dtypes(basic_df: pd.DataFrame) -> None:
