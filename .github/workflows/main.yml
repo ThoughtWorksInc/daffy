@@ -37,6 +37,7 @@ jobs:
         poetry run black --check .
         poetry run flake8 .
         poetry run mypy .
+        poetry run pydocstyle daffy/
     - name: Test with pytest
       run: |
         poetry run pytest --cov --cov-report=xml tests/
