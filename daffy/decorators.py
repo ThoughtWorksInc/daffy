@@ -1,3 +1,5 @@
+"""Decorators for DAFFY DataFrame Column Validator."""
+
 import logging
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -24,8 +26,9 @@ def _check_columns(df: pd.DataFrame, columns: ColumnsDef, strict: bool) -> None:
 
 
 def df_out(columns: ColumnsDef = None, strict: bool = False) -> Callable:
-    """Decorator used to document a function that returns a Pandas DataFrame.
-    The return value will be validated in runtime.
+    """Decorate a function that returns a Pandas DataFrame.
+
+    Document the return value of a function. The return value will be validated in runtime.
 
     Args:
         columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame. Defaults to None.
@@ -58,8 +61,9 @@ def _get_parameter(name: Optional[str] = None, *args: str, **kwargs: Any) -> pd.
 
 
 def df_in(name: Optional[str] = None, columns: ColumnsDef = None, strict: bool = False) -> Callable:
-    """Decorator used to document a function parameter that is a Pandas DataFrame.
-    The parameter will be validated in runtime.
+    """Decorate a function parameter that is a Pandas DataFrame.
+
+    Document the contents of an inpute parameter. The parameter will be validated in runtime.
 
     Args:
         name (Optional[str], optional): Name of the parameter that contains a DataFrame. Defaults to None.
@@ -111,7 +115,8 @@ def _log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> No
 
 
 def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable:
-    """Decorator used to wrap a function that consumes or produces a Pandas DataFrame or both.
+    """Decorate a function that consumes or produces a Pandas DataFrame or both.
+
     Logs the columns of the consumed and/or produced DataFrame.
 
     Args:
