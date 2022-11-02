@@ -3,46 +3,45 @@ name: test
 on:
   push:
     branches:
-    - master
+      - master
   pull_request:
     branches:
-    - master
+      - master
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
     env:
       PYTHON: ${{ matrix.python-version }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Poetry
-      uses: snok/install-poetry@v1.1.1
-      with:
-        virtualenvs-create: true
-        virtualenvs-in-project: false
-    - name: Install dependencies
-      run: |
-        poetry install
-    - name: Lint with flake8, black, isort and mypy
-      run: |
-        poetry run isort --check .
-        poetry run black --check .
-        poetry run flake8 .
-        poetry run mypy .
-        poetry run pydocstyle daffy/
-    - name: Test with pytest
-      run: |
-        poetry run pytest --cov --cov-report=xml tests/
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        files: ./coverage.xml
-        env_vars: PYTHON
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: false
+      - name: Install dependencies
+        run: |
+          poetry install
+      - name: Lint with flake8, black, isort and mypy
+        run: |
+          poetry run isort --check .
+          poetry run black --check .
+          poetry run flake8 .
+          poetry run mypy .
+          poetry run pydocstyle daffy/
+      - name: Test with pytest
+        run: |
+          poetry run pytest --cov --cov-report=xml tests/
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          files: ./coverage.xml
+          env_vars: PYTHON
