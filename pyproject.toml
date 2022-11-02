@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "daffy"
-version = "0.5.0"
+version = "0.6.0"
 description = "Function decorators for Pandas Dataframe column name and data type validation"
 authors = ["Janne Sinivirta <janne.sinivirta@gmail.com>"]
 license = "MIT"
@@ -24,20 +24,20 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7.1"
-pandas = "^1.2.1"
+python = ">=3.8,<4.0.0"
+pandas = "^1.5.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-isort = "^5.7.0"
-black = "^20.8b1"
-flake8 = "^3.8.4"
-pre-commit = "^2.10.0"
-mypy = "^0.800"
-pytest-mock = "^3.5.1"
-pytest-cov = "^2.11.1"
-coverage = {extras = ["toml"], version = "^5.4"}
-pydocstyle = "^6.0.0"
+pytest = "^7.2.0"
+isort = "^5.10.1"
+black = "^22.10.0"
+flake8 = "^5.0.4"
+pre-commit = "^2.20.0"
+mypy = "^0.982"
+pytest-mock = "^3.10.0"
+pytest-cov = "^4.0.0"
+coverage = {extras = ["toml"], version = "^6.5.0"}
+pydocstyle = "^6.1.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
