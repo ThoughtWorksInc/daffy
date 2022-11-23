@@ -235,6 +235,28 @@ def test_multiple_named_inputs_with_names_in_function_call(basic_df: pd.DataFram
     test_fn(cars=basic_df, ext_cars=extended_df)
 
 
+def test_multiple_named_inputs_without_names_in_function_call(
+    basic_df: pd.DataFrame, extended_df: pd.DataFrame
+) -> None:
+    @df_in(name="cars", columns=["Brand", "Price"], strict=True)
+    @df_in(name="ext_cars", columns=["Brand", "Price", "Year"], strict=True)
+    def test_fn(cars: pd.DataFrame, ext_cars: pd.DataFrame) -> int:
+        return len(cars) + len(ext_cars)
+
+    test_fn(basic_df, extended_df)
+
+
+def test_multiple_named_inputs_with_some_of_names_in_function_call(
+    basic_df: pd.DataFrame, extended_df: pd.DataFrame
+) -> None:
+    @df_in(name="cars", columns=["Brand", "Price"], strict=True)
+    @df_in(name="ext_cars", columns=["Brand", "Price", "Year"], strict=True)
+    def test_fn(cars: pd.DataFrame, ext_cars: pd.DataFrame) -> int:
+        return len(cars) + len(ext_cars)
+
+    test_fn(basic_df, ext_cars=extended_df)
+
+
 def test_log_df(basic_df: pd.DataFrame, mocker: MockerFixture) -> None:
     @df_log()
     def test_fn(foo_df: pd.DataFrame) -> pd.DataFrame:

@@ -63,6 +63,14 @@ def process_cars(year, style, car_df):
     # do stuff with cars
 ```
 
+You can also check columns of multiple arguments if you specify the names
+```python
+@df_in(name="car_df", columns=["Brand", "Price"])
+@df_in(name="brand_df", columns=["Brand", "BrandName"])
+def process_cars(car_df, brand_df):
+    # do stuff with cars
+```
+
 To check that a function returns a DataFrame with specific columns, use `@df_out` decorator:
 
 ```python

@@ -1,5 +1,5 @@
 """Decorators for DAFFY DataFrame Column Validator."""
-
+import inspect
 import logging
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -52,11 +52,17 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callab
     return wrapper_df_out
 
 
-def _get_parameter(name: Optional[str] = None, *args: str, **kwargs: Any) -> pd.DataFrame:
+def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwargs: Any) -> pd.DataFrame:
     if not name:
         if len(args) == 0:
             return None
         return args[0]
+
+    if name and (name not in kwargs):
+        func_params_in_order = list(inspect.signature(func).parameters.keys())
+        parameter_location = func_params_in_order.index(name)
+        return args[parameter_location]
+
     return kwargs[name]
 
 
@@ -77,7 +83,7 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
     def wrapper_df_in(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
-            df = _get_parameter(name, *args, **kwargs)
+            df = _get_parameter(func, name, *args, **kwargs)
             assert isinstance(
                 df, pd.DataFrame
             ), f"Wrong parameter type. Expected Pandas DataFrame, got {type(df).__name__} instead."
@@ -130,7 +136,7 @@ def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable
     def wrapper_df_log(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
-            _log_input(level, func.__name__, _get_parameter(None, *args, **kwargs), include_dtypes)
+            _log_input(level, func.__name__, _get_parameter(func, None, *args, **kwargs), include_dtypes)
             result = func(*args, **kwargs)
             _log_output(level, func.__name__, result, include_dtypes)
 
