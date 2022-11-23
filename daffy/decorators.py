@@ -74,7 +74,7 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
         Callable: Decorated function
     """
 
-    def wrapper_df_out(func: Callable) -> Callable:
+    def wrapper_df_in(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
             df = _get_parameter(name, *args, **kwargs)
@@ -87,7 +87,7 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
 
         return wrapper
 
-    return wrapper_df_out
+    return wrapper_df_in
 
 
 def _describe_pd(df: pd.DataFrame, include_dtypes: bool = False) -> str:
