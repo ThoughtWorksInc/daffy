@@ -167,6 +167,10 @@ MIT
 
 ## Changelog
 
+### 0.6.0
+
+- Make checking columns of multiple function parameters work also with positional arguments (thanks @latvanii)
+
 ### 0.5.0
 
 - Added `strict` parameter for `@df_in` and `@df_out`
