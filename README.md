@@ -1,5 +1,5 @@
 # DAFFY DataFrame Column Validator
-![PyPI](https://img.shields.io/pypi/v/daffy)
+[![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
 ![test](https://github.com/fourkind/daffy/workflows/test/badge.svg)
 [![codecov](https://codecov.io/gh/fourkind/daffy/branch/master/graph/badge.svg?token=2FYBMT65A6)](https://codecov.io/gh/fourkind/daffy)
