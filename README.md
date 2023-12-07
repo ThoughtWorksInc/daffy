@@ -167,6 +167,11 @@ MIT
 
 ## Changelog
 
+### 0.7.0
+
+- Support Pandas 2.x
+- Drop support for Python 3.7 and 3.8
+
 ### 0.6.0
 
 - Make checking columns of multiple function parameters work also with positional arguments (thanks @latvanii)
