@@ -1,5 +1,5 @@
 # DAFFY DataFrame Column Validator
-![PyPI](https://img.shields.io/pypi/v/daffy)
+[![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
 ![test](https://github.com/fourkind/daffy/workflows/test/badge.svg)
 [![codecov](https://codecov.io/gh/fourkind/daffy/branch/master/graph/badge.svg?token=2FYBMT65A6)](https://codecov.io/gh/fourkind/daffy)
@@ -166,6 +166,12 @@ To enable linting on each commit, run `pre-commit install`. After that, your eve
 MIT
 
 ## Changelog
+
+### 0.7.0
+
+- Support Pandas 2.x
+- Drop support for Python 3.7 and 3.8
+- Build and test with Python 3.12 also
 
 ### 0.6.0
 
