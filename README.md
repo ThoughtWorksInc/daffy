@@ -171,6 +171,7 @@ MIT
 
 - Support Pandas 2.x
 - Drop support for Python 3.7 and 3.8
+- Build and test with Python 3.12 also
 
 ### 0.6.0
 
