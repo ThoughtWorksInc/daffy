@@ -140,3 +140,7 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# JetBrains IDE (e.g., PyCharm)
+#  The .idea directory stores project settings specific to JetBrains IDEs.
+#  These settings are individual and generally not shared across different development environments.
+.idea/
