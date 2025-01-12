@@ -1,18 +1,9 @@
 repos:
-  - repo: https://github.com/timothycrosley/isort
-    rev: 5.12.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.9.1
     hooks:
-      - id: isort
-  - repo: https://github.com/psf/black
-    rev: 23.11.0 # Replace by any tag/version: https://github.com/psf/black/tags
-    hooks:
-      - id: black
-        language_version: python3
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
-    hooks:
-      - id: mypy
+      # Run the linter.
+      - id: ruff
+      # Run the formatter.
+      - id: ruff-format
