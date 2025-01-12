@@ -35,9 +35,6 @@ pandas = ">=1.5.1,<3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
-isort = "^5.12.0"
-black = "^23.11.0"
-flake8 = "^6.1.0"
 pre-commit = "^3.5.0"
 mypy = "^1.7.1"
 pytest-mock = "^3.12.0"
@@ -50,10 +47,6 @@ ruff = "^0.9.1"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-
 [tool.coverage.run]
 branch = true
 source = ["daffy"]
@@ -61,9 +54,6 @@ source = ["daffy"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 95
-
-[tool.black]
-line-length = 120
 
 [tool.ruff]
 line-length = 120
