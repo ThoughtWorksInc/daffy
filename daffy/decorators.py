@@ -6,11 +6,13 @@ from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
+import polars as pl
 
 ColumnsDef = Union[List, Dict]
+DataFrameType = Union[pd.DataFrame, pl.DataFrame]
 
 
-def _check_columns(df: pd.DataFrame, columns: ColumnsDef, strict: bool) -> None:
+def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None:
     if isinstance(columns, list):
         for column in columns:
             assert column in df.columns, f"Column {column} missing from DataFrame. Got {_describe_pd(df)}"
@@ -43,7 +45,9 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callab
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
             result = func(*args, **kwargs)
-            assert isinstance(result, pd.DataFrame), f"Wrong return type. Expected pandas dataframe, got {type(result)}"
+            assert isinstance(result, pd.DataFrame) or isinstance(result, pl.DataFrame), (
+                f"Wrong return type. Expected DataFrame, got {type(result)}"
+            )
             if columns:
                 _check_columns(result, columns, strict)
             return result
@@ -53,7 +57,7 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callab
     return wrapper_df_out
 
 
-def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwargs: Any) -> pd.DataFrame:
+def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwargs: Any) -> DataFrameType:
     if not name:
         if len(args) == 0:
             return None
@@ -85,8 +89,8 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
             df = _get_parameter(func, name, *args, **kwargs)
-            assert isinstance(df, pd.DataFrame), (
-                f"Wrong parameter type. Expected Pandas DataFrame, got {type(df).__name__} instead."
+            assert isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame), (
+                f"Wrong parameter type. Expected DataFrame, got {type(df).__name__} instead."
             )
             if columns:
                 _check_columns(df, columns, strict)
@@ -97,16 +101,19 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
     return wrapper_df_in
 
 
-def _describe_pd(df: pd.DataFrame, include_dtypes: bool = False) -> str:
+def _describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
     result = f"columns: {list(df.columns)}"
     if include_dtypes:
-        readable_dtypes = [dtype.name for dtype in df.dtypes]
-        result += f" with dtypes {readable_dtypes}"
+        if isinstance(df, pd.DataFrame):
+            readable_dtypes = [dtype.name for dtype in df.dtypes]
+            result += f" with dtypes {readable_dtypes}"
+        if isinstance(df, pl.DataFrame):
+            result += f" with dtypes {df.dtypes}"
     return result
 
 
 def _log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
-    if isinstance(df, pd.DataFrame):
+    if isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame):
         logging.log(
             level,
             f"Function {func_name} parameters contained a DataFrame: {_describe_pd(df, include_dtypes)}",
@@ -114,7 +121,7 @@ def _log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> Non
 
 
 def _log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
-    if isinstance(df, pd.DataFrame):
+    if isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame):
         logging.log(
             level,
             f"Function {func_name} returned a DataFrame: {_describe_pd(df, include_dtypes)}",
