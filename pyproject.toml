@@ -1,9 +1,12 @@
-[tool.poetry]
+[project]
 name = "daffy"
 version = "0.7.0"
 description = "Function decorators for Pandas Dataframe column name and data type validation"
-authors = ["Janne Sinivirta <janne.sinivirta@gmail.com>"]
+authors = [
+ { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
+]
 license = "MIT"
+requires-python = ">=3.9"
 readme = "README.md"
 homepage = "https://github.com/fourkind/daffy"
 repository = "https://github.com/fourkind/daffy.git"
@@ -18,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License"
 ]
