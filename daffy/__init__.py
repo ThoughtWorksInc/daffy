@@ -5,6 +5,7 @@ output. It's hard to figure out quickly what these DataFrames contain. This libr
 annotate your functions so that they document themselves and that documentation is kept up-to-date by validating
 the input and output on runtime.
 """
+
 __version__ = "0.5.0"
 
 from .decorators import df_in  # noqa

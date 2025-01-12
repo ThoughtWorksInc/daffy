@@ -44,6 +44,7 @@ pytest-mock = "^3.12.0"
 pytest-cov = "^4.1.0"
 coverage = {extras = ["toml"], version = "^7.3.2"}
 pydocstyle = "^6.3.0"
+ruff = "^0.9.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -63,3 +64,10 @@ fail_under = 95
 
 [tool.black]
 line-length = 120
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I", "N"]
