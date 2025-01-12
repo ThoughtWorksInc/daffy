@@ -3,19 +3,26 @@ from typing import Any
 from unittest.mock import call
 
 import pandas as pd
+import polars as pl
 import pytest
 from pytest_mock import MockerFixture
 
 from daffy import df_in, df_log, df_out
 
+cars = {
+    "Brand": ["Honda Civic", "Toyota Corolla", "Ford Focus", "Audi A4"],
+    "Price": [22000, 25000, 27000, 35000],
+}
+
 
 @pytest.fixture
 def basic_df() -> pd.DataFrame:
-    cars = {
-        "Brand": ["Honda Civic", "Toyota Corolla", "Ford Focus", "Audi A4"],
-        "Price": [22000, 25000, 27000, 35000],
-    }
-    return pd.DataFrame(cars, columns=["Brand", "Price"])
+    return pd.DataFrame(cars)
+
+
+@pytest.fixture
+def basic_polars_df() -> pd.DataFrame:
+    return pl.DataFrame(cars)
 
 
 @pytest.fixture
@@ -51,6 +58,14 @@ def test_correct_return_type_and_columns(basic_df: pd.DataFrame) -> None:
     @df_out(columns=["Brand", "Price"])
     def test_fn() -> pd.DataFrame:
         return basic_df
+
+    test_fn()
+
+
+def test_correct_return_type_and_columns_with_polars(basic_polars_df: pl.DataFrame) -> None:
+    @df_out(columns=["Brand", "Price"])
+    def test_fn() -> pl.DataFrame:
+        return basic_polars_df
 
     test_fn()
 
@@ -112,7 +127,7 @@ def test_wrong_input_type_named() -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn(my_input="foobar")
 
-    assert "Wrong parameter type. Expected Pandas DataFrame, got str instead." in str(excinfo.value)
+    assert "Wrong parameter type. Expected DataFrame, got str instead." in str(excinfo.value)
 
 
 def test_correct_input_with_columns(basic_df: pd.DataFrame) -> None:
@@ -139,7 +154,7 @@ def test_dfin_with_no_inputs() -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Wrong parameter type. Expected Pandas DataFrame, got NoneType instead." in str(excinfo.value)
+    assert "Wrong parameter type. Expected DataFrame, got NoneType instead." in str(excinfo.value)
 
 
 def test_correct_named_input_with_columns(basic_df: pd.DataFrame) -> None:

@@ -6,6 +6,7 @@ from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
+import polars as pl
 
 ColumnsDef = Union[List, Dict]
 
@@ -43,7 +44,9 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callab
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
             result = func(*args, **kwargs)
-            assert isinstance(result, pd.DataFrame), f"Wrong return type. Expected pandas dataframe, got {type(result)}"
+            assert isinstance(result, pd.DataFrame) or isinstance(result, pl.DataFrame), (
+                f"Wrong return type. Expected DataFrame, got {type(result)}"
+            )
             if columns:
                 _check_columns(result, columns, strict)
             return result
@@ -85,8 +88,8 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
             df = _get_parameter(func, name, *args, **kwargs)
-            assert isinstance(df, pd.DataFrame), (
-                f"Wrong parameter type. Expected Pandas DataFrame, got {type(df).__name__} instead."
+            assert isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame), (
+                f"Wrong parameter type. Expected DataFrame, got {type(df).__name__} instead."
             )
             if columns:
                 _check_columns(df, columns, strict)
