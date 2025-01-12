@@ -7,20 +7,18 @@
 
 ## Description 
 
-In projects using Pandas, it's very common to have functions that take Pandas DataFrames as input or produce them as output.
-It's hard to figure out quickly what these DataFrames contain. This library offers simple decorators to annotate your functions
-so that they document themselves and that documentation is kept up-to-date by validating the input and output on runtime.
-
-For example,
+Working with DataFrames often means passing them through multiple transformation functions, making it easy to lose track of their structure over time. DAFFY adds runtime validation and documentation to your DataFrame operations through simple decorators. By declaring the expected columns and types in your function definitions, you can:
 
 ```python
-@df_in(columns=["Brand", "Price"])     # the function expects a DataFrame as input parameter with columns Brand and Price
-@df_out(columns=["Brand", "Price"])    # the function will return a DataFrame with columns Brand and Price
-def filter_cars(car_df):
-    # before this code is executed, the input DataFrame is validated according to the above decorator
-    # filter some cars..
-    return filtered_cars_df
+@df_in(columns=["price", "bedrooms", "location"])
+@df_out(columns=["price_per_room", "price_category"])
+def analyze_housing(houses_df):
+    # Transform raw housing data into price analysis
+    return analyzed_df
 ```
+
+Like type hints for DataFrames, DAFFY helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Compatible with both Pandas and Polars.
+
 
 ## Table of Contents
 * [Installation](#installation)
@@ -166,6 +164,10 @@ To enable linting on each commit, run `pre-commit install`. After that, your eve
 MIT
 
 ## Changelog
+
+### 0.8.0
+
+- Support Polars DataFrames
 
 ### 0.7.0
 
