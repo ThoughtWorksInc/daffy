@@ -32,13 +32,11 @@ jobs:
         run: |
           poetry install
 
-      - name: Lint with flake8, black, isort and mypy
+      - name: Lint with Ruff and Mypy
         run: |
-          poetry run isort --check .
-          poetry run black --check .
-          poetry run flake8 .
+          poetry run ruff check --output-format=github .
+          poetry run ruff format --diff
           poetry run mypy .
-          poetry run pydocstyle daffy/
 
       - name: Test with pytest
         run: |

@@ -1,4 +1,5 @@
 """Decorators for DAFFY DataFrame Column Validator."""
+
 import inspect
 import logging
 from functools import wraps
@@ -16,13 +17,13 @@ def _check_columns(df: pd.DataFrame, columns: ColumnsDef, strict: bool) -> None:
     if isinstance(columns, dict):
         for column, dtype in columns.items():
             assert column in df.columns, f"Column {column} missing from DataFrame. Got {_describe_pd(df)}"
-            assert (
-                df[column].dtype == dtype
-            ), f"Column {column} has wrong dtype. Was {df[column].dtype}, expected {dtype}"
+            assert df[column].dtype == dtype, (
+                f"Column {column} has wrong dtype. Was {df[column].dtype}, expected {dtype}"
+            )
     if strict:
-        assert len(df.columns) == len(
-            columns
-        ), f"DataFrame contained unexpected column(s): {', '.join(set(df.columns) - set(columns))}"
+        assert len(df.columns) == len(columns), (
+            f"DataFrame contained unexpected column(s): {', '.join(set(df.columns) - set(columns))}"
+        )
 
 
 def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callable:
@@ -84,9 +85,9 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
         @wraps(func)
         def wrapper(*args: str, **kwargs: Any) -> Any:
             df = _get_parameter(func, name, *args, **kwargs)
-            assert isinstance(
-                df, pd.DataFrame
-            ), f"Wrong parameter type. Expected Pandas DataFrame, got {type(df).__name__} instead."
+            assert isinstance(df, pd.DataFrame), (
+                f"Wrong parameter type. Expected Pandas DataFrame, got {type(df).__name__} instead."
+            )
             if columns:
                 _check_columns(df, columns, strict)
             return func(*args, **kwargs)
