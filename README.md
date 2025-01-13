@@ -164,6 +164,10 @@ MIT
 
 ## Changelog
 
+### 0.9.0
+
+- Add marker (`py.typed`) to tell Mypy that the library has type annotations
+
 ### 0.8.0
 
 - Support Polars DataFrames
