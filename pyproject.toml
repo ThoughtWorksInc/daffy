@@ -29,6 +29,9 @@ include = [
     "LICENSE",
 ]
 
+[tool.poetry]
+include = ["daffy/py.typed"]
+
 [tool.poetry.dependencies]
 python = ">=3.9.0,<4.0.0"
 pandas = ">=1.5.1,<3.0.0"
