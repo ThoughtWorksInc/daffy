@@ -156,7 +156,7 @@ poetry shell
 pytest
 ```
 
-To enable linting on each commit, run `pre-commit install`. After that, your every commit will be checked with `isort`, `black` and `flake8`.
+To enable linting on each commit, run `pre-commit install`. After that, your every commit will be checked with `ruff` and `mypy`.
 
 ## License
 
