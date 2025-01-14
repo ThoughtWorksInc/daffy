@@ -164,6 +164,10 @@ MIT
 
 ## Changelog
 
+### 0.9.1
+
+- Add explicit `__all__` export for functions to make Mypy happy
+
 ### 0.9.0
 
 - Add marker (`py.typed`) to tell Mypy that the library has type annotations
