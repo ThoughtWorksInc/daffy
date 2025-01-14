@@ -180,6 +180,15 @@ def test_correct_named_input_with_columns_strict(df: DataFrameType) -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
+def test_correct_named_input_with_columns_strict_no_name(df: DataFrameType) -> None:
+    @df_in(columns=["Brand", "Price"], strict=True)
+    def test_fn(_df: DataFrameType) -> DataFrameType:
+        return _df
+
+    test_fn(_df=df)
+
+
+@pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
 def test_in_allow_extra_columns(df: DataFrameType) -> None:
     @df_in(name="_df", columns=["Brand"])
     def test_fn(my_input: Any, _df: DataFrameType) -> DataFrameType:

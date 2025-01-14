@@ -59,9 +59,11 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callab
 
 def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwargs: Any) -> DataFrameType:
     if not name:
-        if len(args) == 0:
-            return None
-        return args[0]
+        if len(args) > 0:
+            return args[0]
+        if kwargs:
+            return next(iter(kwargs.values()))
+        return None
 
     if name and (name not in kwargs):
         func_params_in_order = list(inspect.signature(func).parameters.keys())

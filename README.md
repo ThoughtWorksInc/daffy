@@ -164,6 +164,11 @@ MIT
 
 ## Changelog
 
+### 0.9.0
+
+- Add marker (`py.typed`) to tell Mypy that the library has type annotations
+- Fix bug when using `strict` parameter and no `name` parameter in `@df_in`
+
 ### 0.8.0
 
 - Support Polars DataFrames

@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "0.8.0"
+version = "0.9.0"
 description = "Function decorators for Pandas and Polars Dataframe column name and data type validation"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
@@ -28,6 +28,9 @@ classifiers = [
 include = [
     "LICENSE",
 ]
+
+[tool.poetry]
+include = ["daffy/py.typed"]
 
 [tool.poetry.dependencies]
 python = ">=3.9.0,<4.0.0"
