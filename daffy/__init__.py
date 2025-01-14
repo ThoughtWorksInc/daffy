@@ -6,8 +6,6 @@ annotate your functions so that they document themselves and that documentation 
 the input and output on runtime.
 """
 
-from .decorators import df_in
-from .decorators import df_log
-from .decorators import df_out
+from .decorators import df_in, df_log, df_out
 
 __all__ = ["df_in", "df_out", "df_log"]
