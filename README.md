@@ -164,7 +164,7 @@ MIT
 
 ## Changelog
 
-### 0.9.1
+### 0.9.2
 
 - Add explicit `__all__` export for functions to make Mypy happy
 
