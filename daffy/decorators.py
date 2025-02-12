@@ -13,19 +13,33 @@ DataFrameType = Union[pd.DataFrame, pl.DataFrame]
 
 
 def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None:
+    missing_columns = []
+    dtype_mismatches = []
+
     if isinstance(columns, list):
         for column in columns:
-            assert column in df.columns, f"Column {column} missing from DataFrame. Got {_describe_pd(df)}"
+            if column not in df.columns:
+                missing_columns.append(column)
     if isinstance(columns, dict):
         for column, dtype in columns.items():
-            assert column in df.columns, f"Column {column} missing from DataFrame. Got {_describe_pd(df)}"
-            assert df[column].dtype == dtype, (
-                f"Column {column} has wrong dtype. Was {df[column].dtype}, expected {dtype}"
-            )
-    if strict:
-        assert len(df.columns) == len(columns), (
-            f"DataFrame contained unexpected column(s): {', '.join(set(df.columns) - set(columns))}"
+            if column not in df.columns:
+                missing_columns.append(column)
+            elif df[column].dtype != dtype:
+                dtype_mismatches.append((column, df[column].dtype, dtype))
+
+    if missing_columns:
+        raise AssertionError(f"Missing columns: {missing_columns}. Got {_describe_pd(df)}")
+
+    if dtype_mismatches:
+        mismatches = ", ".join(
+            [f"Column {col} has wrong dtype. Was {was}, expected {expected}" for col, was, expected in dtype_mismatches]
         )
+        raise AssertionError(mismatches)
+
+    if strict:
+        extra_columns = set(df.columns) - set(columns)
+        if extra_columns:
+            raise AssertionError(f"DataFrame contained unexpected column(s): {', '.join(extra_columns)}")
 
 
 def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callable:

@@ -107,7 +107,7 @@ def test_missing_column_in_return(df: DataFrameType) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Column FooColumn missing" in str(excinfo.value)
+    assert "Missing columns: ['FooColumn']. Got columns: ['Brand', 'Price']" in str(excinfo.value)
 
 
 def test_wrong_input_type_unnamed() -> None:
@@ -255,7 +255,18 @@ def test_df_in_missing_column(df: DataFrameType) -> None:
 
     with pytest.raises(AssertionError) as excinfo:
         test_fn(df[["Brand"]])
-    assert "Column Price missing" in str(excinfo.value)
+    assert "Missing columns: ['Price']. Got columns: ['Brand']" in str(excinfo.value)
+
+
+@pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
+def test_df_in_missing_multiple_columns(df: DataFrameType) -> None:
+    @df_in(columns=["Brand", "Price", "Extra"])
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn(df[["Brand"]])
+    assert "Missing columns: ['Price', 'Extra']. Got columns: ['Brand']" in str(excinfo.value)
 
 
 def test_df_out_with_df_modification(basic_pandas_df: pd.DataFrame, extended_pandas_df: pd.DataFrame) -> None:
