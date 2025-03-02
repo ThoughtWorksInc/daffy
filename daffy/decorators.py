@@ -8,6 +8,8 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import pandas as pd
 import polars as pl
 
+from daffy.config import get_strict
+
 ColumnsDef = Union[List, Dict]
 DataFrameType = Union[pd.DataFrame, pl.DataFrame]
 
@@ -42,14 +44,15 @@ def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None
             raise AssertionError(f"DataFrame contained unexpected column(s): {', '.join(extra_columns)}")
 
 
-def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callable:
+def df_out(columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) -> Callable:
     """Decorate a function that returns a Pandas DataFrame.
 
     Document the return value of a function. The return value will be validated in runtime.
 
     Args:
         columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame. Defaults to None.
-        strict (bool, optional): If True, columns must match exactly with no extra columns. Defaults to False.
+        strict (bool, optional): If True, columns must match exactly with no extra columns.
+            If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
 
     Returns:
         Callable: Decorated function
@@ -63,7 +66,7 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callab
                 f"Wrong return type. Expected DataFrame, got {type(result)}"
             )
             if columns:
-                _check_columns(result, columns, strict)
+                _check_columns(result, columns, get_strict(strict))
             return result
 
         return wrapper
@@ -87,7 +90,7 @@ def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwa
     return kwargs[name]
 
 
-def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, strict: bool = False) -> Callable:
+def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) -> Callable:
     """Decorate a function parameter that is a Pandas DataFrame.
 
     Document the contents of an inpute parameter. The parameter will be validated in runtime.
@@ -95,7 +98,8 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
     Args:
         name (Optional[str], optional): Name of the parameter that contains a DataFrame. Defaults to None.
         columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame. Defaults to None.
-        strict (bool, optional): If True, columns must match exactly with no extra columns. Defaults to False.
+        strict (bool, optional): If True, columns must match exactly with no extra columns.
+            If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
 
     Returns:
         Callable: Decorated function
@@ -109,7 +113,7 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
                 f"Wrong parameter type. Expected DataFrame, got {type(df).__name__} instead."
             )
             if columns:
-                _check_columns(df, columns, strict)
+                _check_columns(df, columns, get_strict(strict))
             return func(*args, **kwargs)
 
         return wrapper
