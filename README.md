@@ -4,7 +4,7 @@
 ![test](https://github.com/fourkind/daffy/workflows/test/badge.svg)
 [![codecov](https://codecov.io/gh/vertti/daffy/graph/badge.svg?token=00OL75TW4W)](https://codecov.io/gh/vertti/daffy)
 
-## Description 
+## Description
 
 Working with DataFrames often means passing them through multiple transformation functions, making it easy to lose track of their structure over time. DAFFY adds runtime validation and documentation to your DataFrame operations through simple decorators. By declaring the expected columns and types in your function definitions, you can:
 
@@ -35,7 +35,7 @@ Install with your favorite Python dependency manager like
 pip install daffy
 ```
 
-## Usage 
+## Usage
 
 Start by importing the needed decorators:
 
@@ -185,6 +185,10 @@ MIT
 
 ## Changelog
 
+### 0.9.4
+
+- Fix to strict flag loading when tool config was missing
+
 ### 0.9.3
 
 - Add configuration system to set default strict mode in pyproject.toml
@@ -238,7 +242,7 @@ MIT
 
 ### 0.2.1
 
-- Added Pypi classifiers. 
+- Added Pypi classifiers.
 
 ### 0.2.0
 

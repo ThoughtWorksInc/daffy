@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "0.9.3"
+version = "0.9.4"
 description = "Function decorators for Pandas and Polars Dataframe column name and data type validation"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
