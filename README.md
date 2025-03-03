@@ -185,6 +185,11 @@ MIT
 
 ## Changelog
 
+### 0.9.3
+
+- Add configuration system to set default strict mode in pyproject.toml
+- Improve logging when multiple columns are missing
+
 ### 0.9.2
 
 - Add explicit `__all__` export for functions to make Mypy happy
