@@ -127,6 +127,27 @@ will, when `car_df` contains columns `["Brand", "Price"]` raise an error:
 AssertionError: DataFrame contained unexpected column(s): Price
 ```
 
+### Project-wide Configuration
+
+You can set the default value for strict mode at the project level by adding a `[tool.daffy]` section to your `pyproject.toml` file:
+
+```toml
+[tool.daffy]
+strict = true
+```
+
+When this configuration is present, all `@df_in` and `@df_out` decorators will use strict mode by default. You can still override this setting on individual decorators:
+
+```python
+# Uses strict=true from project config
+@df_in(columns=["Brand"])
+# Explicitly disable strict mode for this decorator
+@df_out(columns=["Brand", "FilteredPrice"], strict=False)
+def filter_cars(car_df):
+    # filter some cars
+    return filtered_cars_df
+```
+
 To quickly check what the incoming and outgoing dataframes contain, you can add a `@df_log` annotation to the function. For
 example adding `@df_log` to the above `filter_cars` function will product log lines:
 
