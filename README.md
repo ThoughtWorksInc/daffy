@@ -4,7 +4,7 @@
 ![test](https://github.com/fourkind/daffy/workflows/test/badge.svg)
 [![codecov](https://codecov.io/gh/vertti/daffy/graph/badge.svg?token=00OL75TW4W)](https://codecov.io/gh/vertti/daffy)
 
-## Description 
+## Description
 
 Working with DataFrames often means passing them through multiple transformation functions, making it easy to lose track of their structure over time. DAFFY adds runtime validation and documentation to your DataFrame operations through simple decorators. By declaring the expected columns and types in your function definitions, you can:
 
@@ -35,7 +35,7 @@ Install with your favorite Python dependency manager like
 pip install daffy
 ```
 
-## Usage 
+## Usage
 
 Start by importing the needed decorators:
 
@@ -127,6 +127,27 @@ will, when `car_df` contains columns `["Brand", "Price"]` raise an error:
 AssertionError: DataFrame contained unexpected column(s): Price
 ```
 
+### Project-wide Configuration
+
+You can set the default value for strict mode at the project level by adding a `[tool.daffy]` section to your `pyproject.toml` file:
+
+```toml
+[tool.daffy]
+strict = true
+```
+
+When this configuration is present, all `@df_in` and `@df_out` decorators will use strict mode by default. You can still override this setting on individual decorators:
+
+```python
+# Uses strict=true from project config
+@df_in(columns=["Brand"])
+# Explicitly disable strict mode for this decorator
+@df_out(columns=["Brand", "FilteredPrice"], strict=False)
+def filter_cars(car_df):
+    # filter some cars
+    return filtered_cars_df
+```
+
 To quickly check what the incoming and outgoing dataframes contain, you can add a `@df_log` annotation to the function. For
 example adding `@df_log` to the above `filter_cars` function will product log lines:
 
@@ -163,6 +184,15 @@ To enable linting on each commit, run `pre-commit install`. After that, your eve
 MIT
 
 ## Changelog
+
+### 0.9.4
+
+- Fix to strict flag loading when tool config was missing
+
+### 0.9.3
+
+- Add configuration system to set default strict mode in pyproject.toml
+- Improve logging when multiple columns are missing
 
 ### 0.9.2
 
@@ -212,7 +242,7 @@ MIT
 
 ### 0.2.1
 
-- Added Pypi classifiers. 
+- Added Pypi classifiers.
 
 ### 0.2.0
 
