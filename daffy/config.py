@@ -6,7 +6,7 @@ from typing import Optional
 import tomli
 
 
-def load_config():
+def load_config() -> dict:
     """
     Load daffy configuration from pyproject.toml.
 
@@ -36,7 +36,7 @@ def load_config():
         return default_config
 
 
-def find_config_file():
+def find_config_file() -> Optional[str]:
     """
     Find pyproject.toml in the user's project directory.
 
@@ -61,7 +61,7 @@ def find_config_file():
 _config_cache = None
 
 
-def get_config():
+def get_config() -> dict:
     """
     Get the daffy configuration, loading it if necessary.
 
@@ -86,4 +86,4 @@ def get_strict(strict_param: Optional[bool] = None) -> bool:
     """
     if strict_param is not None:
         return strict_param
-    return get_config()["strict"]
+    return bool(get_config()["strict"])
