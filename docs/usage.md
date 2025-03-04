@@ -63,6 +63,31 @@ def filter_cars(car_df):
     return filtered_cars_df
 ```
 
+## Column Pattern Matching with Regex
+
+You can use regex patterns to match column names that follow a specific pattern. This is useful when working with dynamic column names or when dealing with many similar columns.
+
+Define a regex pattern by using the format `"r/pattern/"`:
+
+```python
+@df_in(columns=["Brand", "r/Price_\d+/"])
+def process_data(df):
+    # This will accept DataFrames with columns like "Brand", "Price_1", "Price_2", etc.
+    ...
+```
+
+In this example:
+- The DataFrame must have a column named exactly "Brand"
+- The DataFrame must have at least one column matching the pattern "Price_\d+" (e.g., "Price_1", "Price_2", etc.)
+
+If no columns match a regex pattern, an error is raised:
+
+```
+AssertionError: Missing columns: ['r/Price_\d+/']. Got columns: ['Brand', 'Model']
+```
+
+Regex patterns are also considered in strict mode. Any column matching a regex pattern is considered valid.
+
 ## Data Type Validation
 
 If you want to also check the data types of each column, you can replace the column array:
@@ -82,6 +107,8 @@ This will not only check that the specified columns are found from the DataFrame
 ```
 AssertionError("Column Price has wrong dtype. Was int64, expected float64")
 ```
+
+> Note: Regex pattern matching is only available for column name lists, not for dictionaries specifying data types.
 
 ## Strict Mode
 

@@ -22,6 +22,7 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 ## Key Features
 
 - Validate DataFrame columns at function entry and exit points
+- Support regex patterns for matching column names (e.g., `"r/column_\d+/"`)
 - Check data types of columns
 - Control strictness of validation (allow or disallow extra columns)
 - Works with both Pandas and Polars DataFrames
