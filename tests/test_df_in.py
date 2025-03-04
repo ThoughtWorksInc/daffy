@@ -208,3 +208,50 @@ def test_multiple_named_inputs_with_some_of_names_in_function_call(
         return len(cars) + len(ext_cars)
 
     test_fn(basic_df, ext_cars=extended_df)
+
+
+def test_regex_column_pattern(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a DataFrame with numbered price columns
+    df = basic_pandas_df.copy()
+    df["Price_1"] = df["Price"] * 1
+    df["Price_2"] = df["Price"] * 2
+    df["Price_3"] = df["Price"] * 3
+
+    @df_in(columns=["Brand", "r/Price_[0-9]/"])
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    # This should pass since we have Price_1, Price_2, and Price_3 columns
+    result = test_fn(df)
+    assert "Price_1" in result.columns
+    assert "Price_2" in result.columns
+    assert "Price_3" in result.columns
+
+
+def test_regex_column_pattern_missing(basic_pandas_df: pd.DataFrame) -> None:
+    @df_in(columns=["Brand", "r/NonExistent_[0-9]/"])
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    # This should fail since we don't have any columns matching the pattern
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn(basic_pandas_df)
+
+    assert "Missing columns: ['r/NonExistent_[0-9]/']" in str(excinfo.value)
+
+
+def test_regex_column_pattern_with_strict(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a DataFrame with numbered price columns
+    df = basic_pandas_df.copy()
+    df["Price_1"] = df["Price"] * 1
+    df["Price_2"] = df["Price"] * 2
+
+    @df_in(columns=["Brand", "r/Price_[0-9]/"], strict=True)
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    # This should pass, because "Price" is unexpected but "Price_1" and "Price_2" match the regex
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn(df)
+
+    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)

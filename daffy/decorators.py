@@ -2,27 +2,73 @@
 
 import inspect
 import logging
+import re
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Pattern, Tuple, Union
 
 import pandas as pd
 import polars as pl
 
 from daffy.config import get_strict
 
-ColumnsDef = Union[List, Dict]
+# New type definition to support regex patterns
+RegexColumnDef = Tuple[str, Pattern]  # Tuple of (pattern_str, compiled_pattern)
+ColumnsDef = Union[List, Dict, List[Union[str, RegexColumnDef]]]
 DataFrameType = Union[pd.DataFrame, pl.DataFrame]
+
+
+def _is_regex_pattern(column: Any) -> bool:
+    """Check if the column definition is a regex pattern tuple."""
+    return (
+        isinstance(column, tuple) and len(column) == 2 and isinstance(column[0], str) and isinstance(column[1], Pattern)
+    )
+
+
+def _match_column_with_regex(column_pattern: RegexColumnDef, df_columns: List[str]) -> List[str]:
+    """Find all column names that match the regex pattern."""
+    _, pattern = column_pattern
+    return [col for col in df_columns if pattern.match(col)]
+
+
+def _compile_regex_patterns(columns: List) -> List:
+    """Compile regex patterns in the column list."""
+    result = []
+    for col in columns:
+        if isinstance(col, str) and col.startswith("r/") and col.endswith("/"):
+            # Pattern is in the format "r/pattern/"
+            pattern_str = col[2:-1]  # Remove "r/" prefix and "/" suffix
+            compiled_pattern = re.compile(pattern_str)
+            result.append((col, compiled_pattern))
+        else:
+            result.append(col)
+    return result
 
 
 def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None:
     missing_columns = []
     dtype_mismatches = []
+    matched_by_regex = set()
 
+    # Handle list of column names/patterns
     if isinstance(columns, list):
-        for column in columns:
-            if column not in df.columns:
-                missing_columns.append(column)
-    if isinstance(columns, dict):
+        # First, compile any regex patterns
+        processed_columns = _compile_regex_patterns(columns)
+
+        for column in processed_columns:
+            if isinstance(column, str):
+                # Direct column name match
+                if column not in df.columns:
+                    missing_columns.append(column)
+            elif _is_regex_pattern(column):
+                # Regex pattern match
+                matches = _match_column_with_regex(column, list(df.columns))
+                if not matches:
+                    missing_columns.append(column[0])  # Add the original pattern string
+                else:
+                    matched_by_regex.update(matches)
+
+    # Handle dictionary of column names/types
+    elif isinstance(columns, dict):
         for column, dtype in columns.items():
             if column not in df.columns:
                 missing_columns.append(column)
@@ -39,18 +85,26 @@ def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None
         raise AssertionError(mismatches)
 
     if strict:
-        extra_columns = set(df.columns) - set(columns)
+        if isinstance(columns, list):
+            # For regex matches, we need to consider all matched columns
+            explicit_columns = {col for col in columns if isinstance(col, str)}
+            allowed_columns = explicit_columns.union(matched_by_regex)
+            extra_columns = set(df.columns) - allowed_columns
+        else:
+            extra_columns = set(df.columns) - set(columns)
+
         if extra_columns:
             raise AssertionError(f"DataFrame contained unexpected column(s): {', '.join(extra_columns)}")
 
 
 def df_out(columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) -> Callable:
-    """Decorate a function that returns a Pandas DataFrame.
+    """Decorate a function that returns a Pandas or Polars DataFrame.
 
     Document the return value of a function. The return value will be validated in runtime.
 
     Args:
-        columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame. Defaults to None.
+        columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame.
+            List can contain regex patterns in format "r/pattern/" (e.g., "r/Col[0-9]+/"). Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
 
@@ -91,13 +145,14 @@ def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwa
 
 
 def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) -> Callable:
-    """Decorate a function parameter that is a Pandas DataFrame.
+    """Decorate a function parameter that is a Pandas or Polars DataFrame.
 
-    Document the contents of an inpute parameter. The parameter will be validated in runtime.
+    Document the contents of an input parameter. The parameter will be validated in runtime.
 
     Args:
         name (Optional[str], optional): Name of the parameter that contains a DataFrame. Defaults to None.
-        columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame. Defaults to None.
+        columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame.
+            List can contain regex patterns in format "r/pattern/" (e.g., "r/Col[0-9]+/"). Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
 
