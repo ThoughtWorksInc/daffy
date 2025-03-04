@@ -87,3 +87,44 @@ def test_df_out_with_df_modification(basic_pandas_df: pd.DataFrame, extended_pan
 
     assert list(basic_pandas_df.columns) == ["Brand", "Price"]  # For sanity
     pd.testing.assert_frame_equal(extended_pandas_df, test_fn(basic_pandas_df.copy()))
+
+
+def test_regex_column_pattern_in_output(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a function that adds numbered price columns
+    @df_out(columns=["Brand", "r/Price_[0-9]/"])
+    def test_fn() -> pd.DataFrame:
+        df = basic_pandas_df.copy()
+        df["Price_1"] = df["Price"] * 1
+        df["Price_2"] = df["Price"] * 2
+        return df
+
+    # This should pass since the output has Brand and Price_1, Price_2 columns
+    result = test_fn()
+    assert "Price_1" in result.columns
+    assert "Price_2" in result.columns
+
+
+def test_regex_column_pattern_missing_in_output(basic_pandas_df: pd.DataFrame) -> None:
+    @df_out(columns=["Brand", "r/NonExistent_[0-9]/"])
+    def test_fn() -> pd.DataFrame:
+        return basic_pandas_df.copy()
+
+    # This should fail since the output doesn't have columns matching the pattern
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn()
+
+    assert "Missing columns: ['r/NonExistent_[0-9]/']" in str(excinfo.value)
+
+
+def test_regex_column_pattern_with_strict_in_output(basic_pandas_df: pd.DataFrame) -> None:
+    @df_out(columns=["Brand", "r/Price_[0-9]/"], strict=True)
+    def test_fn() -> pd.DataFrame:
+        df = basic_pandas_df.copy()
+        df["Price_1"] = df["Price"] * 1
+        return df
+
+    # This should raise an error because Price is unexpected
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn()
+
+    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
