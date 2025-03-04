@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.10.0
+
+- Add support for regex patterns in column name validation
+
 ## 0.9.4
 
 - Fix to strict flag loading when tool config was missing
