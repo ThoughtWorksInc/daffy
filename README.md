@@ -1,4 +1,4 @@
-# DAFFY DataFrame Column Validator
+# Daffy - DataFrame Column Validator
 
 [![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
@@ -7,7 +7,7 @@
 
 ## Description
 
-Working with DataFrames often means passing them through multiple transformation functions, making it easy to lose track of their structure over time. DAFFY adds runtime validation and documentation to your DataFrame operations through simple decorators. By declaring the expected columns and types in your function definitions, you can:
+Working with DataFrames often means passing them through multiple transformation functions, making it easy to lose track of their structure over time. Daffy adds runtime validation and documentation to your DataFrame operations through simple decorators. By declaring the expected columns and types in your function definitions, you can:
 
 ```python
 @df_in(columns=["price", "bedrooms", "location"])
@@ -17,7 +17,7 @@ def analyze_housing(houses_df):
     return analyzed_df
 ```
 
-Like type hints for DataFrames, DAFFY helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Compatible with both Pandas and Polars.
+Like type hints for DataFrames, Daffy helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Compatible with both Pandas and Polars.
 
 ## Key Features
 
@@ -31,7 +31,7 @@ Like type hints for DataFrames, DAFFY helps you catch structural mismatches earl
 ## Documentation
 
 - [Usage Guide](docs/usage.md) - Detailed usage instructions
-- [Development Guide](docs/development.md) - Guide for contributing to DAFFY
+- [Development Guide](docs/development.md) - Guide for contributing to Daffy
 - [Changelog](CHANGELOG.md) - Version history and release notes
 
 ## Installation
@@ -47,8 +47,8 @@ pip install daffy
 ```python
 from daffy import df_in, df_out
 
-@df_in(columns=["Brand", "Price"])  # Validate input DataFrame
-@df_out(columns=["Brand", "Price", "Discount"])  # Validate output DataFrame
+@df_in(columns=["Brand", "Price"])  # Validate input DataFrame columns
+@df_out(columns=["Brand", "Price", "Discount"])  # Validate output DataFrame columns
 def apply_discount(cars_df):
     cars_df = cars_df.copy()
     cars_df["Discount"] = cars_df["Price"] * 0.1
