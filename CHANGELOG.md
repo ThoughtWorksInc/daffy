@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.10.1
+
+- Built and published with UV. No functional changes
+
 ## 0.10.0
 
 - Add support for regex patterns in column name validation
