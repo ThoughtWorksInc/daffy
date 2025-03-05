@@ -1,3 +1,4 @@
 [tools]
 node = "latest"
 poetry = "latest"
+uv = "latest"

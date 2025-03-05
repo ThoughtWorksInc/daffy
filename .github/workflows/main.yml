@@ -18,29 +18,28 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: false
-
-      - name: Install dependencies
+      - name: Install uv
         run: |
-          poetry install
+          pip install uv
+
+      - name: Create virtual environment and install dependencies
+        run: |
+          uv sync
 
       - name: Lint with Ruff and Mypy
         run: |
-          poetry run ruff check --output-format=github .
-          poetry run ruff format --diff
-          poetry run mypy .
+          uv run ruff check --output-format=github .
+          uv run ruff format --diff
+          uv run mypy .
 
       - name: Test with pytest
         run: |
-          poetry run pytest --cov --cov-report=xml tests/
+          uv run pytest --cov --cov-report=xml tests/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
