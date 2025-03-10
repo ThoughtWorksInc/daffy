@@ -16,7 +16,7 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 # Improved type definitions to support regex patterns
-RegexColumnDef = Tuple[str, Pattern]  # Tuple of (pattern_str, compiled_pattern)
+RegexColumnDef = Tuple[str, Pattern[str]]  # Tuple of (pattern_str, compiled_pattern)
 ColumnsDef = Union[List[Union[str, RegexColumnDef]], Dict[str, Any]]
 DataFrameType = Union[pd.DataFrame, pl.DataFrame]
 
@@ -34,9 +34,9 @@ def _match_column_with_regex(column_pattern: RegexColumnDef, df_columns: List[st
     return [col for col in df_columns if pattern.match(col)]
 
 
-def _compile_regex_patterns(columns: List) -> List:
+def _compile_regex_patterns(columns: List[Any]) -> List[Union[str, RegexColumnDef]]:
     """Compile regex patterns in the column list."""
-    result = []
+    result: List[Union[str, RegexColumnDef]] = []
     for col in columns:
         if isinstance(col, str) and col.startswith("r/") and col.endswith("/"):
             # Pattern is in the format "r/pattern/"
@@ -134,7 +134,7 @@ def df_out(
     return wrapper_df_out
 
 
-def _get_parameter(func: Callable, name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
+def _get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
     if not name:
         if len(args) > 0:
             return args[0]

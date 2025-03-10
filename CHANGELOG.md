@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 - Update function parameter types for better type safety
 - Fix missing return statement in df_log decorator
+- Added stricter mypy type checking settings
 
 ## 0.10.1
 
