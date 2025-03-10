@@ -28,6 +28,7 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 - Works with both Pandas and Polars DataFrames
 - Project-wide configuration via pyproject.toml
 - Integrated logging for DataFrame structure inspection
+- Enhanced type annotations for improved IDE and type checker support
 
 ## Documentation
 

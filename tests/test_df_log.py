@@ -60,7 +60,7 @@ def test_log_df_with_dtypes(basic_pandas_df: pd.DataFrame, mocker: MockerFixture
 
 def test_log_df_with_dtypes_polars(basic_polars_df: pl.DataFrame, mocker: MockerFixture) -> None:
     @df_log(include_dtypes=True)
-    def test_fn(foo_df: pd.DataFrame) -> pd.DataFrame:
+    def test_fn(foo_df: pl.DataFrame) -> pl.DataFrame:
         return basic_polars_df
 
     mock_log = mocker.patch("daffy.decorators.logging.log")

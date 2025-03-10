@@ -1,12 +1,12 @@
 """Configuration handling for DAFFY."""
 
 import os
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import tomli
 
 
-def load_config() -> dict:
+def load_config() -> Dict[str, Any]:
     """
     Load daffy configuration from pyproject.toml.
 
@@ -61,7 +61,7 @@ def find_config_file() -> Optional[str]:
 _config_cache = None
 
 
-def get_config() -> dict:
+def get_config() -> Dict[str, Any]:
     """
     Get the daffy configuration, loading it if necessary.
 
