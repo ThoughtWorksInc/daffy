@@ -9,7 +9,7 @@ from tests.conftest import DataFrameType, cars
 
 
 def test_wrong_return_type() -> None:
-    @df_out()
+    @df_out()  # type: ignore[arg-type]
     def test_fn() -> int:
         return 1
 
@@ -86,7 +86,10 @@ def test_df_out_with_df_modification(basic_pandas_df: pd.DataFrame, extended_pan
         return my_input
 
     assert list(basic_pandas_df.columns) == ["Brand", "Price"]  # For sanity
-    pd.testing.assert_frame_equal(extended_pandas_df, test_fn(basic_pandas_df.copy()))
+    result = test_fn(basic_pandas_df.copy())
+    # Type check to ensure we get a pandas DataFrame before comparing
+    assert isinstance(result, pd.DataFrame)
+    pd.testing.assert_frame_equal(extended_pandas_df, result)
 
 
 def test_regex_column_pattern_in_output(basic_pandas_df: pd.DataFrame) -> None:
