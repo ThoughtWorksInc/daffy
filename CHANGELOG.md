@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.11.0
+
+- Update function parameter types for better type safety
+- Fix missing return statement in df_log decorator
+
 ## 0.10.1
 
 - Built and published with UV. No functional changes
