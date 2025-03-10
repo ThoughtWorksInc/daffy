@@ -4,16 +4,20 @@ import inspect
 import logging
 import re
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Pattern, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Pattern, Tuple, TypeVar, Union
 
 import pandas as pd
 import polars as pl
 
 from daffy.config import get_strict
 
-# New type definition to support regex patterns
+# Type variables for preserving return types
+T = TypeVar("T")
+R = TypeVar("R")
+
+# Improved type definitions to support regex patterns
 RegexColumnDef = Tuple[str, Pattern]  # Tuple of (pattern_str, compiled_pattern)
-ColumnsDef = Union[List, Dict, List[Union[str, RegexColumnDef]]]
+ColumnsDef = Union[List[Union[str, RegexColumnDef]], Dict[str, Any]]
 DataFrameType = Union[pd.DataFrame, pl.DataFrame]
 
 
@@ -97,7 +101,9 @@ def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None
             raise AssertionError(f"DataFrame contained unexpected column(s): {', '.join(extra_columns)}")
 
 
-def df_out(columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) -> Callable:
+def df_out(
+    columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None
+) -> Callable[[Callable[..., DataFrameType]], Callable[..., DataFrameType]]:
     """Decorate a function that returns a Pandas or Polars DataFrame.
 
     Document the return value of a function. The return value will be validated in runtime.
@@ -109,12 +115,12 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) 
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
 
     Returns:
-        Callable: Decorated function
+        Callable: Decorated function with preserved DataFrame return type
     """
 
-    def wrapper_df_out(func: Callable) -> Callable:
+    def wrapper_df_out(func: Callable[..., DataFrameType]) -> Callable[..., DataFrameType]:
         @wraps(func)
-        def wrapper(*args: str, **kwargs: Any) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> DataFrameType:
             result = func(*args, **kwargs)
             assert isinstance(result, pd.DataFrame) or isinstance(result, pl.DataFrame), (
                 f"Wrong return type. Expected DataFrame, got {type(result)}"
@@ -128,7 +134,7 @@ def df_out(columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) 
     return wrapper_df_out
 
 
-def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwargs: Any) -> DataFrameType:
+def _get_parameter(func: Callable, name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
     if not name:
         if len(args) > 0:
             return args[0]
@@ -144,7 +150,9 @@ def _get_parameter(func: Callable, name: Optional[str] = None, *args: str, **kwa
     return kwargs[name]
 
 
-def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None) -> Callable:
+def df_in(
+    name: Optional[str] = None, columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None
+) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """Decorate a function parameter that is a Pandas or Polars DataFrame.
 
     Document the contents of an input parameter. The parameter will be validated in runtime.
@@ -157,12 +165,12 @@ def df_in(name: Optional[str] = None, columns: Optional[ColumnsDef] = None, stri
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
 
     Returns:
-        Callable: Decorated function
+        Callable: Decorated function with preserved return type
     """
 
-    def wrapper_df_in(func: Callable) -> Callable:
+    def wrapper_df_in(func: Callable[..., R]) -> Callable[..., R]:
         @wraps(func)
-        def wrapper(*args: str, **kwargs: Any) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> R:
             df = _get_parameter(func, name, *args, **kwargs)
             assert isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame), (
                 f"Wrong parameter type. Expected DataFrame, got {type(df).__name__} instead."
@@ -203,7 +211,7 @@ def _log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> No
         )
 
 
-def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable:
+def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorate a function that consumes or produces a Pandas DataFrame or both.
 
     Logs the columns of the consumed and/or produced DataFrame.
@@ -213,15 +221,16 @@ def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable
         include_dtypes (bool, optional): When set to True, will log also the dtypes of each column. Defaults to False.
 
     Returns:
-        Callable: Decorated function.
+        Callable: Decorated function with preserved return type.
     """
 
-    def wrapper_df_log(func: Callable) -> Callable:
+    def wrapper_df_log(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
-        def wrapper(*args: str, **kwargs: Any) -> Any:
+        def wrapper(*args: Any, **kwargs: Any) -> T:
             _log_input(level, func.__name__, _get_parameter(func, None, *args, **kwargs), include_dtypes)
             result = func(*args, **kwargs)
             _log_output(level, func.__name__, result, include_dtypes)
+            return result  # Added missing return statement
 
         return wrapper
 
