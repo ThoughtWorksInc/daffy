@@ -9,16 +9,21 @@ from typing import Any, Callable, Dict, List, Optional, Pattern, Tuple, TypeVar,
 import pandas as pd
 import polars as pl
 
+# Import fully qualified types to satisfy disallow_any_unimported
+from pandas import DataFrame as PandasDataFrame
+from polars import DataFrame as PolarsDataFrame
+
 from daffy.config import get_strict
 
 # Type variables for preserving return types
 T = TypeVar("T")
 R = TypeVar("R")
 
+
 # Improved type definitions to support regex patterns
 RegexColumnDef = Tuple[str, Pattern[str]]  # Tuple of (pattern_str, compiled_pattern)
 ColumnsDef = Union[List[Union[str, RegexColumnDef]], Dict[str, Any]]
-DataFrameType = Union[pd.DataFrame, pl.DataFrame]
+DataFrameType = Union[PandasDataFrame, PolarsDataFrame]
 
 
 def _is_regex_pattern(column: Any) -> bool:
