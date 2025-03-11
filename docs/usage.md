@@ -108,7 +108,26 @@ This will not only check that the specified columns are found from the DataFrame
 AssertionError("Column Price has wrong dtype. Was int64, expected float64")
 ```
 
-> Note: Regex pattern matching is only available for column name lists, not for dictionaries specifying data types.
+### Combining Regex Patterns with Data Type Validation
+
+You can use regex patterns in dictionaries that specify data types as well:
+
+```python
+@df_in(columns={"Brand": "object", "r/Price_\d+/": "int64"})
+def process_data(df):
+    # This will check that all columns matching "Price_\d+" have int64 dtype
+    ...
+```
+
+In this example:
+- The DataFrame must have a column named exactly "Brand" with dtype "object"
+- Any columns matching the pattern "Price_\d+" (e.g., "Price_1", "Price_2") must have dtype "int64"
+
+If a column matches the regex pattern but has the wrong dtype, an error is raised:
+
+```
+AssertionError: Column Price_2 has wrong dtype. Was float64, expected int64
+```
 
 ## Strict Mode
 
