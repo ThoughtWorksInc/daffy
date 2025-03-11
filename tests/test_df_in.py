@@ -255,3 +255,51 @@ def test_regex_column_pattern_with_strict(basic_pandas_df: pd.DataFrame) -> None
         test_fn(df)
 
     assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+
+
+def test_regex_column_with_dtype_pandas(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a DataFrame with numbered price columns
+    df = basic_pandas_df.copy()
+    df["Price_1"] = df["Price"] * 1
+    df["Price_2"] = df["Price"] * 2
+
+    @df_in(columns={"Brand": "object", "r/Price_[0-9]/": "int64"})
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    # This should pass since Price_1 and Price_2 are int64
+    result = test_fn(df)
+    assert "Price_1" in result.columns
+    assert "Price_2" in result.columns
+
+
+def test_regex_column_with_dtype_mismatch_pandas(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a DataFrame with numbered price columns
+    df = basic_pandas_df.copy()
+    df["Price_1"] = df["Price"] * 1
+    df["Price_2"] = df["Price"] * 2.0  # Make this a float
+
+    @df_in(columns={"Brand": "object", "r/Price_[0-9]/": "int64"})
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    # This should fail since Price_2 is float64, not int64
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn(df)
+
+    assert "Column Price_2 has wrong dtype. Was float64, expected int64" in str(excinfo.value)
+
+
+def test_regex_column_with_dtype_polars(basic_polars_df: pl.DataFrame) -> None:
+    # Create a DataFrame with numbered price columns
+    # Polars DataFrames are immutable, so we don't need to copy
+    df = basic_polars_df.with_columns([pl.col("Price").alias("Price_1"), pl.col("Price").alias("Price_2")])
+
+    @df_in(columns={"Brand": pl.datatypes.String, "r/Price_[0-9]/": pl.datatypes.Int64})
+    def test_fn(my_input: Any) -> Any:
+        return my_input
+
+    # This should pass since Price_1 and Price_2 are Int64
+    result = test_fn(df)
+    assert "Price_1" in result.columns
+    assert "Price_2" in result.columns

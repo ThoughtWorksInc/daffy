@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.12.0
+
+- Add support for regex patterns used with column dtype validation
+
 ## 0.11.0
 
 - Update function parameter types for better type safety

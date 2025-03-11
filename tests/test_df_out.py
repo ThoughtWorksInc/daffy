@@ -131,3 +131,63 @@ def test_regex_column_pattern_with_strict_in_output(basic_pandas_df: pd.DataFram
         test_fn()
 
     assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+
+
+def test_regex_column_with_dtype_in_output_pandas(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a function that adds numbered price columns
+    @df_out(columns={"Brand": "object", "r/Price_[0-9]/": "int64"})
+    def test_fn() -> pd.DataFrame:
+        df = basic_pandas_df.copy()
+        df["Price_1"] = df["Price"] * 1
+        df["Price_2"] = df["Price"] * 2
+        return df
+
+    # This should pass since Price_1 and Price_2 are int64
+    result = test_fn()
+    assert "Price_1" in result.columns
+    assert "Price_2" in result.columns
+
+
+def test_regex_column_with_dtype_mismatch_in_output_pandas(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a function that adds numbered price columns with one wrong dtype
+    @df_out(columns={"Brand": "object", "r/Price_[0-9]/": "int64"})
+    def test_fn() -> pd.DataFrame:
+        df = basic_pandas_df.copy()
+        df["Price_1"] = df["Price"] * 1
+        df["Price_2"] = df["Price"] * 2.0  # Make this a float
+        return df
+
+    # This should fail since Price_2 is float64, not int64
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn()
+
+    assert "Column Price_2 has wrong dtype. Was float64, expected int64" in str(excinfo.value)
+
+
+def test_regex_column_with_dtype_in_output_polars(basic_polars_df: pl.DataFrame) -> None:
+    # Create a function that adds numbered price columns
+    @df_out(columns={"Brand": pl.datatypes.String, "r/Price_[0-9]/": pl.datatypes.Int64})
+    def test_fn() -> pl.DataFrame:
+        # Polars DataFrames are immutable, so we build a new one
+        return basic_polars_df.with_columns([pl.col("Price").alias("Price_1"), pl.col("Price").alias("Price_2")])
+
+    # This should pass since Price_1 and Price_2 are Int64
+    result = test_fn()
+    assert "Price_1" in result.columns
+    assert "Price_2" in result.columns
+
+
+def test_regex_column_with_dtype_strict_in_output_pandas(basic_pandas_df: pd.DataFrame) -> None:
+    # Create a function that adds numbered price columns
+    @df_out(columns={"Brand": "object", "r/Price_[0-9]/": "int64"}, strict=True)
+    def test_fn() -> pd.DataFrame:
+        df = basic_pandas_df.copy()
+        df["Price_1"] = df["Price"] * 1
+        df["Price_2"] = df["Price"] * 2
+        return df
+
+    # This should fail because Price is unexpected
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn()
+
+    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
