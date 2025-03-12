@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.13.0
+
+- Fix type annotation issues with decorator parameters that could cause type errors in strict type checking
+- Use `Sequence` instead of `List` for better type variance compatibility
+- Add test case that validates type compatibility
+
 ## 0.12.0
 
 - Add support for regex patterns used with column dtype validation
