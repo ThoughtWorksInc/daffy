@@ -9,7 +9,7 @@ from tests.conftest import DataFrameType, cars
 
 
 def test_wrong_return_type() -> None:
-    @df_out()  # type: ignore[arg-type]
+    @df_out()  # type: ignore[type-var]
     def test_fn() -> int:
         return 1
 
