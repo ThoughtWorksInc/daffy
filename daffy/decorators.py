@@ -5,6 +5,7 @@ import logging
 import re
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Pattern, Tuple, TypeVar, Union
+from typing import Sequence as Seq  # Renamed to avoid collision
 
 import pandas as pd
 import polars as pl
@@ -16,30 +17,30 @@ from polars import DataFrame as PolarsDataFrame
 from daffy.config import get_strict
 
 # Type variables for preserving return types
-T = TypeVar("T")
-R = TypeVar("R")
+T = TypeVar("T")  # Generic type var for df_log
+DF = TypeVar("DF", bound=Union[PandasDataFrame, PolarsDataFrame])
+R = TypeVar("R")  # Return type for df_in
 
+RegexColumnDef = Tuple[str, Pattern[str]]
 
-# Improved type definitions to support regex patterns
-RegexColumnDef = Tuple[str, Pattern[str]]  # Tuple of (pattern_str, compiled_pattern)
-ColumnsDef = Union[List[Union[str, RegexColumnDef]], Dict[Union[str, RegexColumnDef], Any]]
+ColumnsList = Seq[Union[str, RegexColumnDef]]
+ColumnsDict = Dict[Union[str, RegexColumnDef], Any]
+ColumnsDef = Union[ColumnsList, ColumnsDict, None]
 DataFrameType = Union[PandasDataFrame, PolarsDataFrame]
 
 
 def _is_regex_pattern(column: Any) -> bool:
-    """Check if the column definition is a regex pattern tuple."""
     return (
         isinstance(column, tuple) and len(column) == 2 and isinstance(column[0], str) and isinstance(column[1], Pattern)
     )
 
 
 def _match_column_with_regex(column_pattern: RegexColumnDef, df_columns: List[str]) -> List[str]:
-    """Find all column names that match the regex pattern."""
     _, pattern = column_pattern
     return [col for col in df_columns if pattern.match(col)]
 
 
-def _compile_regex_patterns(columns: List[Any]) -> List[Union[str, RegexColumnDef]]:
+def _compile_regex_patterns(columns: Seq[Any]) -> List[Union[str, RegexColumnDef]]:
     """Compile regex patterns in the column list."""
     result: List[Union[str, RegexColumnDef]] = []
     for col in columns:
@@ -53,7 +54,7 @@ def _compile_regex_patterns(columns: List[Any]) -> List[Union[str, RegexColumnDe
     return result
 
 
-def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None:
+def _check_columns(df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], strict: bool) -> None:
     missing_columns = []
     dtype_mismatches = []
     matched_by_regex = set()
@@ -137,15 +138,16 @@ def _check_columns(df: DataFrameType, columns: ColumnsDef, strict: bool) -> None
 
 
 def df_out(
-    columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None
-) -> Callable[[Callable[..., DataFrameType]], Callable[..., DataFrameType]]:
+    columns: Union[ColumnsList, ColumnsDict, None] = None, strict: Optional[bool] = None
+) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
     """Decorate a function that returns a Pandas or Polars DataFrame.
 
     Document the return value of a function. The return value will be validated in runtime.
 
     Args:
-        columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame.
-            List can contain regex patterns in format "r/pattern/" (e.g., "r/Col[0-9]+/").
+        columns (Union[Sequence[str], Dict[str, Any]], optional): Sequence or dict that describes expected columns
+            of the DataFrame.
+            Sequence can contain regex patterns in format "r/pattern/" (e.g., "r/Col[0-9]+/").
             Dict can use regex patterns as keys in format "r/pattern/" to validate dtypes for matching columns.
             Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
@@ -155,9 +157,9 @@ def df_out(
         Callable: Decorated function with preserved DataFrame return type
     """
 
-    def wrapper_df_out(func: Callable[..., DataFrameType]) -> Callable[..., DataFrameType]:
+    def wrapper_df_out(func: Callable[..., DF]) -> Callable[..., DF]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> DataFrameType:
+        def wrapper(*args: Any, **kwargs: Any) -> DF:
             result = func(*args, **kwargs)
             assert isinstance(result, pd.DataFrame) or isinstance(result, pl.DataFrame), (
                 f"Wrong return type. Expected DataFrame, got {type(result)}"
@@ -188,7 +190,7 @@ def _get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: 
 
 
 def df_in(
-    name: Optional[str] = None, columns: Optional[ColumnsDef] = None, strict: Optional[bool] = None
+    name: Optional[str] = None, columns: Union[ColumnsList, ColumnsDict, None] = None, strict: Optional[bool] = None
 ) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """Decorate a function parameter that is a Pandas or Polars DataFrame.
 
@@ -196,8 +198,9 @@ def df_in(
 
     Args:
         name (Optional[str], optional): Name of the parameter that contains a DataFrame. Defaults to None.
-        columns (ColumnsDef, optional): List or dict that describes expected columns of the DataFrame.
-            List can contain regex patterns in format "r/pattern/" (e.g., "r/Col[0-9]+/").
+        columns (Union[Sequence[str], Dict[str, Any]], optional): Sequence or dict that describes expected columns
+            of the DataFrame.
+            Sequence can contain regex patterns in format "r/pattern/" (e.g., "r/Col[0-9]+/").
             Dict can use regex patterns as keys in format "r/pattern/" to validate dtypes for matching columns.
             Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
