@@ -32,9 +32,9 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 
 ## Documentation
 
-- [Usage Guide](docs/usage.md) - Detailed usage instructions
-- [Development Guide](docs/development.md) - Guide for contributing to Daffy
-- [Changelog](CHANGELOG.md) - Version history and release notes
+- [Usage Guide](https://github.com/ThoughtWorksInc/daffy/blob/master/docs/usage.md) - Detailed usage instructions
+- [Development Guide](https://github.com/ThoughtWorksInc/daffy/blob/master/docs/development.md) - Guide for contributing to Daffy
+- [Changelog](https://github.com/ThoughtWorksInc/daffy/blob/master/CHANGELOG.md) - Version history and release notes
 
 ## Installation
 

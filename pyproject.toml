@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "0.13.1"
+version = "0.13.2"
 description = "Function decorators for Pandas and Polars Dataframe column name and data type validation"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
@@ -8,9 +8,6 @@ authors = [
 license = "MIT"
 requires-python = ">=3.9"
 readme = "README.md"
-homepage = "https://github.com/ThoughtWorksInc/daffy"
-repository = "https://github.com/ThoughtWorksInc/daffy.git"
-documentation = "https://github.com/ThoughtWorksInc/daffy/blob/master/README.md"
 keywords = ["pandas", "dataframe", "typing", "validation"]
 classifiers = [
     "Operating System :: OS Independent",
@@ -32,6 +29,11 @@ dependencies = [
     "polars>=1.7.0",
     "tomli>=2.0.0",
 ]
+
+[project.urls]
+homepage = "https://github.com/ThoughtWorksInc/daffy"
+repository = "https://github.com/ThoughtWorksInc/daffy.git"
+documentation = "https://github.com/ThoughtWorksInc/daffy/blob/master/README.md"
 
 [dependency-groups]
 dev = [
