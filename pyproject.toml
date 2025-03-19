@@ -42,7 +42,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "coverage[toml]>=7.3.2",
     "pydocstyle>=6.3.0",
-    "ruff>=0.9.1",
+    "ruff>=0.11.0",
     "pandas-stubs>=2.2.2.240807",
 ]
 
