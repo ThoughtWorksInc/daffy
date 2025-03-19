@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.13.1
+
+- Update documentation
+- Update dependencies
+
 ## 0.13.0
 
 - Fix type annotation issues with decorator parameters that could cause type errors in strict type checking
