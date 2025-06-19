@@ -61,56 +61,44 @@ def _check_columns(
     dtype_mismatches = []
     matched_by_regex = set()
 
-    # Handle list of column names/patterns
     if isinstance(columns, list):
-        # First, compile any regex patterns
         processed_columns = _compile_regex_patterns(columns)
-
         for column in processed_columns:
             if isinstance(column, str):
-                # Direct column name match
                 if column not in df.columns:
                     missing_columns.append(column)
             elif _is_regex_pattern(column):
-                # Regex pattern match
                 matches = _match_column_with_regex(column, list(df.columns))
                 if not matches:
-                    missing_columns.append(column[0])  # Add the original pattern string
+                    missing_columns.append(column[0])
                 else:
                     matched_by_regex.update(matches)
 
-    # Handle dictionary of column names/types
-    elif isinstance(columns, dict):
-        # First, process dictionary keys for regex patterns
+    else:  # isinstance(columns, dict)
+        assert isinstance(columns, dict)  # Type narrowing for mypy
         processed_dict: Dict[Union[str, RegexColumnDef], Any] = {}
         for column, dtype in columns.items():
             if isinstance(column, str) and column.startswith("r/") and column.endswith("/"):
-                # Pattern is in the format "r/pattern/"
-                pattern_str = column[2:-1]  # Remove "r/" prefix and "/" suffix
+                pattern_str = column[2:-1]
                 compiled_pattern = re.compile(pattern_str)
                 processed_dict[(column, compiled_pattern)] = dtype
             else:
                 processed_dict[column] = dtype
 
-        # Check each column against dictionary keys
-        regex_matched_columns = set()
         for column_key, dtype in processed_dict.items():
             if isinstance(column_key, str):
-                # Direct column name match
                 if column_key not in df.columns:
                     missing_columns.append(column_key)
                 elif df[column_key].dtype != dtype:
                     dtype_mismatches.append((column_key, df[column_key].dtype, dtype))
             elif _is_regex_pattern(column_key):
-                # Regex pattern match
                 pattern_str, compiled_pattern = column_key
                 matches = _match_column_with_regex(column_key, list(df.columns))
                 if not matches:
-                    missing_columns.append(pattern_str)  # Add the original pattern string
+                    missing_columns.append(pattern_str)
                 else:
                     for matched_col in matches:
                         matched_by_regex.add(matched_col)
-                        regex_matched_columns.add(matched_col)
                         if df[matched_col].dtype != dtype:
                             dtype_mismatches.append((matched_col, df[matched_col].dtype, dtype))
 
