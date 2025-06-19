@@ -35,20 +35,31 @@ def _is_regex_pattern(column: Any) -> bool:
     )
 
 
+def _assert_is_dataframe(obj: Any, context: str) -> None:
+    if not isinstance(obj, (pd.DataFrame, pl.DataFrame)):
+        raise AssertionError(f"Wrong {context}. Expected DataFrame, got {type(obj).__name__} instead.")
+
+
 def _match_column_with_regex(column_pattern: RegexColumnDef, df_columns: List[str]) -> List[str]:
     _, pattern = column_pattern
     return [col for col in df_columns if pattern.match(col)]
 
 
+def _compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
+    pattern_str = pattern_string[2:-1]
+    compiled_pattern = re.compile(pattern_str)
+    return (pattern_string, compiled_pattern)
+
+
+def _is_regex_string(column: str) -> bool:
+    return column.startswith("r/") and column.endswith("/")
+
+
 def _compile_regex_patterns(columns: Seq[Any]) -> List[Union[str, RegexColumnDef]]:
-    """Compile regex patterns in the column list."""
     result: List[Union[str, RegexColumnDef]] = []
     for col in columns:
-        if isinstance(col, str) and col.startswith("r/") and col.endswith("/"):
-            # Pattern is in the format "r/pattern/"
-            pattern_str = col[2:-1]  # Remove "r/" prefix and "/" suffix
-            compiled_pattern = re.compile(pattern_str)
-            result.append((col, compiled_pattern))
+        if isinstance(col, str) and _is_regex_string(col):
+            result.append(_compile_regex_pattern(col))
         else:
             result.append(col)
     return result
@@ -75,13 +86,11 @@ def _check_columns(
                     matched_by_regex.update(matches)
 
     else:  # isinstance(columns, dict)
-        assert isinstance(columns, dict)  # Type narrowing for mypy
+        assert isinstance(columns, dict)
         processed_dict: Dict[Union[str, RegexColumnDef], Any] = {}
         for column, dtype in columns.items():
-            if isinstance(column, str) and column.startswith("r/") and column.endswith("/"):
-                pattern_str = column[2:-1]
-                compiled_pattern = re.compile(pattern_str)
-                processed_dict[(column, compiled_pattern)] = dtype
+            if isinstance(column, str) and _is_regex_string(column):
+                processed_dict[_compile_regex_pattern(column)] = dtype
             else:
                 processed_dict[column] = dtype
 
@@ -117,16 +126,9 @@ def _check_columns(
         raise AssertionError(mismatches)
 
     if strict:
-        if isinstance(columns, list):
-            # For regex matches, we need to consider all matched columns
-            explicit_columns = {col for col in columns if isinstance(col, str)}
-            allowed_columns = explicit_columns.union(matched_by_regex)
-            extra_columns = set(df.columns) - allowed_columns
-        else:
-            # For dict with regex patterns, we need to handle both direct and regex matches
-            explicit_columns = {col for col in columns if isinstance(col, str)}
-            allowed_columns = explicit_columns.union(matched_by_regex)
-            extra_columns = set(df.columns) - allowed_columns
+        explicit_columns = {col for col in columns if isinstance(col, str)}
+        allowed_columns = explicit_columns.union(matched_by_regex)
+        extra_columns = set(df.columns) - allowed_columns
 
         if extra_columns:
             param_info = f" in parameter '{param_name}'" if param_name else ""
@@ -157,9 +159,7 @@ def df_out(
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> DF:
             result = func(*args, **kwargs)
-            assert isinstance(result, pd.DataFrame) or isinstance(result, pl.DataFrame), (
-                f"Wrong return type. Expected DataFrame, got {type(result)}"
-            )
+            _assert_is_dataframe(result, "return type")
             if columns:
                 _check_columns(result, columns, get_strict(strict))
             return result
@@ -177,7 +177,7 @@ def _get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: 
             return next(iter(kwargs.values()))
         return None
 
-    if name and (name not in kwargs):
+    if name not in kwargs:
         func_params_in_order = list(inspect.signature(func).parameters.keys())
         parameter_location = func_params_in_order.index(name)
         return args[parameter_location]
@@ -230,9 +230,7 @@ def df_in(
         def wrapper(*args: Any, **kwargs: Any) -> R:
             df = _get_parameter(func, name, *args, **kwargs)
             param_name = _get_parameter_name(func, name, *args, **kwargs)
-            assert isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame), (
-                f"Wrong parameter type. Expected DataFrame, got {type(df).__name__} instead."
-            )
+            _assert_is_dataframe(df, "parameter type")
             if columns:
                 _check_columns(df, columns, get_strict(strict), param_name)
             return func(*args, **kwargs)
@@ -248,7 +246,7 @@ def _describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
         if isinstance(df, pd.DataFrame):
             readable_dtypes = [dtype.name for dtype in df.dtypes]
             result += f" with dtypes {readable_dtypes}"
-        if isinstance(df, pl.DataFrame):
+        else:
             result += f" with dtypes {df.dtypes}"
     return result
 
