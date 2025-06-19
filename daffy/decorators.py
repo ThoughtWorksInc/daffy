@@ -208,8 +208,7 @@ def _get_parameter_name(
     if len(args) > 0:
         # Get the first parameter name from the function signature
         func_params_in_order = list(inspect.signature(func).parameters.keys())
-        if func_params_in_order:
-            return func_params_in_order[0]
+        return func_params_in_order[0]
     elif kwargs:
         # Return the first keyword argument name
         return next(iter(kwargs.keys()))
