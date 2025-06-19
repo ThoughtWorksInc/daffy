@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.14.1
+
+- Internal code quality improvements
+
 ## 0.14.0
 
 - Improve df_in error messages to include parameter names
