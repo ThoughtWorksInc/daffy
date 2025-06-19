@@ -4,7 +4,7 @@ import inspect
 import logging
 import re
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Pattern, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Pattern, Set, Tuple, TypeVar, Union
 from typing import Sequence as Seq  # Renamed to avoid collision
 
 import pandas as pd
@@ -40,6 +40,38 @@ def _assert_is_dataframe(obj: Any, context: str) -> None:
         raise AssertionError(f"Wrong {context}. Expected DataFrame, got {type(obj).__name__} instead.")
 
 
+def _make_param_info(param_name: Optional[str]) -> str:
+    return f" in parameter '{param_name}'" if param_name else ""
+
+
+def _validate_column(
+    column_spec: Union[str, RegexColumnDef], df: DataFrameType, expected_dtype: Any = None
+) -> Tuple[List[str], List[Tuple[str, Any, Any]], Set[str]]:
+    """Validate a single column specification against a DataFrame."""
+    missing_columns = []
+    dtype_mismatches = []
+    matched_by_regex = set()
+
+    if isinstance(column_spec, str):
+        if column_spec not in df.columns:
+            missing_columns.append(column_spec)
+        elif expected_dtype is not None and df[column_spec].dtype != expected_dtype:
+            dtype_mismatches.append((column_spec, df[column_spec].dtype, expected_dtype))
+    elif _is_regex_pattern(column_spec):
+        pattern_str, _ = column_spec
+        matches = _match_column_with_regex(column_spec, list(df.columns))
+        if not matches:
+            missing_columns.append(pattern_str)
+        else:
+            matched_by_regex.update(matches)
+            if expected_dtype is not None:
+                for matched_col in matches:
+                    if df[matched_col].dtype != expected_dtype:
+                        dtype_mismatches.append((matched_col, df[matched_col].dtype, expected_dtype))
+
+    return missing_columns, dtype_mismatches, matched_by_regex
+
+
 def _match_column_with_regex(column_pattern: RegexColumnDef, df_columns: List[str]) -> List[str]:
     _, pattern = column_pattern
     return [col for col in df_columns if pattern.match(col)]
@@ -62,70 +94,45 @@ def _compile_regex_patterns(columns: Seq[Any]) -> List[Union[str, RegexColumnDef
 def _check_columns(
     df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], strict: bool, param_name: Optional[str] = None
 ) -> None:
-    missing_columns = []
-    dtype_mismatches = []
-    matched_by_regex = set()
+    all_missing_columns = []
+    all_dtype_mismatches = []
+    all_matched_by_regex = set()
 
     if isinstance(columns, list):
         processed_columns = _compile_regex_patterns(columns)
-        for column in processed_columns:
-            if isinstance(column, str):
-                if column not in df.columns:
-                    missing_columns.append(column)
-            elif _is_regex_pattern(column):
-                matches = _match_column_with_regex(column, list(df.columns))
-                if not matches:
-                    missing_columns.append(column[0])
-                else:
-                    matched_by_regex.update(matches)
-
+        for column_spec in processed_columns:
+            missing, mismatches, matched = _validate_column(column_spec, df)
+            all_missing_columns.extend(missing)
+            all_dtype_mismatches.extend(mismatches)
+            all_matched_by_regex.update(matched)
     else:  # isinstance(columns, dict)
         assert isinstance(columns, dict)
-        processed_dict: Dict[Union[str, RegexColumnDef], Any] = {}
-        for column, dtype in columns.items():
-            if isinstance(column, str) and _is_regex_string(column):
-                processed_dict[_compile_regex_pattern(column)] = dtype
-            else:
-                processed_dict[column] = dtype
+        for column, expected_dtype in columns.items():
+            column_spec = (
+                _compile_regex_pattern(column) if isinstance(column, str) and _is_regex_string(column) else column
+            )
+            missing, mismatches, matched = _validate_column(column_spec, df, expected_dtype)
+            all_missing_columns.extend(missing)
+            all_dtype_mismatches.extend(mismatches)
+            all_matched_by_regex.update(matched)
 
-        for column_key, dtype in processed_dict.items():
-            if isinstance(column_key, str):
-                if column_key not in df.columns:
-                    missing_columns.append(column_key)
-                elif df[column_key].dtype != dtype:
-                    dtype_mismatches.append((column_key, df[column_key].dtype, dtype))
-            elif _is_regex_pattern(column_key):
-                pattern_str, compiled_pattern = column_key
-                matches = _match_column_with_regex(column_key, list(df.columns))
-                if not matches:
-                    missing_columns.append(pattern_str)
-                else:
-                    for matched_col in matches:
-                        matched_by_regex.add(matched_col)
-                        if df[matched_col].dtype != dtype:
-                            dtype_mismatches.append((matched_col, df[matched_col].dtype, dtype))
+    param_info = _make_param_info(param_name)
 
-    if missing_columns:
-        param_info = f" in parameter '{param_name}'" if param_name else ""
-        raise AssertionError(f"Missing columns: {missing_columns}{param_info}. Got {_describe_pd(df)}")
+    if all_missing_columns:
+        raise AssertionError(f"Missing columns: {all_missing_columns}{param_info}. Got {_describe_pd(df)}")
 
-    if dtype_mismatches:
-        param_info = f" in parameter '{param_name}'" if param_name else ""
-        mismatches = ", ".join(
-            [
-                f"Column {col}{param_info} has wrong dtype. Was {was}, expected {expected}"
-                for col, was, expected in dtype_mismatches
-            ]
+    if all_dtype_mismatches:
+        mismatch_descriptions = ", ".join(
+            f"Column {col}{param_info} has wrong dtype. Was {was}, expected {expected}"
+            for col, was, expected in all_dtype_mismatches
         )
-        raise AssertionError(mismatches)
+        raise AssertionError(mismatch_descriptions)
 
     if strict:
         explicit_columns = {col for col in columns if isinstance(col, str)}
-        allowed_columns = explicit_columns.union(matched_by_regex)
+        allowed_columns = explicit_columns.union(all_matched_by_regex)
         extra_columns = set(df.columns) - allowed_columns
-
         if extra_columns:
-            param_info = f" in parameter '{param_name}'" if param_name else ""
             raise AssertionError(f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}")
 
 
@@ -165,37 +172,27 @@ def df_out(
 
 def _get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
     if not name:
-        if len(args) > 0:
-            return args[0]
-        if kwargs:
-            return next(iter(kwargs.values()))
-        return None
+        return args[0] if args else next(iter(kwargs.values()), None)
 
-    if name not in kwargs:
-        func_params_in_order = list(inspect.signature(func).parameters.keys())
-        parameter_location = func_params_in_order.index(name)
-        return args[parameter_location]
+    if name in kwargs:
+        return kwargs[name]
 
-    return kwargs[name]
+    func_params_in_order = list(inspect.signature(func).parameters.keys())
+    parameter_location = func_params_in_order.index(name)
+    return args[parameter_location]
 
 
 def _get_parameter_name(
     func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any
 ) -> Optional[str]:
-    """Get the actual parameter name being validated."""
     if name:
         return name
 
-    # If no name specified, try to get the first parameter name
-    if len(args) > 0:
-        # Get the first parameter name from the function signature
+    if args:
         func_params_in_order = list(inspect.signature(func).parameters.keys())
         return func_params_in_order[0]
-    elif kwargs:
-        # Return the first keyword argument name
-        return next(iter(kwargs.keys()))
 
-    return None
+    return next(iter(kwargs.keys()), None)
 
 
 def df_in(
@@ -246,19 +243,13 @@ def _describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
 
 
 def _log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
-    if isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame):
-        logging.log(
-            level,
-            f"Function {func_name} parameters contained a DataFrame: {_describe_pd(df, include_dtypes)}",
-        )
+    if isinstance(df, (pd.DataFrame, pl.DataFrame)):
+        logging.log(level, f"Function {func_name} parameters contained a DataFrame: {_describe_pd(df, include_dtypes)}")
 
 
 def _log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
-    if isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame):
-        logging.log(
-            level,
-            f"Function {func_name} returned a DataFrame: {_describe_pd(df, include_dtypes)}",
-        )
+    if isinstance(df, (pd.DataFrame, pl.DataFrame)):
+        logging.log(level, f"Function {func_name} returned a DataFrame: {_describe_pd(df, include_dtypes)}")
 
 
 def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable[[Callable[..., T]], Callable[..., T]]:
