@@ -51,3 +51,66 @@ strict = true
 
             config = load_config()
             assert config["strict"] is True
+
+
+def test_load_config_returns_default_when_file_not_found() -> None:
+    with patch("daffy.config.find_config_file", return_value="/nonexistent/pyproject.toml"):
+        config = get_config()
+        assert config["strict"] is False
+
+
+def test_load_config_returns_default_when_toml_malformed() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("invalid toml [[[")
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            import daffy.config
+
+            daffy.config._config_cache = None
+
+            config = get_config()
+            assert config["strict"] is False
+
+
+def test_find_config_file_returns_none_when_no_pyproject_exists() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import find_config_file
+
+            result = find_config_file()
+            assert result is None
+
+
+def test_load_config_without_strict_setting() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+other_setting = "value"
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            import daffy.config
+
+            daffy.config._config_cache = None
+
+            config = get_config()
+            assert config["strict"] is False
+
+
+def test_load_config_daffy_section_without_strict() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+some_other_setting = "value"
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            import daffy.config
+
+            daffy.config._config_cache = None
+
+            config = get_config()
+            assert config["strict"] is False

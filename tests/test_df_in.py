@@ -5,6 +5,7 @@ import polars as pl
 import pytest
 
 from daffy import df_in
+from daffy.decorators import _check_columns, _get_parameter_name
 from tests.conftest import DataFrameType, cars, extended_cars
 
 
@@ -322,3 +323,63 @@ def test_multiple_parameters_error_identification(basic_df: DataFrameType, exten
         test_fn(cars=basic_df, ext_cars=extended_df)
 
     assert "Missing columns: ['NonExistent'] in parameter 'ext_cars'" in str(excinfo.value)
+
+
+def test_check_columns_handles_invalid_column_type_in_list() -> None:
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    columns: Any = ["A", 123]
+
+    _check_columns(df, columns, False)
+
+
+def test_check_columns_handles_invalid_column_key_in_dict() -> None:
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    columns: Any = {"A": "int64", 123: "int64"}
+
+    _check_columns(df, columns, False)
+
+
+def test_get_parameter_name_returns_none_when_no_params() -> None:
+    def func_with_no_params() -> None:
+        pass
+
+    result = _get_parameter_name(func_with_no_params, None)
+    assert result is None
+
+
+def test_get_parameter_name_returns_none_when_no_args_or_kwargs() -> None:
+    def some_func(param: str) -> str:
+        return param
+
+    result = _get_parameter_name(some_func, None)
+    assert result is None
+
+
+def test_missing_column_in_dict_specification() -> None:
+    df = pd.DataFrame({"A": [1, 2]})
+    columns: Any = {"A": "int64", "MissingCol": "int64"}
+
+    with pytest.raises(AssertionError) as excinfo:
+        _check_columns(df, columns, False)
+
+    assert "Missing columns: ['MissingCol']" in str(excinfo.value)
+
+
+def test_missing_regex_pattern_in_dict_specification() -> None:
+    df = pd.DataFrame({"A": [1, 2]})
+    columns: Any = {"A": "int64", "r/Missing_[0-9]/": "int64"}
+
+    with pytest.raises(AssertionError) as excinfo:
+        _check_columns(df, columns, False)
+
+    assert "Missing columns: ['r/Missing_[0-9]/']" in str(excinfo.value)
+
+
+def test_dict_columns_all_present_no_error() -> None:
+    @df_in(columns={"A": "int64", "B": "int64"})
+    def test_fn(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    result = test_fn(df)
+    assert result is not None
