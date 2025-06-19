@@ -56,13 +56,7 @@ def _is_regex_string(column: str) -> bool:
 
 
 def _compile_regex_patterns(columns: Seq[Any]) -> List[Union[str, RegexColumnDef]]:
-    result: List[Union[str, RegexColumnDef]] = []
-    for col in columns:
-        if isinstance(col, str) and _is_regex_string(col):
-            result.append(_compile_regex_pattern(col))
-        else:
-            result.append(col)
-    return result
+    return [_compile_regex_pattern(col) if isinstance(col, str) and _is_regex_string(col) else col for col in columns]
 
 
 def _check_columns(
