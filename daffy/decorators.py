@@ -51,38 +51,38 @@ def _make_param_info(param_name: Optional[str]) -> str:
     return f" in parameter '{param_name}'" if param_name else ""
 
 
-def _find_missing_columns(column_spec: Union[str, RegexColumnDef], df: DataFrameType) -> List[str]:
+def _find_missing_columns(column_spec: Union[str, RegexColumnDef], df_columns: List[str]) -> List[str]:
     """Find missing columns for a single column specification."""
     if isinstance(column_spec, str):
-        return [column_spec] if column_spec not in df.columns else []
+        return [column_spec] if column_spec not in df_columns else []
     elif _is_regex_pattern(column_spec):
         pattern_str, _ = column_spec
-        matches = _match_column_with_regex(column_spec, list(df.columns))
+        matches = _match_column_with_regex(column_spec, df_columns)
         return [pattern_str] if not matches else []
     return []
 
 
 def _find_dtype_mismatches(
-    column_spec: Union[str, RegexColumnDef], df: DataFrameType, expected_dtype: Any
+    column_spec: Union[str, RegexColumnDef], df: DataFrameType, expected_dtype: Any, df_columns: List[str]
 ) -> List[Tuple[str, Any, Any]]:
     """Find dtype mismatches for a single column specification."""
     mismatches = []
     if isinstance(column_spec, str):
-        if column_spec in df.columns and df[column_spec].dtype != expected_dtype:
+        if column_spec in df_columns and df[column_spec].dtype != expected_dtype:
             mismatches.append((column_spec, df[column_spec].dtype, expected_dtype))
     elif _is_regex_pattern(column_spec):
-        matches = _match_column_with_regex(column_spec, list(df.columns))
+        matches = _match_column_with_regex(column_spec, df_columns)
         for matched_col in matches:
             if df[matched_col].dtype != expected_dtype:
                 mismatches.append((matched_col, df[matched_col].dtype, expected_dtype))
     return mismatches
 
 
-def _find_regex_matches(column_spec: Union[str, RegexColumnDef], df: DataFrameType) -> Set[str]:
+def _find_regex_matches(column_spec: Union[str, RegexColumnDef], df_columns: List[str]) -> Set[str]:
     """Find regex matches for a single column specification."""
     regex_pattern = _as_regex_pattern(column_spec)
     if regex_pattern:
-        return set(_match_column_with_regex(regex_pattern, list(df.columns)))
+        return set(_match_column_with_regex(regex_pattern, df_columns))
     return set()
 
 
@@ -108,6 +108,7 @@ def _compile_regex_patterns(columns: Seq[Any]) -> List[Union[str, RegexColumnDef
 def _check_columns(
     df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], strict: bool, param_name: Optional[str] = None
 ) -> None:
+    df_columns = list(df.columns)  # Cache the column list conversion
     all_missing_columns = []
     all_dtype_mismatches = []
     all_matched_by_regex = set()
@@ -115,17 +116,17 @@ def _check_columns(
     if isinstance(columns, list):
         processed_columns = _compile_regex_patterns(columns)
         for column_spec in processed_columns:
-            all_missing_columns.extend(_find_missing_columns(column_spec, df))
-            all_matched_by_regex.update(_find_regex_matches(column_spec, df))
+            all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
+            all_matched_by_regex.update(_find_regex_matches(column_spec, df_columns))
     else:  # isinstance(columns, dict)
         assert isinstance(columns, dict)
         for column, expected_dtype in columns.items():
             column_spec = (
                 _compile_regex_pattern(column) if isinstance(column, str) and _is_regex_string(column) else column
             )
-            all_missing_columns.extend(_find_missing_columns(column_spec, df))
-            all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype))
-            all_matched_by_regex.update(_find_regex_matches(column_spec, df))
+            all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
+            all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
+            all_matched_by_regex.update(_find_regex_matches(column_spec, df_columns))
 
     param_info = _make_param_info(param_name)
 
@@ -142,7 +143,7 @@ def _check_columns(
     if strict:
         explicit_columns = {col for col in columns if isinstance(col, str)}
         allowed_columns = explicit_columns.union(all_matched_by_regex)
-        extra_columns = set(df.columns) - allowed_columns
+        extra_columns = set(df_columns) - allowed_columns
         if extra_columns:
             raise AssertionError(f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}")
 
