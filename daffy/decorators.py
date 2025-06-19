@@ -54,7 +54,9 @@ def _compile_regex_patterns(columns: Seq[Any]) -> List[Union[str, RegexColumnDef
     return result
 
 
-def _check_columns(df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], strict: bool) -> None:
+def _check_columns(
+    df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], strict: bool, param_name: Optional[str] = None
+) -> None:
     missing_columns = []
     dtype_mismatches = []
     matched_by_regex = set()
@@ -113,11 +115,16 @@ def _check_columns(df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], 
                             dtype_mismatches.append((matched_col, df[matched_col].dtype, dtype))
 
     if missing_columns:
-        raise AssertionError(f"Missing columns: {missing_columns}. Got {_describe_pd(df)}")
+        param_info = f" in parameter '{param_name}'" if param_name else ""
+        raise AssertionError(f"Missing columns: {missing_columns}{param_info}. Got {_describe_pd(df)}")
 
     if dtype_mismatches:
+        param_info = f" in parameter '{param_name}'" if param_name else ""
         mismatches = ", ".join(
-            [f"Column {col} has wrong dtype. Was {was}, expected {expected}" for col, was, expected in dtype_mismatches]
+            [
+                f"Column {col}{param_info} has wrong dtype. Was {was}, expected {expected}"
+                for col, was, expected in dtype_mismatches
+            ]
         )
         raise AssertionError(mismatches)
 
@@ -134,7 +141,8 @@ def _check_columns(df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], 
             extra_columns = set(df.columns) - allowed_columns
 
         if extra_columns:
-            raise AssertionError(f"DataFrame contained unexpected column(s): {', '.join(extra_columns)}")
+            param_info = f" in parameter '{param_name}'" if param_name else ""
+            raise AssertionError(f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}")
 
 
 def df_out(
@@ -189,6 +197,26 @@ def _get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: 
     return kwargs[name]
 
 
+def _get_parameter_name(
+    func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any
+) -> Optional[str]:
+    """Get the actual parameter name being validated."""
+    if name:
+        return name
+
+    # If no name specified, try to get the first parameter name
+    if len(args) > 0:
+        # Get the first parameter name from the function signature
+        func_params_in_order = list(inspect.signature(func).parameters.keys())
+        if func_params_in_order:
+            return func_params_in_order[0]
+    elif kwargs:
+        # Return the first keyword argument name
+        return next(iter(kwargs.keys()))
+
+    return None
+
+
 def df_in(
     name: Optional[str] = None, columns: Union[ColumnsList, ColumnsDict, None] = None, strict: Optional[bool] = None
 ) -> Callable[[Callable[..., R]], Callable[..., R]]:
@@ -214,11 +242,12 @@ def df_in(
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> R:
             df = _get_parameter(func, name, *args, **kwargs)
+            param_name = _get_parameter_name(func, name, *args, **kwargs)
             assert isinstance(df, pd.DataFrame) or isinstance(df, pl.DataFrame), (
                 f"Wrong parameter type. Expected DataFrame, got {type(df).__name__} instead."
             )
             if columns:
-                _check_columns(df, columns, get_strict(strict))
+                _check_columns(df, columns, get_strict(strict), param_name)
             return func(*args, **kwargs)
 
         return wrapper

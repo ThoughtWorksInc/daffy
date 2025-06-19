@@ -104,7 +104,7 @@ def test_in_strict_extra_columns(df: DataFrameType) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn("foo", _df=df)
 
-    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in parameter '_df' contained unexpected column(s): Price" in str(excinfo.value)
 
 
 def test_correct_input_with_columns_and_dtypes_pandas(basic_pandas_df: pd.DataFrame) -> None:
@@ -131,7 +131,7 @@ def test_dtype_mismatch_pandas(basic_pandas_df: pd.DataFrame) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn(basic_pandas_df)
 
-    assert "Column Price has wrong dtype. Was int64, expected float64" in str(excinfo.value)
+    assert "Column Price in parameter 'my_input' has wrong dtype. Was int64, expected float64" in str(excinfo.value)
 
 
 def test_dtype_mismatch_polars(basic_polars_df: pl.DataFrame) -> None:
@@ -142,7 +142,7 @@ def test_dtype_mismatch_polars(basic_polars_df: pl.DataFrame) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn(basic_polars_df)
 
-    assert "Column Price has wrong dtype. Was Int64, expected Float64" in str(excinfo.value)
+    assert "Column Price in parameter 'my_input' has wrong dtype. Was Int64, expected Float64" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
@@ -153,7 +153,7 @@ def test_df_in_missing_column(df: DataFrameType) -> None:
 
     with pytest.raises(AssertionError) as excinfo:
         test_fn(df[["Brand"]])
-    assert "Missing columns: ['Price']. Got columns: ['Brand']" in str(excinfo.value)
+    assert "Missing columns: ['Price'] in parameter 'my_input'. Got columns: ['Brand']" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
@@ -164,7 +164,7 @@ def test_df_in_missing_multiple_columns(df: DataFrameType) -> None:
 
     with pytest.raises(AssertionError) as excinfo:
         test_fn(df[["Brand"]])
-    assert "Missing columns: ['Price', 'Extra']. Got columns: ['Brand']" in str(excinfo.value)
+    assert "Missing columns: ['Price', 'Extra'] in parameter 'my_input'. Got columns: ['Brand']" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -254,7 +254,7 @@ def test_regex_column_pattern_with_strict(basic_pandas_df: pd.DataFrame) -> None
     with pytest.raises(AssertionError) as excinfo:
         test_fn(df)
 
-    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in parameter 'my_input' contained unexpected column(s): Price" in str(excinfo.value)
 
 
 def test_regex_column_with_dtype_pandas(basic_pandas_df: pd.DataFrame) -> None:
@@ -287,7 +287,7 @@ def test_regex_column_with_dtype_mismatch_pandas(basic_pandas_df: pd.DataFrame) 
     with pytest.raises(AssertionError) as excinfo:
         test_fn(df)
 
-    assert "Column Price_2 has wrong dtype. Was float64, expected int64" in str(excinfo.value)
+    assert "Column Price_2 in parameter 'my_input' has wrong dtype. Was float64, expected int64" in str(excinfo.value)
 
 
 def test_regex_column_with_dtype_polars(basic_polars_df: pl.DataFrame) -> None:
@@ -303,3 +303,22 @@ def test_regex_column_with_dtype_polars(basic_polars_df: pl.DataFrame) -> None:
     result = test_fn(df)
     assert "Price_1" in result.columns
     assert "Price_2" in result.columns
+
+
+@pytest.mark.parametrize(
+    ("basic_df,extended_df"),
+    [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
+)
+def test_multiple_parameters_error_identification(basic_df: DataFrameType, extended_df: DataFrameType) -> None:
+    """Test that we can identify which parameter has the issue when multiple dataframes are used."""
+
+    @df_in(name="cars", columns=["Brand", "Price"], strict=True)
+    @df_in(name="ext_cars", columns=["Brand", "Price", "Year", "NonExistent"], strict=True)
+    def test_fn(cars: DataFrameType, ext_cars: DataFrameType) -> int:
+        return len(cars) + len(ext_cars)
+
+    # Test missing column in second parameter
+    with pytest.raises(AssertionError) as excinfo:
+        test_fn(cars=basic_df, ext_cars=extended_df)
+
+    assert "Missing columns: ['NonExistent'] in parameter 'ext_cars'" in str(excinfo.value)
