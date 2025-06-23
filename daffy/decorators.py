@@ -10,7 +10,7 @@ from polars import DataFrame as PolarsDataFrame
 
 from daffy.config import get_strict
 from daffy.utils import assert_is_dataframe, get_parameter, get_parameter_name, log_input, log_output
-from daffy.validation import ColumnsDef, check_columns
+from daffy.validation import ColumnsDef, validate_dataframe
 
 # Type variables for preserving return types
 T = TypeVar("T")  # Generic type var for df_log
@@ -44,7 +44,7 @@ def df_out(
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
             if columns:
-                check_columns(result, columns, get_strict(strict))
+                validate_dataframe(result, columns, get_strict(strict))
             return result
 
         return wrapper
@@ -80,7 +80,7 @@ def df_in(
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
             if columns:
-                check_columns(df, columns, get_strict(strict), param_name)
+                validate_dataframe(df, columns, get_strict(strict), param_name)
             return func(*args, **kwargs)
 
         return wrapper

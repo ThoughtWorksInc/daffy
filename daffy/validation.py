@@ -46,7 +46,7 @@ def _find_dtype_mismatches(
     return mismatches
 
 
-def check_columns(
+def validate_dataframe(
     df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], strict: bool, param_name: Optional[str] = None
 ) -> None:
     df_columns = list(df.columns)  # Cache the column list conversion
