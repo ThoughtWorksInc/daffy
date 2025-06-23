@@ -9,8 +9,8 @@ from pandas import DataFrame as PandasDataFrame
 from polars import DataFrame as PolarsDataFrame
 
 from daffy.config import get_strict
-from daffy.utils import _assert_is_dataframe, _get_parameter, _get_parameter_name, _log_input, _log_output
-from daffy.validation import ColumnsDef, _check_columns
+from daffy.utils import assert_is_dataframe, get_parameter, get_parameter_name, log_input, log_output
+from daffy.validation import ColumnsDef, check_columns
 
 # Type variables for preserving return types
 T = TypeVar("T")  # Generic type var for df_log
@@ -42,9 +42,9 @@ def df_out(
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> DF:
             result = func(*args, **kwargs)
-            _assert_is_dataframe(result, "return type")
+            assert_is_dataframe(result, "return type")
             if columns:
-                _check_columns(result, columns, get_strict(strict))
+                check_columns(result, columns, get_strict(strict))
             return result
 
         return wrapper
@@ -76,11 +76,11 @@ def df_in(
     def wrapper_df_in(func: Callable[..., R]) -> Callable[..., R]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> R:
-            df = _get_parameter(func, name, *args, **kwargs)
-            param_name = _get_parameter_name(func, name, *args, **kwargs)
-            _assert_is_dataframe(df, "parameter type")
+            df = get_parameter(func, name, *args, **kwargs)
+            param_name = get_parameter_name(func, name, *args, **kwargs)
+            assert_is_dataframe(df, "parameter type")
             if columns:
-                _check_columns(df, columns, get_strict(strict), param_name)
+                check_columns(df, columns, get_strict(strict), param_name)
             return func(*args, **kwargs)
 
         return wrapper
@@ -104,9 +104,9 @@ def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable
     def wrapper_df_log(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
-            _log_input(level, func.__name__, _get_parameter(func, None, *args, **kwargs), include_dtypes)
+            log_input(level, func.__name__, get_parameter(func, None, *args, **kwargs), include_dtypes)
             result = func(*args, **kwargs)
-            _log_output(level, func.__name__, result, include_dtypes)
+            log_output(level, func.__name__, result, include_dtypes)
             return result
 
         return wrapper

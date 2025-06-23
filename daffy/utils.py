@@ -14,16 +14,16 @@ from polars import DataFrame as PolarsDataFrame
 DataFrameType = Union[PandasDataFrame, PolarsDataFrame]
 
 
-def _assert_is_dataframe(obj: Any, context: str) -> None:
+def assert_is_dataframe(obj: Any, context: str) -> None:
     if not isinstance(obj, (pd.DataFrame, pl.DataFrame)):
         raise AssertionError(f"Wrong {context}. Expected DataFrame, got {type(obj).__name__} instead.")
 
 
-def _make_param_info(param_name: Optional[str]) -> str:
+def make_param_info(param_name: Optional[str]) -> str:
     return f" in parameter '{param_name}'" if param_name else ""
 
 
-def _get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
+def get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
     if not name:
         return args[0] if args else next(iter(kwargs.values()), None)
 
@@ -35,7 +35,7 @@ def _get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: 
     return args[parameter_location]
 
 
-def _get_parameter_name(
+def get_parameter_name(
     func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any
 ) -> Optional[str]:
     if name:
@@ -48,7 +48,7 @@ def _get_parameter_name(
     return next(iter(kwargs.keys()), None)
 
 
-def _describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
+def describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
     result = f"columns: {list(df.columns)}"
     if include_dtypes:
         if isinstance(df, pd.DataFrame):
@@ -59,11 +59,11 @@ def _describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
     return result
 
 
-def _log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
+def log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, (pd.DataFrame, pl.DataFrame)):
-        logging.log(level, f"Function {func_name} parameters contained a DataFrame: {_describe_pd(df, include_dtypes)}")
+        logging.log(level, f"Function {func_name} parameters contained a DataFrame: {describe_pd(df, include_dtypes)}")
 
 
-def _log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
+def log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, (pd.DataFrame, pl.DataFrame)):
-        logging.log(level, f"Function {func_name} returned a DataFrame: {_describe_pd(df, include_dtypes)}")
+        logging.log(level, f"Function {func_name} returned a DataFrame: {describe_pd(df, include_dtypes)}")
