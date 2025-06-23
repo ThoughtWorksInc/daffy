@@ -12,7 +12,7 @@ from daffy.patterns import (
     is_regex_string,
     match_column_with_regex,
 )
-from daffy.utils import DataFrameType, describe_dataframe, make_param_info
+from daffy.utils import DataFrameType, describe_dataframe, format_param_context
 
 ColumnsList = Seq[Union[str, RegexColumnDef]]
 ColumnsDict = Dict[Union[str, RegexColumnDef], Any]
@@ -69,7 +69,7 @@ def validate_dataframe(
             all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
             all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
 
-    param_info = make_param_info(param_name)
+    param_info = format_param_context(param_name)
 
     if all_missing_columns:
         raise AssertionError(f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}")

@@ -19,7 +19,7 @@ def assert_is_dataframe(obj: Any, context: str) -> None:
         raise AssertionError(f"Wrong {context}. Expected DataFrame, got {type(obj).__name__} instead.")
 
 
-def make_param_info(param_name: Optional[str]) -> str:
+def format_param_context(param_name: Optional[str]) -> str:
     return f" in parameter '{param_name}'" if param_name else ""
 
 
