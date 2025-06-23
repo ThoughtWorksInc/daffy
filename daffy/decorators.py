@@ -9,7 +9,13 @@ from pandas import DataFrame as PandasDataFrame
 from polars import DataFrame as PolarsDataFrame
 
 from daffy.config import get_strict
-from daffy.utils import assert_is_dataframe, get_parameter, get_parameter_name, log_input, log_output
+from daffy.utils import (
+    assert_is_dataframe,
+    get_parameter,
+    get_parameter_name,
+    log_dataframe_input,
+    log_dataframe_output,
+)
 from daffy.validation import ColumnsDef, validate_dataframe
 
 # Type variables for preserving return types
@@ -104,9 +110,9 @@ def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable
     def wrapper_df_log(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
-            log_input(level, func.__name__, get_parameter(func, None, *args, **kwargs), include_dtypes)
+            log_dataframe_input(level, func.__name__, get_parameter(func, None, *args, **kwargs), include_dtypes)
             result = func(*args, **kwargs)
-            log_output(level, func.__name__, result, include_dtypes)
+            log_dataframe_output(level, func.__name__, result, include_dtypes)
             return result
 
         return wrapper

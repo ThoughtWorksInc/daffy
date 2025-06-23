@@ -59,13 +59,13 @@ def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
     return result
 
 
-def log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
+def log_dataframe_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, (pd.DataFrame, pl.DataFrame)):
         logging.log(
             level, f"Function {func_name} parameters contained a DataFrame: {describe_dataframe(df, include_dtypes)}"
         )
 
 
-def log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
+def log_dataframe_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, (pd.DataFrame, pl.DataFrame)):
         logging.log(level, f"Function {func_name} returned a DataFrame: {describe_dataframe(df, include_dtypes)}")
