@@ -48,7 +48,7 @@ def get_parameter_name(
     return next(iter(kwargs.keys()), None)
 
 
-def describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
+def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
     result = f"columns: {list(df.columns)}"
     if include_dtypes:
         if isinstance(df, pd.DataFrame):
@@ -61,9 +61,11 @@ def describe_pd(df: DataFrameType, include_dtypes: bool = False) -> str:
 
 def log_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, (pd.DataFrame, pl.DataFrame)):
-        logging.log(level, f"Function {func_name} parameters contained a DataFrame: {describe_pd(df, include_dtypes)}")
+        logging.log(
+            level, f"Function {func_name} parameters contained a DataFrame: {describe_dataframe(df, include_dtypes)}"
+        )
 
 
 def log_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if isinstance(df, (pd.DataFrame, pl.DataFrame)):
-        logging.log(level, f"Function {func_name} returned a DataFrame: {describe_pd(df, include_dtypes)}")
+        logging.log(level, f"Function {func_name} returned a DataFrame: {describe_dataframe(df, include_dtypes)}")
