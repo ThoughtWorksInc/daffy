@@ -5,7 +5,8 @@ import polars as pl
 import pytest
 
 from daffy import df_in
-from daffy.decorators import _check_columns, _get_parameter_name
+from daffy.utils import _get_parameter_name
+from daffy.validation import _check_columns
 from tests.conftest import DataFrameType, cars, extended_cars
 
 
