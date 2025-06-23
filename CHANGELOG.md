@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.14.2
+
+- Internal code quality improvements
+
 ## 0.14.1
 
 - Internal code quality improvements
