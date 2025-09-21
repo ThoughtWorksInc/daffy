@@ -19,8 +19,16 @@ def assert_is_dataframe(obj: Any, context: str) -> None:
         raise AssertionError(f"Wrong {context}. Expected DataFrame, got {type(obj).__name__} instead.")
 
 
-def format_param_context(param_name: Optional[str]) -> str:
-    return f" in parameter '{param_name}'" if param_name else ""
+def format_param_context(param_name: Optional[str], func_name: Optional[str] = None) -> str:
+    context_parts = []
+    if func_name:
+        context_parts.append(f"function '{func_name}'")
+    if param_name:
+        context_parts.append(f"parameter '{param_name}'")
+
+    if context_parts:
+        return f" in {' '.join(context_parts)}"
+    return ""
 
 
 def get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:

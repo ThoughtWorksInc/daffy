@@ -64,7 +64,7 @@ def test_extra_column_in_return_strict(df: DataFrameType) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in function 'test_fn' contained unexpected column(s): Price" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
@@ -76,7 +76,7 @@ def test_missing_column_in_return(df: DataFrameType) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Missing columns: ['FooColumn']. Got columns: ['Brand', 'Price']" in str(excinfo.value)
+    assert "Missing columns: ['FooColumn'] in function 'test_fn'. Got columns: ['Brand', 'Price']" in str(excinfo.value)
 
 
 def test_df_out_with_df_modification(basic_pandas_df: pd.DataFrame, extended_pandas_df: pd.DataFrame) -> None:
@@ -130,7 +130,7 @@ def test_regex_column_pattern_with_strict_in_output(basic_pandas_df: pd.DataFram
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in function 'test_fn' contained unexpected column(s): Price" in str(excinfo.value)
 
 
 def test_regex_column_with_dtype_in_output_pandas(basic_pandas_df: pd.DataFrame) -> None:
@@ -161,7 +161,7 @@ def test_regex_column_with_dtype_mismatch_in_output_pandas(basic_pandas_df: pd.D
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Column Price_2 has wrong dtype. Was float64, expected int64" in str(excinfo.value)
+    assert "Column Price_2 in function 'test_fn' has wrong dtype. Was float64, expected int64" in str(excinfo.value)
 
 
 def test_regex_column_with_dtype_in_output_polars(basic_polars_df: pl.DataFrame) -> None:
@@ -190,4 +190,31 @@ def test_regex_column_with_dtype_strict_in_output_pandas(basic_pandas_df: pd.Dat
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "DataFrame contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in function 'test_fn' contained unexpected column(s): Price" in str(excinfo.value)
+
+
+def test_function_name_appears_in_missing_columns_exception_output() -> None:
+    @df_out(columns=["Brand", "NonExistentColumn"])
+    def my_output_function() -> pd.DataFrame:
+        return pd.DataFrame({"Brand": ["Toyota", "Honda"]})
+
+    with pytest.raises(AssertionError) as excinfo:
+        my_output_function()
+
+    # Should include function name in the exception message
+    assert "my_output_function" in str(excinfo.value)
+    assert "Missing columns: ['NonExistentColumn']" in str(excinfo.value)
+
+
+def test_function_name_appears_in_dtype_mismatch_exception_output() -> None:
+    @df_out(columns={"Brand": "object", "Price": "float64"})
+    def another_output_function() -> pd.DataFrame:
+        return pd.DataFrame({"Brand": ["Toyota"], "Price": [100]})  # Price is int64, not float64
+
+    with pytest.raises(AssertionError) as excinfo:
+        another_output_function()
+
+    # Should include function name in the exception message
+    assert "another_output_function" in str(excinfo.value)
+    assert "Column Price" in str(excinfo.value)
+    assert "wrong dtype" in str(excinfo.value)
