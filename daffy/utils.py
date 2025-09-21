@@ -10,7 +10,7 @@ try:
     from pandas import DataFrame as PandasDataFrame
 
     HAS_PANDAS = True
-except ImportError:
+except ImportError:  # pragma: no cover
     pd = None  # type: ignore
     PandasDataFrame = None  # type: ignore
     HAS_PANDAS = False
@@ -20,7 +20,7 @@ try:
     from polars import DataFrame as PolarsDataFrame
 
     HAS_POLARS = True
-except ImportError:
+except ImportError:  # pragma: no cover
     pl = None  # type: ignore
     PolarsDataFrame = None  # type: ignore
     HAS_POLARS = False
@@ -40,7 +40,7 @@ else:
     if HAS_POLARS:
         _available_types.append(PolarsDataFrame)
 
-    if not _available_types:
+    if not _available_types:  # pragma: no cover
         raise ImportError(
             "No DataFrame library found. Please install Pandas or Polars: pip install pandas  OR  pip install polars"
         )

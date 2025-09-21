@@ -115,3 +115,56 @@ def test_both_libraries_work_together() -> None:
 
     works_with_both(pandas_df)
     works_with_both(polars_df)
+
+
+def test_describe_dataframe_with_dtypes() -> None:
+    """Test describe_dataframe function with dtype information."""
+    from daffy.utils import describe_dataframe
+
+    if HAS_PANDAS:
+        import pandas as pd
+
+        df = pd.DataFrame({"A": [1, 2], "B": ["x", "y"]})
+        result = describe_dataframe(df, include_dtypes=True)
+        assert "columns: ['A', 'B']" in result
+        assert "with dtypes" in result
+
+    if HAS_POLARS:
+        import polars as pl
+
+        df = pl.DataFrame({"A": [1, 2], "B": ["x", "y"]})
+        result = describe_dataframe(df, include_dtypes=True)
+        assert "columns: ['A', 'B']" in result
+        assert "with dtypes" in result
+
+
+def test_log_dataframe_functions() -> None:
+    """Test DataFrame logging functions."""
+    import logging
+
+    from daffy.utils import log_dataframe_input, log_dataframe_output
+
+    # Set up logging to capture messages
+    logging.basicConfig(level=logging.DEBUG)
+
+    if HAS_PANDAS:
+        import pandas as pd
+
+        df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+
+        # These should not raise errors
+        log_dataframe_input(logging.INFO, "test_func", df, False)
+        log_dataframe_output(logging.INFO, "test_func", df, True)
+
+        # Test with non-DataFrame input
+        log_dataframe_input(logging.INFO, "test_func", "not_a_df", False)
+        log_dataframe_output(logging.INFO, "test_func", "not_a_df", False)
+
+    if HAS_POLARS:
+        import polars as pl
+
+        df = pl.DataFrame({"A": [1, 2], "B": [3, 4]})
+
+        # These should not raise errors
+        log_dataframe_input(logging.INFO, "test_func", df, False)
+        log_dataframe_output(logging.INFO, "test_func", df, True)
