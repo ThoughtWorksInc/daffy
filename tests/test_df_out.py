@@ -64,7 +64,7 @@ def test_extra_column_in_return_strict(df: DataFrameType) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "DataFrame in function 'test_fn' contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in function 'test_fn' return value contained unexpected column(s): Price" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
@@ -76,7 +76,9 @@ def test_missing_column_in_return(df: DataFrameType) -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Missing columns: ['FooColumn'] in function 'test_fn'. Got columns: ['Brand', 'Price']" in str(excinfo.value)
+    assert "Missing columns: ['FooColumn'] in function 'test_fn' return value. Got columns: ['Brand', 'Price']" in str(
+        excinfo.value
+    )
 
 
 def test_df_out_with_df_modification(basic_pandas_df: pd.DataFrame, extended_pandas_df: pd.DataFrame) -> None:
@@ -116,7 +118,7 @@ def test_regex_column_pattern_missing_in_output(basic_pandas_df: pd.DataFrame) -
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Missing columns: ['r/NonExistent_[0-9]/']" in str(excinfo.value)
+    assert "Missing columns: ['r/NonExistent_[0-9]/'] in function 'test_fn' return value" in str(excinfo.value)
 
 
 def test_regex_column_pattern_with_strict_in_output(basic_pandas_df: pd.DataFrame) -> None:
@@ -130,7 +132,7 @@ def test_regex_column_pattern_with_strict_in_output(basic_pandas_df: pd.DataFram
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "DataFrame in function 'test_fn' contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in function 'test_fn' return value contained unexpected column(s): Price" in str(excinfo.value)
 
 
 def test_regex_column_with_dtype_in_output_pandas(basic_pandas_df: pd.DataFrame) -> None:
@@ -161,7 +163,9 @@ def test_regex_column_with_dtype_mismatch_in_output_pandas(basic_pandas_df: pd.D
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Column Price_2 in function 'test_fn' has wrong dtype. Was float64, expected int64" in str(excinfo.value)
+    assert "Column Price_2 in function 'test_fn' return value has wrong dtype. Was float64, expected int64" in str(
+        excinfo.value
+    )
 
 
 def test_regex_column_with_dtype_in_output_polars(basic_polars_df: pl.DataFrame) -> None:
@@ -190,7 +194,7 @@ def test_regex_column_with_dtype_strict_in_output_pandas(basic_pandas_df: pd.Dat
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "DataFrame in function 'test_fn' contained unexpected column(s): Price" in str(excinfo.value)
+    assert "DataFrame in function 'test_fn' return value contained unexpected column(s): Price" in str(excinfo.value)
 
 
 def test_function_name_appears_in_missing_columns_exception_output() -> None:
@@ -218,3 +222,45 @@ def test_function_name_appears_in_dtype_mismatch_exception_output() -> None:
     assert "another_output_function" in str(excinfo.value)
     assert "Column Price" in str(excinfo.value)
     assert "wrong dtype" in str(excinfo.value)
+
+
+def test_return_value_validation_clearly_states_return_value_missing_columns() -> None:
+    @df_out(columns=["Brand", "MissingColumn"])
+    def function_with_return_validation() -> pd.DataFrame:
+        return pd.DataFrame({"Brand": ["Toyota", "Honda"]})
+
+    with pytest.raises(AssertionError) as excinfo:
+        function_with_return_validation()
+
+    # Should clearly state this is a return value validation failure
+    assert "return value" in str(excinfo.value)
+    assert "function_with_return_validation" in str(excinfo.value)
+    assert "Missing columns: ['MissingColumn']" in str(excinfo.value)
+
+
+def test_return_value_validation_clearly_states_return_value_dtype_mismatch() -> None:
+    @df_out(columns={"Brand": "object", "Price": "float64"})
+    def function_with_dtype_validation() -> pd.DataFrame:
+        return pd.DataFrame({"Brand": ["Toyota"], "Price": [100]})  # Price is int64, not float64
+
+    with pytest.raises(AssertionError) as excinfo:
+        function_with_dtype_validation()
+
+    # Should clearly state this is a return value validation failure
+    assert "return value" in str(excinfo.value)
+    assert "function_with_dtype_validation" in str(excinfo.value)
+    assert "wrong dtype" in str(excinfo.value)
+
+
+def test_return_value_validation_clearly_states_return_value_extra_columns() -> None:
+    @df_out(columns=["Brand"], strict=True)
+    def function_with_extra_columns() -> pd.DataFrame:
+        return pd.DataFrame({"Brand": ["Toyota"], "Price": [100]})
+
+    with pytest.raises(AssertionError) as excinfo:
+        function_with_extra_columns()
+
+    # Should clearly state this is a return value validation failure
+    assert "return value" in str(excinfo.value)
+    assert "function_with_extra_columns" in str(excinfo.value)
+    assert "unexpected column(s): Price" in str(excinfo.value)
