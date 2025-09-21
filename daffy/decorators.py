@@ -2,14 +2,20 @@
 
 import logging
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, Union
 
-# Import fully qualified types to satisfy disallow_any_unimported
-from pandas import DataFrame as PandasDataFrame
-from polars import DataFrame as PolarsDataFrame
+if TYPE_CHECKING:
+    # For static type checking, assume both are available
+    from pandas import DataFrame as PandasDataFrame
+    from polars import DataFrame as PolarsDataFrame
+else:
+    # For runtime, these will be imported from utils if available
+    PandasDataFrame = None
+    PolarsDataFrame = None
 
 from daffy.config import get_strict
 from daffy.utils import (
+    DataFrameType,
     assert_is_dataframe,
     get_parameter,
     get_parameter_name,
@@ -20,7 +26,10 @@ from daffy.validation import ColumnsDef, validate_dataframe
 
 # Type variables for preserving return types
 T = TypeVar("T")  # Generic type var for df_log
-DF = TypeVar("DF", bound=Union[PandasDataFrame, PolarsDataFrame])
+if TYPE_CHECKING:
+    DF = TypeVar("DF", bound=Union[PandasDataFrame, PolarsDataFrame])
+else:
+    DF = TypeVar("DF", bound=DataFrameType)
 R = TypeVar("R")  # Return type for df_in
 
 
