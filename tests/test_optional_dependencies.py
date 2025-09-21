@@ -124,16 +124,16 @@ def test_describe_dataframe_with_dtypes() -> None:
     if HAS_PANDAS:
         import pandas as pd
 
-        df = pd.DataFrame({"A": [1, 2], "B": ["x", "y"]})
-        result = describe_dataframe(df, include_dtypes=True)
+        pandas_df = pd.DataFrame({"A": [1, 2], "B": ["x", "y"]})
+        result = describe_dataframe(pandas_df, include_dtypes=True)
         assert "columns: ['A', 'B']" in result
         assert "with dtypes" in result
 
     if HAS_POLARS:
         import polars as pl
 
-        df = pl.DataFrame({"A": [1, 2], "B": ["x", "y"]})
-        result = describe_dataframe(df, include_dtypes=True)
+        polars_df = pl.DataFrame({"A": [1, 2], "B": ["x", "y"]})
+        result = describe_dataframe(polars_df, include_dtypes=True)
         assert "columns: ['A', 'B']" in result
         assert "with dtypes" in result
 
@@ -150,11 +150,11 @@ def test_log_dataframe_functions() -> None:
     if HAS_PANDAS:
         import pandas as pd
 
-        df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+        pandas_df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
 
         # These should not raise errors
-        log_dataframe_input(logging.INFO, "test_func", df, False)
-        log_dataframe_output(logging.INFO, "test_func", df, True)
+        log_dataframe_input(logging.INFO, "test_func", pandas_df, False)
+        log_dataframe_output(logging.INFO, "test_func", pandas_df, True)
 
         # Test with non-DataFrame input
         log_dataframe_input(logging.INFO, "test_func", "not_a_df", False)
@@ -163,8 +163,8 @@ def test_log_dataframe_functions() -> None:
     if HAS_POLARS:
         import polars as pl
 
-        df = pl.DataFrame({"A": [1, 2], "B": [3, 4]})
+        polars_df = pl.DataFrame({"A": [1, 2], "B": [3, 4]})
 
         # These should not raise errors
-        log_dataframe_input(logging.INFO, "test_func", df, False)
-        log_dataframe_output(logging.INFO, "test_func", df, True)
+        log_dataframe_input(logging.INFO, "test_func", polars_df, False)
+        log_dataframe_output(logging.INFO, "test_func", polars_df, True)
