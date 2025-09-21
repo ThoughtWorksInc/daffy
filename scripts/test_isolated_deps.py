@@ -21,9 +21,10 @@ Usage:
 
 import importlib.util
 import sys
+from typing import Any
 
 
-def test_pandas_only():
+def test_pandas_only() -> bool:
     """Test daffy with only pandas installed."""
     print("Testing pandas-only configuration...")
 
@@ -49,7 +50,7 @@ def test_pandas_only():
 
         @df_in(columns=["A", "B"])
         @df_out(columns=["A", "B", "C"])
-        def test_func(df):
+        def test_func(df: Any) -> Any:
             df = df.copy()
             df["C"] = df["A"] + df["B"]
             return df
@@ -72,7 +73,7 @@ def test_pandas_only():
         return False
 
 
-def test_polars_only():
+def test_polars_only() -> bool:
     """Test daffy with only polars installed."""
     print("Testing polars-only configuration...")
 
@@ -98,7 +99,7 @@ def test_polars_only():
 
         @df_in(columns=["A", "B"])
         @df_out(columns=["A", "B", "C"])
-        def test_func(df):
+        def test_func(df: Any) -> Any:
             import polars as pl  # Import here for local scope
 
             return df.with_columns((pl.col("A") + pl.col("B")).alias("C"))
@@ -121,7 +122,7 @@ def test_polars_only():
         return False
 
 
-def test_both():
+def test_both() -> bool:
     """Test daffy with both libraries installed."""
     print("Testing both pandas and polars configuration...")
 
@@ -140,7 +141,7 @@ def test_both():
         print("✅ Library detection correct")
 
         @df_in(columns=["A", "B"])
-        def test_func(df):
+        def test_func(df: Any) -> Any:
             return df
 
         # Test both types work
@@ -165,7 +166,7 @@ def test_both():
         return False
 
 
-def test_none():
+def test_none() -> bool:
     """Test daffy with no DataFrame libraries installed."""
     print("Testing no DataFrame libraries configuration...")
 

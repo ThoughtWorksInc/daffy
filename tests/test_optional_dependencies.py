@@ -1,5 +1,7 @@
 """Simple tests for optional dependencies functionality."""
 
+from typing import Any
+
 import pytest
 
 from daffy.utils import HAS_PANDAS, HAS_POLARS
@@ -8,16 +10,16 @@ from daffy.utils import HAS_PANDAS, HAS_POLARS
 class TestOptionalDependenciesDetection:
     """Test that daffy correctly detects available dependencies."""
 
-    def test_library_detection_flags_exist(self):
+    def test_library_detection_flags_exist(self) -> None:
         """Test that the detection flags exist and are boolean."""
         assert isinstance(HAS_PANDAS, bool)
         assert isinstance(HAS_POLARS, bool)
 
-    def test_at_least_one_library_available(self):
+    def test_at_least_one_library_available(self) -> None:
         """Test that at least one DataFrame library is available in test environment."""
         assert HAS_PANDAS or HAS_POLARS, "At least one DataFrame library should be available for tests"
 
-    def test_import_detection_consistency(self):
+    def test_import_detection_consistency(self) -> None:
         """Test that import detection is consistent with actual imports."""
         if HAS_PANDAS:
             # If we detected pandas, we should be able to import it
@@ -31,12 +33,12 @@ class TestOptionalDependenciesDetection:
 
             assert pl is not None
 
-    def test_error_messages_reflect_available_libraries(self):
+    def test_error_messages_reflect_available_libraries(self) -> None:
         """Test that error messages reflect only available libraries."""
         from daffy import df_in
 
         @df_in()
-        def test_func(df):
+        def test_func(df: Any) -> Any:
             return df
 
         with pytest.raises(AssertionError) as excinfo:
@@ -54,7 +56,7 @@ class TestOptionalDependenciesDetection:
             assert "Polars" in error_msg
             assert "Pandas" not in error_msg
 
-    def test_dataframe_validation_works_with_available_libraries(self):
+    def test_dataframe_validation_works_with_available_libraries(self) -> None:
         """Test that DataFrame validation works with whatever libraries are available."""
         from daffy import df_in, df_out
 
@@ -63,7 +65,7 @@ class TestOptionalDependenciesDetection:
 
             @df_in(columns=["A", "B"])
             @df_out(columns=["A", "B", "C"])
-            def pandas_test(df):
+            def pandas_test(df: Any) -> Any:
                 df = df.copy()
                 df["C"] = df["A"] + df["B"]
                 return df
@@ -77,7 +79,7 @@ class TestOptionalDependenciesDetection:
 
             @df_in(columns=["A", "B"])
             @df_out(columns=["A", "B", "C"])
-            def polars_test(df):
+            def polars_test(df: Any) -> Any:
                 return df.with_columns((pl.col("A") + pl.col("B")).alias("C"))
 
             polars_df = pl.DataFrame({"A": [1, 2], "B": [3, 4]})
@@ -85,7 +87,7 @@ class TestOptionalDependenciesDetection:
             assert result.columns == ["A", "B", "C"]
 
 
-def test_basic_import_works():
+def test_basic_import_works() -> None:
     """Test that basic daffy import works regardless of available libraries."""
     from daffy import df_in, df_log, df_out
 
@@ -96,7 +98,7 @@ def test_basic_import_works():
 
 
 @pytest.mark.skipif(not (HAS_PANDAS and HAS_POLARS), reason="Test requires both pandas and polars")
-def test_both_libraries_work_together():
+def test_both_libraries_work_together() -> None:
     """Test that both libraries can be used in the same environment."""
     import pandas as pd
     import polars as pl
@@ -104,7 +106,7 @@ def test_both_libraries_work_together():
     from daffy import df_in
 
     @df_in(columns=["A", "B"])
-    def works_with_both(df):
+    def works_with_both(df: Any) -> Any:
         return df
 
     # Both should work
