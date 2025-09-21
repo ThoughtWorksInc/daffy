@@ -47,7 +47,12 @@ def _find_dtype_mismatches(
 
 
 def validate_dataframe(
-    df: DataFrameType, columns: Union[ColumnsList, ColumnsDict], strict: bool, param_name: Optional[str] = None
+    df: DataFrameType,
+    columns: Union[ColumnsList, ColumnsDict],
+    strict: bool,
+    param_name: Optional[str] = None,
+    func_name: Optional[str] = None,
+    is_return_value: bool = False,
 ) -> None:
     df_columns = list(df.columns)  # Cache the column list conversion
     all_missing_columns = []
@@ -69,7 +74,7 @@ def validate_dataframe(
             all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
             all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
 
-    param_info = format_param_context(param_name)
+    param_info = format_param_context(param_name, func_name, is_return_value)
 
     if all_missing_columns:
         raise AssertionError(f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}")

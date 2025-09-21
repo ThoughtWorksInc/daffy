@@ -50,7 +50,7 @@ def df_out(
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
             if columns:
-                validate_dataframe(result, columns, get_strict(strict))
+                validate_dataframe(result, columns, get_strict(strict), None, func.__name__, True)
             return result
 
         return wrapper
@@ -86,7 +86,7 @@ def df_in(
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
             if columns:
-                validate_dataframe(df, columns, get_strict(strict), param_name)
+                validate_dataframe(df, columns, get_strict(strict), param_name, func.__name__)
             return func(*args, **kwargs)
 
         return wrapper

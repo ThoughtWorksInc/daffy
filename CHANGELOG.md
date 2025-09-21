@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.15.0
+
+- Exception messages now include function names to improve debugging
+  - Input validation: `"Missing columns: ['Col'] in function 'my_func' parameter 'param'. Got columns: ['Other']"`
+- Return value validation messages now clearly state "return value" instead of just showing function name
+  - Output validation: `"Missing columns: ['Col'] in function 'my_func' return value. Got columns: ['Other']"`
+
 ## 0.14.2
 
 - Internal code quality improvements
