@@ -48,8 +48,10 @@ def get_all_cars():
 In case one of the listed columns is missing from the DataFrame, a helpful assertion error is thrown:
 
 ```python
-AssertionError("Column Price missing from DataFrame. Got columns: ['Brand']")
+AssertionError("Missing columns: ['Price'] in function 'get_all_cars' return value. Got columns: ['Brand']")
 ```
+
+The error message clearly indicates that this is a **return value** validation failure in the function `get_all_cars`.
 
 ## Combined Validation
 
@@ -62,6 +64,10 @@ def filter_cars(car_df):
     # filter some cars
     return filtered_cars_df
 ```
+
+Note that error messages will clearly distinguish between input and output validation failures:
+- Input validation: `"Missing columns: ['Price'] in function 'filter_cars' parameter 'car_df'. Got columns: ['Brand']"`
+- Output validation: `"Missing columns: ['Price'] in function 'filter_cars' return value. Got columns: ['Brand']"`
 
 ## Column Pattern Matching with Regex
 
@@ -83,7 +89,7 @@ In this example:
 If no columns match a regex pattern, an error is raised:
 
 ```
-AssertionError: Missing columns: ['r/Price_\d+/']. Got columns: ['Brand', 'Model']
+AssertionError: Missing columns: ['r/Price_\d+/'] in function 'process_data' parameter 'df'. Got columns: ['Brand', 'Model']
 ```
 
 Regex patterns are also considered in strict mode. Any column matching a regex pattern is considered valid.
@@ -105,7 +111,7 @@ columns={"Brand": "object", "Price": "int64"}
 This will not only check that the specified columns are found from the DataFrame but also that their `dtype` is the expected. In case of a wrong `dtype`, an error message similar to following will explain the mismatch:
 
 ```
-AssertionError("Column Price has wrong dtype. Was int64, expected float64")
+AssertionError("Column Price in function 'process_cars' parameter 'car_df' has wrong dtype. Was int64, expected float64")
 ```
 
 ### Combining Regex Patterns with Data Type Validation
@@ -126,7 +132,7 @@ In this example:
 If a column matches the regex pattern but has the wrong dtype, an error is raised:
 
 ```
-AssertionError: Column Price_2 has wrong dtype. Was float64, expected int64
+AssertionError: Column Price_2 in function 'process_data' parameter 'df' has wrong dtype. Was float64, expected int64
 ```
 
 ## Strict Mode
@@ -142,7 +148,7 @@ def process_cars(car_df):
 will, when `car_df` contains columns `["Brand", "Price"]` raise an error:
 
 ```
-AssertionError: DataFrame contained unexpected column(s): Price
+AssertionError: DataFrame in function 'process_cars' parameter 'car_df' contained unexpected column(s): Price
 ```
 
 ## Project-wide Configuration
