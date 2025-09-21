@@ -87,5 +87,5 @@ jobs:
       - name: Test no libraries scenario (expected to fail gracefully)
         if: matrix.scenario == 'none'
         run: |
-          uv run --no-project python scripts/test_isolated_deps.py none
+          uv run --no-project --with "daffy @ ." python scripts/test_isolated_deps.py none
 

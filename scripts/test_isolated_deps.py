@@ -7,16 +7,16 @@ by testing with different combinations of pandas/polars.
 
 Usage:
     # Test with pandas only
-    uv run --with pandas>=1.5.1 python scripts/test_isolated_deps.py pandas
+    uv run --with "pandas>=1.5.1" python scripts/test_isolated_deps.py pandas
 
     # Test with polars only
-    uv run --with polars>=1.7.0 python scripts/test_isolated_deps.py polars
+    uv run --with "polars>=1.7.0" python scripts/test_isolated_deps.py polars
 
     # Test with both
-    uv run --with pandas>=1.5.1 --with polars>=1.7.0 python scripts/test_isolated_deps.py both
+    uv run --with "pandas>=1.5.1" --with "polars>=1.7.0" python scripts/test_isolated_deps.py both
 
-    # Test with neither (should fail)
-    uv run --no-project python scripts/test_isolated_deps.py none
+    # Test with neither (should fail gracefully)
+    uv run --no-project --with "daffy @ ." python scripts/test_isolated_deps.py none
 """
 
 import importlib.util
@@ -172,12 +172,16 @@ def test_none() -> bool:
 
     if importlib.util.find_spec("pandas") is not None:
         print("❌ Pandas should not be available")
+        print("   Note: This test requires a clean environment without pandas/polars")
+        print("   This is expected to work only in CI with isolated environments")
         return False
     else:
         print("✅ Pandas correctly not available")
 
     if importlib.util.find_spec("polars") is not None:
         print("❌ Polars should not be available")
+        print("   Note: This test requires a clean environment without pandas/polars")
+        print("   This is expected to work only in CI with isolated environments")
         return False
     else:
         print("✅ Polars correctly not available")

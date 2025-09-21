@@ -36,16 +36,16 @@ The `scripts/test_isolated_deps.py` script allows manual testing of different sc
 
 ```bash
 # Test with pandas only
-uv run --with pandas>=1.5.1 python scripts/test_isolated_deps.py pandas
+uv run --with "pandas>=1.5.1" python scripts/test_isolated_deps.py pandas
 
 # Test with polars only
-uv run --with polars>=1.7.0 python scripts/test_isolated_deps.py polars
+uv run --with "polars>=1.7.0" python scripts/test_isolated_deps.py polars
 
 # Test with both
-uv run --with pandas>=1.5.1 --with polars>=1.7.0 python scripts/test_isolated_deps.py both
+uv run --with "pandas>=1.5.1" --with "polars>=1.7.0" python scripts/test_isolated_deps.py both
 
-# Test with neither (should fail gracefully)
-uv run --no-project python scripts/test_isolated_deps.py none
+# Test with neither (should fail gracefully) - primarily for CI
+uv run --no-project --with "daffy @ ." python scripts/test_isolated_deps.py none
 ```
 
 ### Expected Behaviors
