@@ -9,6 +9,7 @@ on:
       - master
 
 jobs:
+  # Standard tests with both pandas and polars
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -47,4 +48,76 @@ jobs:
           files: ./coverage.xml
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Test optional dependencies scenarios with pytest (always passes)
+  test-optional-deps-pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Run optional dependencies tests with both libraries
+        run: |
+          uv sync
+          uv run pytest tests/test_optional_dependencies.py -v
+
+  # Test true isolation scenarios (manual script testing)
+  test-isolation-scenarios:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.13"]
+        scenario: ["pandas-only", "polars-only", "both", "none"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Build daffy wheel
+        run: |
+          uv build --wheel
+
+      - name: Test pandas-only scenario
+        if: matrix.scenario == 'pandas-only'
+        run: |
+          WHEEL=$(ls dist/daffy-*.whl | head -n1)
+          uv run --no-project --with "pandas>=1.5.1" --with "$WHEEL" python scripts/test_isolated_deps.py pandas
+
+      - name: Test polars-only scenario
+        if: matrix.scenario == 'polars-only'
+        run: |
+          WHEEL=$(ls dist/daffy-*.whl | head -n1)
+          uv run --no-project --with "polars>=1.7.0" --with "$WHEEL" python scripts/test_isolated_deps.py polars
+
+      - name: Test both libraries scenario
+        if: matrix.scenario == 'both'
+        run: |
+          WHEEL=$(ls dist/daffy-*.whl | head -n1)
+          uv run --no-project --with "pandas>=1.5.1" --with "polars>=1.7.0" --with "$WHEEL" python scripts/test_isolated_deps.py both
+
+      - name: Test no libraries scenario (expected to fail gracefully)
+        if: matrix.scenario == 'none'
+        run: |
+          WHEEL=$(ls dist/daffy-*.whl | head -n1)
+          uv run --no-project --with "$WHEEL" python scripts/test_isolated_deps.py none
 

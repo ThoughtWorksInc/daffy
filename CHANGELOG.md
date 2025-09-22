@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.16.0
+
+- Removed Pandas and Polars from required dependencies. Daffy will not pull in Polars if your project just uses Pandas
+and vice versa. All combinations are dynamically supported and require no changes from existing users.
+
+### Testing & CI
+
+- Added comprehensive CI testing for all dependency combinations
+- New test suite validates optional dependency behavior
+- Manual testing script for developers (`scripts/test_isolated_deps.py`)
+- Updated CI to test pandas-only, polars-only, both, and none scenarios
+
 ## 0.15.0
 
 - Exception messages now include function names to improve debugging
