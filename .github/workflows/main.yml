@@ -32,11 +32,11 @@ jobs:
         run: |
           uv sync
 
-      - name: Lint with Ruff and Mypy
+      - name: Lint with Ruff and Pyrefly
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --diff
-          uv run mypy .
+          uv run pyrefly check .
 
       - name: Test with pytest
         run: |
