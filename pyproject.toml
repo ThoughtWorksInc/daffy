@@ -34,17 +34,22 @@ repository = "https://github.com/ThoughtWorksInc/daffy.git"
 documentation = "https://github.com/ThoughtWorksInc/daffy/blob/master/README.md"
 
 [dependency-groups]
-dev = [
+# Minimal dependencies for running tests - must support Python 3.9+
+test = [
     "pytest>=8.4.1",
-    "pre-commit>=4.0.0",
-    "pyrefly",
     "pytest-mock>=3.14.1",
-    "pytest-cov>=6.0.0",
-    "coverage[toml]>=7.10.6",
-    "pydocstyle>=6.3.0",
-    "ruff>=0.14.2",
     "pandas>=1.5.1,<3.0.0",
     "polars>=1.7.0",
+]
+
+# Development tools - can require latest Python
+dev = [
+    "ruff>=0.14.2",
+    "pyrefly",
+    "coverage[toml]>=7.10.6",
+    "pytest-cov>=6.0.0",
+    "pre-commit>=4.0.0",
+    "pydocstyle>=6.3.0",
 ]
 
 [build-system]
