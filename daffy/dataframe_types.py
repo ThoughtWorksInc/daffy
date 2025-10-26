@@ -38,7 +38,7 @@ else:
     if HAS_POLARS:
         _available_types.append(PolarsDataFrame)
 
-    if not _available_types:  # pragma: no cover
+    if not _available_types:
         raise ImportError(
             "No DataFrame library found. Please install Pandas or Polars: pip install pandas  OR  pip install polars"
         )
