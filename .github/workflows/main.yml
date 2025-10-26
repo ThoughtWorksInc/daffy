@@ -1,4 +1,4 @@
-name: test
+name: CI
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
 jobs:
   # Test on all Python versions with minimal dependencies
   test:
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -38,6 +39,7 @@ jobs:
 
   # Lint and type-check on latest Python only
   lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -64,6 +66,7 @@ jobs:
 
   # Coverage on latest Python only
   coverage:
+    name: Code Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -95,6 +98,7 @@ jobs:
 
   # Test optional dependencies scenarios with pytest (always passes)
   test-optional-deps-pytest:
+    name: Optional Dependencies (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -119,6 +123,7 @@ jobs:
 
   # Test true isolation scenarios (manual script testing)
   test-isolation-scenarios:
+    name: Isolation ${{ matrix.scenario }} (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
