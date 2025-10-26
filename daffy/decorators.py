@@ -14,8 +14,8 @@ else:
     PolarsDataFrame = None
 
 from daffy.config import get_strict
+from daffy.dataframe_types import DataFrameType
 from daffy.utils import (
-    DataFrameType,
     assert_is_dataframe,
     get_parameter,
     get_parameter_name,
