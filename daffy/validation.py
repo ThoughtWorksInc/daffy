@@ -34,7 +34,7 @@ def _find_dtype_mismatches(
     column_spec: Union[str, RegexColumnDef], df: DataFrameType, expected_dtype: Any, df_columns: List[str]
 ) -> List[Tuple[str, Any, Any]]:
     """Find dtype mismatches for a single column specification."""
-    mismatches = []
+    mismatches: List[Tuple[str, Any, Any]] = []
     if isinstance(column_spec, str):
         if column_spec in df_columns and df[column_spec].dtype != expected_dtype:
             mismatches.append((column_spec, df[column_spec].dtype, expected_dtype))
