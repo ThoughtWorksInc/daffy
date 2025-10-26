@@ -47,7 +47,7 @@ test = [
 dev = [
     "ruff>=0.14.2",
     "pyrefly",
-    "coverage[toml]>=7.10.6",
+    "coverage[toml]>=7.11.0; python_version >= '3.10'",
     "pytest-cov>=6.0.0",
     "pre-commit>=4.0.0",
     "pydocstyle>=6.3.0",
