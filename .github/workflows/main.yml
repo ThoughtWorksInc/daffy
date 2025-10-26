@@ -9,8 +9,8 @@ on:
       - master
 
 jobs:
-  # Standard tests with both pandas and polars
-  build:
+  # Test on all Python versions with minimal dependencies
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,9 +28,33 @@ jobs:
         run: |
           pip install uv
 
-      - name: Create virtual environment and install dependencies
+      - name: Install test dependencies
         run: |
-          uv sync
+          uv sync --group test
+
+      - name: Test with pytest
+        run: |
+          uv run pytest tests/
+
+  # Lint and type-check on latest Python only
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Install dev dependencies
+        run: |
+          uv sync --group test --group dev
 
       - name: Lint with Ruff and Pyrefly
         run: |
@@ -38,7 +62,27 @@ jobs:
           uv run ruff format --diff
           uv run pyrefly check .
 
-      - name: Test with pytest
+  # Coverage on latest Python only
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+
+      - name: Install uv
+        run: |
+          pip install uv
+
+      - name: Install dev dependencies
+        run: |
+          uv sync --group test --group dev
+
+      - name: Test with coverage
         run: |
           uv run pytest --cov --cov-report=xml tests/
 
@@ -70,7 +114,7 @@ jobs:
 
       - name: Run optional dependencies tests with both libraries
         run: |
-          uv sync
+          uv sync --group test
           uv run pytest tests/test_optional_dependencies.py -v
 
   # Test true isolation scenarios (manual script testing)
