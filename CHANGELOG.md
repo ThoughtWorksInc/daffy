@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.16.1
+
+- Internal refactoring: extracted DataFrame type handling to dedicated module for better code organization and maintainability
+
 ## 0.16.0
 
 - Removed Pandas and Polars from required dependencies. Daffy will not pull in Polars if your project just uses Pandas
