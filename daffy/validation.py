@@ -3,6 +3,7 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 from typing import Sequence as Seq
 
+from daffy.dataframe_types import DataFrameType
 from daffy.patterns import (
     RegexColumnDef,
     compile_regex_pattern,
@@ -12,7 +13,7 @@ from daffy.patterns import (
     is_regex_string,
     match_column_with_regex,
 )
-from daffy.utils import DataFrameType, describe_dataframe, format_param_context
+from daffy.utils import describe_dataframe, format_param_context
 
 ColumnsList = Seq[Union[str, RegexColumnDef]]
 ColumnsDict = Dict[Union[str, RegexColumnDef], Any]
