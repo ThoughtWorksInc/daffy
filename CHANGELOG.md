@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.17.0
+
+- Add optional row-level validation using Pydantic models (requires Pydantic >= 2.4.0)
+  - New `row_validator` parameter for `@df_in` and `@df_out` decorators
+  - Validates actual data values, not just column structure
+  - Batch validation for optimal performance (10-100x faster than row-by-row)
+  - Informative error messages showing which rows failed and why
+  - Configuration via `pyproject.toml`: `row_validation_max_errors` and `row_validation_convert_nans`
+  - Works with both Pandas and Polars DataFrames
+
 ## 0.16.1
 
 - Internal refactoring: extracted DataFrame type handling to dedicated module for better code organization and maintainability
