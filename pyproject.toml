@@ -83,10 +83,10 @@ packages = ["daffy"]
 [tool.coverage.run]
 branch = true
 source = ["daffy"]
-# Exclude dataframe_types.py - it handles optional dependencies and can't be meaningfully
-# tested in normal unit tests where both pandas and polars are installed.
-# This module is thoroughly tested in the isolation test suite (test-isolation-scenarios).
-omit = ["daffy/dataframe_types.py"]
+# Exclude optional dependency modules - they handle optional imports and can't be meaningfully
+# tested in normal unit tests where all dependencies are installed.
+# These modules are thoroughly tested in the isolation test suite (test-isolation-scenarios).
+omit = ["daffy/dataframe_types.py", "daffy/pydantic_types.py"]
 
 [tool.coverage.report]
 show_missing = true
