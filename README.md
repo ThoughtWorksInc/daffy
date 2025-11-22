@@ -1,4 +1,4 @@
-# Daffy - DataFrame Column Validator
+# Daffy - DataFrame Validator
 
 [![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
@@ -17,14 +17,22 @@ def analyze_housing(houses_df):
     return analyzed_df
 ```
 
-Like type hints for DataFrames, Daffy helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Compatible with both Pandas and Polars.
+Like type hints for DataFrames, Daffy helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Column validation is lightweight and fast. For deeper validation, Daffy also supports row-level validation using Pydantic models. Compatible with both Pandas and Polars.
 
 ## Key Features
 
+**Column Validation** (lightweight, minimal overhead):
 - Validate DataFrame columns at function entry and exit points
 - Support regex patterns for matching column names (e.g., `"r/column_\d+/"`)
 - Check data types of columns
 - Control strictness of validation (allow or disallow extra columns)
+
+**Row Validation** (optional, requires Pydantic >= 2.4.0):
+- Validate row data using Pydantic models
+- Batch validation for optimal performance
+- Informative error messages showing which rows failed and why
+
+**General**:
 - Works with both Pandas and Polars DataFrames
 - Project-wide configuration via pyproject.toml
 - Integrated logging for DataFrame structure inspection
@@ -46,6 +54,8 @@ pip install daffy
 
 ## Quick Start
 
+### Column Validation
+
 ```python
 from daffy import df_in, df_out
 
@@ -56,6 +66,27 @@ def apply_discount(cars_df):
     cars_df["Discount"] = cars_df["Price"] * 0.1
     return cars_df
 ```
+
+### Row Validation
+
+For validating actual data values (requires `pip install pydantic`):
+
+```python
+from pydantic import BaseModel, Field
+from daffy import df_in
+
+class Product(BaseModel):
+    name: str
+    price: float = Field(gt=0)  # Price must be positive
+    stock: int = Field(ge=0)    # Stock must be non-negative
+
+@df_in(row_validator=Product)
+def process_inventory(df):
+    # Process inventory data with validated rows
+    return df
+```
+
+**Performance note:** Column validation has minimal overhead. Row validation validates data values and will impact performance on large DataFrames. Use row validation when data quality is critical.
 
 ## License
 
