@@ -35,7 +35,9 @@ R = TypeVar("R")  # Return type for df_in
 
 
 def df_out(
-    columns: ColumnsDef = None, strict: Optional[bool] = None
+    columns: ColumnsDef = None,
+    strict: Optional[bool] = None,
+    row_validator: Optional["type[BaseModel]"] = None,
 ) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
     """Decorate a function that returns a Pandas or Polars DataFrame.
 
@@ -49,6 +51,8 @@ def df_out(
             Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
+        row_validator (type[BaseModel], optional): Pydantic model for validating row data.
+            Requires pydantic >= 2.4.0. Defaults to None.
 
     Returns:
         Callable: Decorated function with preserved DataFrame return type
@@ -61,6 +65,25 @@ def df_out(
             assert_is_dataframe(result, "return type")
             if columns:
                 validate_dataframe(result, columns, get_strict(strict), None, func.__name__, True)
+
+            if row_validator is not None:
+                from daffy.config import get_row_validation_config
+                from daffy.row_validation import validate_dataframe_rows
+                from daffy.utils import format_param_context
+
+                config = get_row_validation_config()
+
+                try:
+                    validate_dataframe_rows(
+                        result,
+                        row_validator,
+                        max_errors=config["max_errors"],
+                        convert_nans=config["convert_nans"],
+                    )
+                except AssertionError as e:
+                    context = format_param_context(None, func.__name__, True)
+                    raise AssertionError(f"{str(e)}{context}") from e
+
             return result
 
         return wrapper
