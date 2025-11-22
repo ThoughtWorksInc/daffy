@@ -128,7 +128,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.9", "3.13"]
-        scenario: ["pandas-only", "polars-only", "both", "none"]
+        scenario: ["pandas-only", "polars-only", "both", "pandas-no-pydantic", "none"]
     steps:
       - uses: actions/checkout@v3
 
@@ -163,6 +163,12 @@ jobs:
         run: |
           WHEEL=$(ls dist/daffy-*.whl | head -n1)
           uv run --no-project --with "pandas>=1.5.1" --with "polars>=1.7.0" --with "$WHEEL" python scripts/test_isolated_deps.py both
+
+      - name: Test pandas without pydantic scenario
+        if: matrix.scenario == 'pandas-no-pydantic'
+        run: |
+          WHEEL=$(ls dist/daffy-*.whl | head -n1)
+          uv run --no-project --with "pandas>=1.5.1" --with "$WHEEL" python scripts/test_isolated_deps.py pandas-no-pydantic
 
       - name: Test no libraries scenario (expected to fail gracefully)
         if: matrix.scenario == 'none'
