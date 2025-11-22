@@ -27,18 +27,7 @@ else:
 
 
 def _iterate_dataframe_with_index(df: DataFrameType) -> Iterator[tuple[Any, dict[str, Any]]]:
-    """
-    Efficiently iterate over DataFrame rows with proper index handling.
-
-    Returns iterator of (index_label, row_dict) tuples.
-    Works for both pandas and polars, handles all index types.
-
-    Args:
-        df: DataFrame to iterate over
-
-    Yields:
-        Tuple of (index_label, row_dict) for each row
-    """
+    """Iterate over DataFrame rows, yielding (index_label, row_dict) tuples."""
     if is_polars_dataframe(df):
         for idx, row in enumerate(df.iter_rows(named=True)):  # type: ignore[attr-defined]
             yield idx, row
@@ -50,25 +39,8 @@ def _iterate_dataframe_with_index(df: DataFrameType) -> Iterator[tuple[Any, dict
 
 
 def _convert_nan_to_none(row_dict: dict[str, Any]) -> dict[str, Any]:
-    """
-    Convert NaN values to None for Pydantic compatibility.
-
-    Pydantic expects None for missing values, but DataFrames use NaN.
-    This function bridges the gap.
-
-    Args:
-        row_dict: Dictionary representation of a DataFrame row
-
-    Returns:
-        Dictionary with NaN values converted to None
-    """
-    cleaned = {}
-    for key, value in row_dict.items():
-        if isinstance(value, float) and math.isnan(value):
-            cleaned[key] = None
-        else:
-            cleaned[key] = value
-    return cleaned
+    """Convert NaN values to None for Pydantic compatibility."""
+    return {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row_dict.items()}
 
 
 def validate_dataframe_rows(
@@ -100,18 +72,13 @@ def validate_dataframe_rows(
     if not isinstance(df, get_dataframe_types()):
         raise TypeError(f"Expected DataFrame, got {type(df)}")
 
-    # Empty DataFrames pass validation
     if len(df) == 0:
         return
 
-    # Try batch validation first (fastest)
     try:
         _validate_batch(df, row_validator, max_errors, convert_nans)
     except (TypeError, AttributeError, KeyError):
-        # Fallback to iterative validation if batch conversion fails
-        # This can happen with complex models or unusual DataFrame structures
         _validate_iterative(df, row_validator, max_errors, convert_nans)
-    # AssertionError from validation failures should propagate
 
 
 def _validate_batch(
@@ -120,16 +87,7 @@ def _validate_batch(
     max_errors: int,
     convert_nans: bool,
 ) -> None:
-    """
-    Batch validation using TypeAdapter - much faster for large DataFrames.
-
-    Args:
-        df: DataFrame to validate
-        row_validator: Pydantic model for validation
-        max_errors: Maximum errors to collect
-        convert_nans: Whether to convert NaN values
-    """
-    # Convert entire DataFrame to list of dicts
+    """Batch validation using TypeAdapter."""
     if is_polars_dataframe(df):
         records = list(df.iter_rows(named=True))  # type: ignore[attr-defined]
     elif is_pandas_dataframe(df):
@@ -137,42 +95,29 @@ def _validate_batch(
     else:
         raise TypeError(f"Cannot convert {type(df)} to records")
 
-    # Convert NaNs if needed
     if convert_nans:
         records = [_convert_nan_to_none(r) for r in records]
 
-    # Create TypeAdapter for batch validation
     adapter = TypeAdapter(list[row_validator])  # type: ignore[misc]
 
     try:
-        # Validate all at once - very fast!
         adapter.validate_python(records)
     except PydanticValidationError as e:  # type: ignore[misc]
-        # Extract row-level errors from batch validation
         errors_by_row: list[tuple[Any, Any]] = []
-
-        # Count unique rows with errors (need to iterate through ALL errors)
         unique_row_indices: set[int] = set()
         all_errors = list(e.errors())  # type: ignore[misc]
+
         for error in all_errors:
             if error["loc"] and isinstance(error["loc"][0], int):
                 unique_row_indices.add(error["loc"][0])
 
-        # Collect up to max_errors for display
         for error in all_errors:
             if len(errors_by_row) >= max_errors:
                 break
 
-            # Error location is like [row_index, field_name, ...]
             if error["loc"] and isinstance(error["loc"][0], int):
                 row_idx = error["loc"][0]
-
-                # Get index label for better error message
-                if is_pandas_dataframe(df):
-                    idx_label = df.index[row_idx]  # type: ignore[attr-defined]
-                else:
-                    idx_label = row_idx
-
+                idx_label = df.index[row_idx] if is_pandas_dataframe(df) else row_idx  # type: ignore[attr-defined]
                 errors_by_row.append((idx_label, error))
 
         if errors_by_row:
@@ -185,15 +130,7 @@ def _validate_iterative(
     max_errors: int,
     convert_nans: bool,
 ) -> None:
-    """
-    Fallback iterative validation - slower but works for all cases.
-
-    Args:
-        df: DataFrame to validate
-        row_validator: Pydantic model for validation
-        max_errors: Maximum errors to collect
-        convert_nans: Whether to convert NaN values
-    """
+    """Fallback iterative validation."""
     failed_rows: list[tuple[Any, PydanticValidationError]] = []
 
     for idx_label, row_dict in _iterate_dataframe_with_index(df):
@@ -216,57 +153,28 @@ def _raise_validation_error(
     errors: list[tuple[Any, Any]],
     total_errors: int,
 ) -> None:
-    """
-    Format and raise AssertionError with detailed row validation information.
-
-    Uses AssertionError for consistency with existing Daffy validation.
-
-    Args:
-        df: DataFrame being validated
-        errors: List of (index_label, error) tuples
-        total_errors: Total number of validation errors
-
-    Raises:
-        AssertionError: With detailed error message
-    """
-    total_rows = len(df)
-    shown_errors = len(errors)
-
-    # Build detailed error message
+    """Format and raise AssertionError with row validation details."""
     error_lines = [
-        f"Row validation failed for {total_errors} out of {total_rows} rows:",
+        f"Row validation failed for {total_errors} out of {len(df)} rows:",
         "",
     ]
 
-    # Show details for each failed row
     for idx_label, error in errors:
         error_lines.append(f"  Row {idx_label}:")
 
-        # Handle Pydantic ValidationError structure
         if isinstance(error, dict):
-            # From batch validation
             field_path = ".".join(str(x) for x in error["loc"][1:] if x != "__root__")
-            if field_path:
-                error_lines.append(f"    - {field_path}: {error['msg']}")
-            else:
-                error_lines.append(f"    - {error['msg']}")
+            error_lines.append(f"    - {field_path}: {error['msg']}" if field_path else f"    - {error['msg']}")
         elif hasattr(error, "errors"):
-            # From iterative validation
             for err_dict in error.errors():
                 field = ".".join(str(loc) for loc in err_dict["loc"] if loc != "__root__")
-                if field:
-                    error_lines.append(f"    - {field}: {err_dict['msg']}")
-                else:
-                    error_lines.append(f"    - {err_dict['msg']}")
+                error_lines.append(f"    - {field}: {err_dict['msg']}" if field else f"    - {err_dict['msg']}")
         else:
             error_lines.append(f"    - {str(error)}")
 
         error_lines.append("")
 
-    # Add truncation notice if needed
-    if total_errors > shown_errors:
-        remaining = total_errors - shown_errors
-        error_lines.append(f"  ... and {remaining} more row(s) with errors")
+    if total_errors > len(errors):
+        error_lines.append(f"  ... and {total_errors - len(errors)} more row(s) with errors")
 
-    message = "\n".join(error_lines)
-    raise AssertionError(message)
+    raise AssertionError("\n".join(error_lines))
