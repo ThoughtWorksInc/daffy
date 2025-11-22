@@ -3,7 +3,7 @@
 Manual script to test daffy with different dependency combinations.
 
 This script helps verify that the optional dependencies work correctly
-by testing with different combinations of pandas/polars.
+by testing with different combinations of pandas/polars/pydantic.
 
 Usage:
     # First build a wheel to avoid dev dependencies
@@ -21,6 +21,10 @@ Usage:
     WHEEL=$(ls dist/daffy-*.whl | head -n1)
     uv run --no-project --with "pandas>=1.5.1" --with "polars>=1.7.0" --with "$WHEEL" \\
         python scripts/test_isolated_deps.py both
+
+    # Test pandas without pydantic
+    WHEEL=$(ls dist/daffy-*.whl | head -n1)
+    uv run --no-project --with "pandas>=1.5.1" --with "$WHEEL" python scripts/test_isolated_deps.py pandas-no-pydantic
 
     # Test with neither (should fail gracefully)
     WHEEL=$(ls dist/daffy-*.whl | head -n1)
@@ -178,6 +182,80 @@ def test_both() -> bool:
         return False
 
 
+def test_pandas_no_pydantic() -> bool:
+    """Test daffy with pandas but without pydantic."""
+    print("Testing pandas without pydantic configuration...")
+
+    if importlib.util.find_spec("pandas") is None:
+        print("❌ Pandas not available")
+        return False
+    else:
+        print("✅ Pandas import successful")
+
+    if importlib.util.find_spec("pydantic") is not None:
+        print("❌ Pydantic should not be available")
+        print("   Note: This test requires pydantic not to be installed")
+        print("   This is expected to work only in CI with truly isolated environments")
+        return False
+    else:
+        print("✅ Pydantic correctly not available")
+
+    try:
+        from daffy import df_in, df_out
+        from daffy.pydantic_types import HAS_PYDANTIC
+
+        assert not HAS_PYDANTIC, f"HAS_PYDANTIC should be False, got {HAS_PYDANTIC}"
+        print("✅ Pydantic detection correct")
+
+        # Test column validation works
+        @df_in(columns=["A", "B"])
+        @df_out(columns=["A", "B", "C"])
+        def test_func(df: Any) -> Any:
+            df = df.copy()
+            df["C"] = df["A"] + df["B"]
+            return df
+
+        import pandas as pd
+
+        df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+        result = test_func(df)
+
+        assert list(result.columns) == ["A", "B", "C"], f"Wrong columns: {list(result.columns)}"
+        print("✅ Column validation works without pydantic")
+
+        # Test row validation fails with helpful error
+        try:
+            from pydantic import BaseModel  # noqa: F401
+
+            print("❌ Should not be able to import pydantic")
+            return False
+        except ImportError:
+            print("✅ Cannot import pydantic BaseModel as expected")
+
+        # Test that row_validator parameter would raise error
+        from daffy.pydantic_types import require_pydantic
+
+        try:
+            require_pydantic()
+            print("❌ require_pydantic should have raised ImportError")
+            return False
+        except ImportError as e:
+            if "Pydantic >= 2.4.0 is required" in str(e):
+                print("✅ Row validation requirement check works correctly")
+            else:
+                print(f"❌ Wrong error message: {e}")
+                return False
+
+        return True
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return False
+
+
 def test_none() -> bool:
     """Test daffy with no DataFrame libraries installed."""
     print("Testing no DataFrame libraries configuration...")
@@ -229,6 +307,8 @@ if __name__ == "__main__":
         success = test_polars_only()
     elif test_type == "both":
         success = test_both()
+    elif test_type == "pandas-no-pydantic":
+        success = test_pandas_no_pydantic()
     elif test_type == "none":
         success = test_none()
     else:

@@ -13,7 +13,11 @@ def load_config() -> Dict[str, Any]:
     Returns:
         dict: Configuration dictionary with daffy settings
     """
-    default_config = {"strict": False}
+    default_config = {
+        "strict": False,
+        "row_validation_max_errors": 5,
+        "row_validation_convert_nans": True,
+    }
 
     # Try to find pyproject.toml in the current directory or parent directories
     config_path = find_config_file()
@@ -30,6 +34,10 @@ def load_config() -> Dict[str, Any]:
         # Update default config with values from pyproject.toml
         if "strict" in daffy_config:
             default_config["strict"] = bool(daffy_config["strict"])
+        if "row_validation_max_errors" in daffy_config:
+            default_config["row_validation_max_errors"] = int(daffy_config["row_validation_max_errors"])
+        if "row_validation_convert_nans" in daffy_config:
+            default_config["row_validation_convert_nans"] = bool(daffy_config["row_validation_convert_nans"])
 
         return default_config
     except (FileNotFoundError, tomli.TOMLDecodeError):
@@ -87,3 +95,26 @@ def get_strict(strict_param: Optional[bool] = None) -> bool:
     if strict_param is not None:
         return strict_param
     return bool(get_config()["strict"])
+
+
+def get_row_validation_config() -> Dict[str, Any]:
+    """Get all row validation configuration options."""
+    config = get_config()
+    return {
+        "max_errors": config["row_validation_max_errors"],
+        "convert_nans": config["row_validation_convert_nans"],
+    }
+
+
+def get_row_validation_max_errors(max_errors: Optional[int] = None) -> int:
+    """Get max_errors setting for row validation."""
+    if max_errors is not None:
+        return max_errors
+    return int(get_config()["row_validation_max_errors"])
+
+
+def get_row_validation_convert_nans(convert_nans: Optional[bool] = None) -> bool:
+    """Get convert_nans setting for row validation."""
+    if convert_nans is not None:
+        return convert_nans
+    return bool(get_config()["row_validation_convert_nans"])

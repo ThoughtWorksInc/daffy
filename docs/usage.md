@@ -172,6 +172,109 @@ def filter_cars(car_df):
     return filtered_cars_df
 ```
 
+## Row Validation
+
+In addition to column validation, Daffy supports row-level validation using Pydantic models. This allows you to validate actual data values, not just column structure.
+
+**Performance consideration:** Column validation is lightweight with minimal overhead. Row validation validates data values and will impact performance, especially on large DataFrames. Use row validation when data quality is critical.
+
+### Basic Row Validation
+
+First, install Pydantic if you haven't already:
+
+```bash
+pip install 'pydantic>=2.4.0'
+```
+
+Define a Pydantic model describing your expected row structure:
+
+```python
+from pydantic import BaseModel, Field
+from daffy import df_in
+
+class Product(BaseModel):
+    name: str
+    price: float = Field(gt=0)  # Price must be positive
+    stock: int = Field(ge=0)    # Stock cannot be negative
+
+@df_in(row_validator=Product)
+def process_inventory(df):
+    return df
+```
+
+If any rows fail validation, you'll get a detailed error message:
+
+```python
+AssertionError: Row validation failed for 2 out of 100 rows:
+
+  Row 5:
+    - price: Input should be greater than 0
+
+  Row 12:
+    - stock: Input should be greater than or equal to 0
+
+ in function 'process_inventory' parameter 'df'
+```
+
+### Combined Column and Row Validation
+
+You can validate both columns and row data:
+
+```python
+@df_in(columns=["name", "price", "stock"], row_validator=Product)
+def process_inventory(df):
+    return df
+```
+
+Column validation runs first (fast check), then row validation runs if columns are valid.
+
+### Validating Return Values
+
+Use `row_validator` with `@df_out` to validate returned DataFrames:
+
+```python
+@df_out(row_validator=Product)
+def load_products():
+    return products_df
+```
+
+### Configuration
+
+Row validation behavior can be configured in `pyproject.toml`:
+
+```toml
+[tool.daffy]
+row_validation_max_errors = 5  # Show up to 5 failed rows (default: 5)
+row_validation_convert_nans = true  # Convert NaN to None (default: true)
+```
+
+### Advanced Features
+
+Pydantic's validation features work seamlessly:
+
+```python
+from pydantic import BaseModel, Field, ConfigDict, field_validator
+
+class Employee(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str
+    email: str
+    age: int = Field(ge=18, le=120)
+    salary: float = Field(gt=0)
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v):
+        if '@' not in v:
+            raise ValueError('must contain @')
+        return v
+
+@df_in(row_validator=Employee)
+def process_employees(df):
+    return df
+```
+
 ## Logging
 
 To quickly check what the incoming and outgoing dataframes contain, you can add a `@df_log` annotation to the function. For example adding `@df_log` to the above `filter_cars` function will produce log lines:

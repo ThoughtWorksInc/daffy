@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "0.16.1"
+version = "0.17.0"
 description = "Function decorators for Pandas and Polars Dataframe column name and data type validation"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
@@ -41,6 +41,7 @@ test = [
     "pytest-mock>=3.14.1",
     "pandas>=1.5.1,<3.0.0",
     "polars>=1.7.0",
+    "pydantic>=2.4.0",
 ]
 
 # Development tools - can require latest Python
@@ -82,10 +83,10 @@ packages = ["daffy"]
 [tool.coverage.run]
 branch = true
 source = ["daffy"]
-# Exclude dataframe_types.py - it handles optional dependencies and can't be meaningfully
-# tested in normal unit tests where both pandas and polars are installed.
-# This module is thoroughly tested in the isolation test suite (test-isolation-scenarios).
-omit = ["daffy/dataframe_types.py"]
+# Exclude optional dependency modules - they handle optional imports and can't be meaningfully
+# tested in normal unit tests where all dependencies are installed.
+# These modules are thoroughly tested in the isolation test suite (test-isolation-scenarios).
+omit = ["daffy/dataframe_types.py", "daffy/pydantic_types.py"]
 
 [tool.coverage.report]
 show_missing = true

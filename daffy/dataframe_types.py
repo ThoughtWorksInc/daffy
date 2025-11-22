@@ -76,5 +76,13 @@ def get_available_library_names() -> List[str]:
     return available_libs
 
 
+def is_pandas_dataframe(df: Any) -> bool:
+    return HAS_PANDAS and pd is not None and isinstance(df, pd.DataFrame)
+
+
+def is_polars_dataframe(df: Any) -> bool:
+    return HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame)
+
+
 # Cache the types tuple at module level for efficiency
 _DATAFRAME_TYPES = get_dataframe_types()

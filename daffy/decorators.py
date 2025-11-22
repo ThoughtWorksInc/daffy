@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     # For static type checking, assume both are available
     from pandas import DataFrame as PandasDataFrame
     from polars import DataFrame as PolarsDataFrame
+    from pydantic import BaseModel
 else:
     # For runtime, these will be imported from utils if available
     PandasDataFrame = None
@@ -34,7 +35,9 @@ R = TypeVar("R")  # Return type for df_in
 
 
 def df_out(
-    columns: ColumnsDef = None, strict: Optional[bool] = None
+    columns: ColumnsDef = None,
+    strict: Optional[bool] = None,
+    row_validator: Optional["type[BaseModel]"] = None,
 ) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
     """Decorate a function that returns a Pandas or Polars DataFrame.
 
@@ -48,6 +51,8 @@ def df_out(
             Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
+        row_validator (type[BaseModel], optional): Pydantic model for validating row data.
+            Requires pydantic >= 2.4.0. Defaults to None.
 
     Returns:
         Callable: Decorated function with preserved DataFrame return type
@@ -60,6 +65,25 @@ def df_out(
             assert_is_dataframe(result, "return type")
             if columns:
                 validate_dataframe(result, columns, get_strict(strict), None, func.__name__, True)
+
+            if row_validator is not None:
+                from daffy.config import get_row_validation_config
+                from daffy.row_validation import validate_dataframe_rows
+                from daffy.utils import format_param_context
+
+                config = get_row_validation_config()
+
+                try:
+                    validate_dataframe_rows(
+                        result,
+                        row_validator,
+                        max_errors=config["max_errors"],
+                        convert_nans=config["convert_nans"],
+                    )
+                except AssertionError as e:
+                    context = format_param_context(None, func.__name__, True)
+                    raise AssertionError(f"{str(e)}{context}") from e
+
             return result
 
         return wrapper
@@ -68,7 +92,10 @@ def df_out(
 
 
 def df_in(
-    name: Optional[str] = None, columns: ColumnsDef = None, strict: Optional[bool] = None
+    name: Optional[str] = None,
+    columns: ColumnsDef = None,
+    strict: Optional[bool] = None,
+    row_validator: Optional["type[BaseModel]"] = None,
 ) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """Decorate a function parameter that is a Pandas or Polars DataFrame.
 
@@ -83,6 +110,8 @@ def df_in(
             Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
+        row_validator (type[BaseModel], optional): Pydantic model for validating row data.
+            Requires pydantic >= 2.4.0. Defaults to None.
 
     Returns:
         Callable: Decorated function with preserved return type
@@ -96,6 +125,25 @@ def df_in(
             assert_is_dataframe(df, "parameter type")
             if columns:
                 validate_dataframe(df, columns, get_strict(strict), param_name, func.__name__)
+
+            if row_validator is not None:
+                from daffy.config import get_row_validation_config
+                from daffy.row_validation import validate_dataframe_rows
+                from daffy.utils import format_param_context
+
+                config = get_row_validation_config()
+
+                try:
+                    validate_dataframe_rows(
+                        df,
+                        row_validator,
+                        max_errors=config["max_errors"],
+                        convert_nans=config["convert_nans"],
+                    )
+                except AssertionError as e:
+                    context = format_param_context(param_name, func.__name__, False)
+                    raise AssertionError(f"{str(e)}{context}") from e
+
             return func(*args, **kwargs)
 
         return wrapper
