@@ -145,3 +145,9 @@ cython_debug/
 #  The .idea directory stores project settings specific to JetBrains IDEs.
 #  These settings are individual and generally not shared across different development environments.
 .idea/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Development planning files
+*_PLAN*.md
