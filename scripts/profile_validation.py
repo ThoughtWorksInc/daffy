@@ -92,7 +92,7 @@ def profile_validation_steps(n_rows: int, detailed: bool = False) -> dict[str, f
     # Step 2: NaN conversion
     print("\nStep 2: NaN conversion")
     t0 = time.perf_counter()
-    records_clean = [_convert_nan_to_none(r) for r in records]
+    records_clean = [_convert_nan_to_none(r) for r in records]  # type: ignore[arg-type]
     t1 = time.perf_counter()
     step2_time = t1 - t0
     results["nan_conversion"] = step2_time

@@ -8,7 +8,7 @@ and validation strategies.
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Any, Iterator
+from typing import TYPE_CHECKING, Any
 
 from daffy.dataframe_types import get_dataframe_types, is_pandas_dataframe, is_polars_dataframe
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
@@ -24,16 +24,6 @@ else:
     PydanticValidationError = None  # type: ignore[assignment, misc]
 
 
-def _pandas_to_records_fast(df: Any) -> list[dict[str, Any]]:
-    """Fast conversion of pandas DataFrame to list of dicts using NumPy.
-
-    This is ~2x faster than df.to_dict("records").
-    """
-    columns = df.columns.tolist()
-    values = df.to_numpy()
-    return [dict(zip(columns, row)) for row in values]
-
-
 def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
     """Prepare DataFrame for validation by handling NaN values.
 
@@ -47,18 +37,6 @@ def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
 
         return df.where(pd.notna(df), None)
     return df
-
-
-def _iterate_dataframe_with_index(df: DataFrameType) -> Iterator[tuple[Any, dict[str, Any]]]:
-    """Iterate over DataFrame rows, yielding (index_label, row_dict) tuples."""
-    if is_polars_dataframe(df):
-        for idx, row in enumerate(df.iter_rows(named=True)):  # type: ignore[attr-defined]
-            yield idx, row
-    elif is_pandas_dataframe(df):
-        for idx_label, row in df.iterrows():  # type: ignore[attr-defined]
-            yield idx_label, row.to_dict()
-    else:
-        raise TypeError(f"Unknown DataFrame type: {type(df)}")
 
 
 def _convert_nan_to_none(row_dict: dict[str, Any]) -> dict[str, Any]:
@@ -167,15 +145,10 @@ def _raise_validation_error(
     for idx_label, error in errors:
         error_lines.append(f"  Row {idx_label}:")
 
-        if isinstance(error, dict):
-            field_path = ".".join(str(x) for x in error["loc"][1:] if x != "__root__")
-            error_lines.append(f"    - {field_path}: {error['msg']}" if field_path else f"    - {error['msg']}")
-        elif hasattr(error, "errors"):
-            for err_dict in error.errors():
-                field = ".".join(str(loc) for loc in err_dict["loc"] if loc != "__root__")
-                error_lines.append(f"    - {field}: {err_dict['msg']}" if field else f"    - {err_dict['msg']}")
-        else:
-            error_lines.append(f"    - {str(error)}")
+        # error is always a Pydantic ValidationError with .errors() method
+        for err_dict in error.errors():
+            field = ".".join(str(loc) for loc in err_dict["loc"] if loc != "__root__")
+            error_lines.append(f"    - {field}: {err_dict['msg']}" if field else f"    - {err_dict['msg']}")
 
         error_lines.append("")
 

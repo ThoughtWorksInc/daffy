@@ -41,13 +41,10 @@ sys.path.insert(0, ".")
 from daffy.row_validation import validate_dataframe_rows
 
 try:
-    from pandantic import Pandantic
-
-    HAS_PANDANTIC = True
+    from pandantic import Pandantic  # type: ignore[import-not-found]
 except ImportError:
-    HAS_PANDANTIC = False
-    Pandantic = None  # type: ignore[misc, assignment]
-    print("Warning: pandantic not installed. Install with: pip install pandantic")
+    print("ERROR: pandantic not installed. Install with: pip install pandantic")
+    sys.exit(1)
 
 
 # ============================================================================
@@ -176,11 +173,8 @@ def benchmark_daffy_polars(df: pl.DataFrame, validator: type[BaseModel], runs: i
     return sum(times) / len(times)
 
 
-def benchmark_pandantic(df: pd.DataFrame, validator: type[BaseModel], runs: int = 5) -> float | None:
+def benchmark_pandantic(df: pd.DataFrame, validator: type[BaseModel], runs: int = 5) -> float:
     """Benchmark pandantic validation."""
-    if not HAS_PANDANTIC:
-        return None
-
     pandantic_validator = Pandantic(schema=validator)  # type: ignore[misc]
     times: list[float] = []
     for _ in range(runs):
@@ -303,9 +297,8 @@ def run_benchmark(scenario: str, n_rows: int) -> None:
     results["Daffy (polars)"] = benchmark_daffy_polars(df_polars, validator)
 
     # Pandantic
-    if HAS_PANDANTIC:
-        print("  - Pandantic...")
-        results["Pandantic"] = benchmark_pandantic(df_pandas, validator)
+    print("  - Pandantic...")
+    results["Pandantic"] = benchmark_pandantic(df_pandas, validator)
 
     # Raw Pydantic baseline (only for smaller datasets)
     if n_rows <= 10000:
@@ -324,10 +317,6 @@ def main() -> None:
     )
     parser.add_argument("--size", type=int, choices=[1000, 10000, 100000], help="DataFrame size (number of rows)")
     args = parser.parse_args()
-
-    # Check dependencies
-    if not HAS_PANDANTIC:
-        print("\nWarning: pandantic not installed. Install with: pip install pandantic\n")
 
     scenarios = ["simple", "medium"] if args.scenario == "all" else [args.scenario]
     sizes = [args.size] if args.size else [1000, 10000, 100000]

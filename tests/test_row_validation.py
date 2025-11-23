@@ -303,11 +303,10 @@ def test_unknown_dataframe_type() -> None:
     require_pydantic()
 
     class NotADataFrame:
-        pass
+        def __len__(self) -> int:
+            return 1  # Pretend to have data
 
     fake_df = NotADataFrame()
 
-    with pytest.raises(TypeError, match="Unknown DataFrame type"):
-        from daffy.row_validation import _iterate_dataframe_with_index
-
-        list(_iterate_dataframe_with_index(fake_df))  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="Expected DataFrame"):
+        validate_dataframe_rows(fake_df, SimpleValidator)  # type: ignore[arg-type]
