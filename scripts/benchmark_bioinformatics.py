@@ -130,17 +130,17 @@ def generate_bioinformatics_data(n_rows: int, missing_rate: float = 0.15) -> pd.
         "protein_ki67_percent": np.where(
             np.random.random(n_rows) < missing_rate * 1.5, np.nan, (np.random.beta(2, 5, n_rows) * 100).clip(0, 100)
         ),
-        "protein_er_status": np.where(
+        "protein_er_status": np.where(  # type: ignore[call-overload]
             np.random.random(n_rows) < missing_rate,
             None,
             np.random.choice(["positive", "negative", "unknown"], n_rows, p=[0.7, 0.25, 0.05]),
         ),
-        "protein_pr_status": np.where(
+        "protein_pr_status": np.where(  # type: ignore[call-overload]
             np.random.random(n_rows) < missing_rate,
             None,
             np.random.choice(["positive", "negative", "unknown"], n_rows, p=[0.65, 0.30, 0.05]),
         ),
-        "protein_her2_status": np.where(
+        "protein_her2_status": np.where(  # type: ignore[call-overload]
             np.random.random(n_rows) < missing_rate,
             None,
             np.random.choice(["positive", "negative", "equivocal"], n_rows, p=[0.20, 0.75, 0.05]),
@@ -175,7 +175,7 @@ def generate_bioinformatics_data(n_rows: int, missing_rate: float = 0.15) -> pd.
         ),
         # Derived features
         "risk_score": np.random.beta(2, 5, n_rows),
-        "treatment_response": np.where(
+        "treatment_response": np.where(  # type: ignore[call-overload]
             np.random.random(n_rows) < missing_rate * 2,  # More missing (not all treated)
             None,
             np.random.choice(["complete", "partial", "stable", "progressive"], n_rows, p=[0.25, 0.35, 0.25, 0.15]),
@@ -236,7 +236,7 @@ def benchmark_bioinformatics_validation(n_rows: int, runs: int = 3) -> dict[str,
 
     # Benchmark pandas
     print(f"Benchmarking Daffy (pandas) - {runs} runs...")
-    times = []
+    times: list[float] = []
     for i in range(runs):
         start = time.perf_counter()
         validate_dataframe_rows(df_pandas, BioinformaticsFeatures)
@@ -252,7 +252,7 @@ def benchmark_bioinformatics_validation(n_rows: int, runs: int = 3) -> dict[str,
     # Benchmark polars
     if df_polars is not None:
         print(f"Benchmarking Daffy (polars) - {runs} runs...")
-        times = []
+        times: list[float] = []
         for i in range(runs):
             start = time.perf_counter()
             validate_dataframe_rows(df_polars, BioinformaticsFeatures)
