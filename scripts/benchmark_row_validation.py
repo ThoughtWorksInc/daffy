@@ -156,7 +156,7 @@ def generate_complex_data(n_rows: int) -> dict[str, list[Any]]:
 
 def benchmark_daffy_pandas(df: pd.DataFrame, validator: type[BaseModel], runs: int = 5) -> float:
     """Benchmark daffy with pandas DataFrame."""
-    times = []
+    times: list[float] = []
     for _ in range(runs):
         start = time.perf_counter()
         validate_dataframe_rows(df, validator)
@@ -167,7 +167,7 @@ def benchmark_daffy_pandas(df: pd.DataFrame, validator: type[BaseModel], runs: i
 
 def benchmark_daffy_polars(df: pl.DataFrame, validator: type[BaseModel], runs: int = 5) -> float:
     """Benchmark daffy with polars DataFrame."""
-    times = []
+    times: list[float] = []
     for _ in range(runs):
         start = time.perf_counter()
         validate_dataframe_rows(df, validator)
@@ -176,13 +176,13 @@ def benchmark_daffy_polars(df: pl.DataFrame, validator: type[BaseModel], runs: i
     return sum(times) / len(times)
 
 
-def benchmark_pandantic(df: pd.DataFrame, validator: type[BaseModel], runs: int = 5) -> float:
+def benchmark_pandantic(df: pd.DataFrame, validator: type[BaseModel], runs: int = 5) -> float | None:
     """Benchmark pandantic validation."""
     if not HAS_PANDANTIC:
         return None
 
     pandantic_validator = Pandantic(schema=validator)  # type: ignore[misc]
-    times = []
+    times: list[float] = []
     for _ in range(runs):
         start = time.perf_counter()
         try:
@@ -197,7 +197,7 @@ def benchmark_pandantic(df: pd.DataFrame, validator: type[BaseModel], runs: int 
 
 def benchmark_pydantic_baseline(df: pd.DataFrame, validator: type[BaseModel], runs: int = 5) -> float:
     """Benchmark raw Pydantic row-by-row validation (baseline)."""
-    times = []
+    times: list[float] = []
     for _ in range(runs):
         start = time.perf_counter()
         for _, row in df.iterrows():
@@ -236,7 +236,7 @@ def format_throughput(n_rows: int, seconds: float) -> str:
         return f"{throughput:.0f} rows/s"
 
 
-def print_results(scenario: str, n_rows: int, results: dict[str, float]) -> None:
+def print_results(scenario: str, n_rows: int, results: dict[str, float | None]) -> None:
     """Print benchmark results in a nice table."""
     print(f"\n{'=' * 70}")
     print(f"Scenario: {scenario}")
@@ -290,7 +290,7 @@ def run_benchmark(scenario: str, n_rows: int) -> None:
     df_polars = pl.DataFrame(data)
 
     # Run benchmarks
-    results = {}
+    results: dict[str, float | None] = {}
 
     print(f"\nBenchmarking {scenario} validation with {n_rows:,} rows...")
 
