@@ -94,9 +94,10 @@ def process_inventory(df):
 - **Simple validation**: ~770K rows/sec (100K rows in 130ms)
 - **Complex validation**: ~165K rows/sec (32 columns, missing values, cross-field validation)
 
-Performance depends on:
+*Benchmarked on MacBook Pro M1 Pro. Performance depends on:*
 - **Model complexity**: Number of fields, validators, and custom validation logic
 - **Data characteristics**: DataFrame size, missing values, data types
+- **Hardware**: CPU speed, available memory
 
 For detailed benchmarks and optimization strategies, see [scripts/README_BENCHMARKS.md](https://github.com/ThoughtWorksInc/daffy/blob/master/scripts/README_BENCHMARKS.md).
 

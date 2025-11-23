@@ -18,6 +18,13 @@ python scripts/benchmark_row_validation.py --scenario simple
 python scripts/benchmark_row_validation.py --size 10000
 ```
 
+## Benchmark Environment
+
+**Hardware**: MacBook Pro M1 Pro
+**Python**: 3.10
+
+*Note: Performance numbers are hardware-dependent. Your results may vary based on CPU, memory, and Python version.*
+
 ## What Gets Benchmarked
 
 ### Libraries Compared
