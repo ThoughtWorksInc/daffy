@@ -27,15 +27,25 @@ else:
 def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
     """Prepare DataFrame for validation by handling NaN values.
 
-    For pandas DataFrames with NaN conversion enabled, uses vectorized
-    operations which are ~6x faster than row-by-row conversion.
+    For pandas DataFrames with NaN conversion enabled, converts NaN to None.
+    This requires converting numeric columns to object dtype to preserve None values.
     """
     if convert_nans and is_pandas_dataframe(df):
-        # Use vectorized where() to replace NaN with None
-        # This is much faster than converting after dict creation
         import pandas as pd
 
-        return df.where(pd.notna(df), None)
+        # Copy DataFrame to avoid modifying original
+        df = df.copy()
+
+        # Convert float/numeric columns with NaN to object dtype and replace NaN with None
+        # This is necessary because pandas float64 columns convert None back to NaN
+        for col in df.columns:
+            if pd.api.types.is_float_dtype(df[col]) or pd.api.types.is_integer_dtype(df[col]):
+                if df[col].isna().any():
+                    mask = pd.isna(df[col])
+                    df[col] = df[col].astype("object")
+                    df.loc[mask, col] = None
+
+        return df
     return df
 
 
@@ -95,12 +105,12 @@ def _validate_optimized(
     # Use fast conversion for pandas DataFrames
     if is_pandas_dataframe(df):
         # Fast NumPy-based conversion (~2x faster than to_dict("records"))
+        # Note: When we have None values (from NaN conversion), to_numpy() converts them back to NaN
+        # because NumPy doesn't support None in numeric arrays. So we use itertuples instead
+        # which preserves None values.
         columns = df.columns.tolist()  # type: ignore[attr-defined]
-        values = df.to_numpy()  # type: ignore[attr-defined]
 
-        # Since NaN conversion was already done vectorized in df_prepared,
-        # we don't need row-by-row conversion anymore
-        for row_idx, row_values in enumerate(values):
+        for row_idx, row_values in enumerate(df.itertuples(index=False, name=None)):  # type: ignore[attr-defined]
             row_dict = dict(zip(columns, row_values))
             idx_label = df.index[row_idx]  # type: ignore[attr-defined]
 
