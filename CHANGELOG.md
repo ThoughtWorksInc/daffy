@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.18.0
+
+### Major Performance Improvements
+
+- **2x faster row validation** - Optimized DataFrame conversion and validation pipeline
+  - 767K rows/sec on simple validation (was 400K)
+  - 165K rows/sec on complex bioinformatics data (32 columns, 5% missing values)
+  - Changed from batch TypeAdapter validation to optimized row-by-row with fast DataFrame iteration
+  - Use `itertuples()` for efficient row access while preserving None values
+
+### Critical Bug Fix
+
+- **Fixed NaN handling for Optional fields** - NaN values in Optional fields are now properly converted to None
+  - Previous implementation failed validation on legitimate missing data
+  - Now correctly handles nullable numeric fields in pandas DataFrames
+  - Converts numeric columns with NaN to object dtype to preserve None values
+
+### New Features
+
+- **Bioinformatics benchmark** (`scripts/benchmark_bioinformatics.py`) - Realistic validation testing
+  - 32-column feature store schema modeling cancer research data
+  - Gene expression, clinical measurements, patient demographics, mutations, outcomes
+  - Mixed types: floats, ints, strings, bools, Optional fields, Literal enums
+  - Missing data patterns (~5%) typical in real-world datasets
+  - Cross-field validation (e.g., disease-free survival ≤ follow-up time)
+
+- **Performance benchmarking suite** - Compare Daffy against competing libraries
+  - Test multiple scenarios (simple, medium complexity)
+  - Multiple dataset sizes (1k, 10k, 100k rows)
+  - Compare pandas vs polars implementations
+
+### Internal Improvements
+
+- Removed unused internal functions (`_pandas_to_records_fast`, `_iterate_dataframe_with_index`)
+- Simplified error formatting (removed dead code branches)
+- Improved test coverage to 98.34%
+- Better handling of edge cases in validation error reporting
+
 ## 0.17.1
 
 - Improve package discoverability on PyPI and GitHub

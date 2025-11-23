@@ -1,7 +1,5 @@
 """Tests for DataFrame row validation with Pydantic."""
 
-from typing import Any
-
 import numpy as np
 import pandas as pd
 import polars as pl
@@ -305,81 +303,10 @@ def test_unknown_dataframe_type() -> None:
     require_pydantic()
 
     class NotADataFrame:
-        pass
+        def __len__(self) -> int:
+            return 1  # Pretend to have data
 
     fake_df = NotADataFrame()
 
-    with pytest.raises(TypeError, match="Unknown DataFrame type"):
-        from daffy.row_validation import _iterate_dataframe_with_index
-
-        list(_iterate_dataframe_with_index(fake_df))  # type: ignore[arg-type]
-
-
-def test_iterative_validation_fallback(mocker: Any) -> None:
-    require_pydantic()
-
-    df = pd.DataFrame(
-        {
-            "name": ["Alice", "Bob", "Charlie"],
-            "age": [25, -5, 150],  # Two invalid ages
-            "price": [10.5, 20.0, 30.0],
-        }
-    )
-
-    # Mock TypeAdapter to raise TypeError, forcing iterative validation
-    from daffy import row_validation
-
-    original_adapter = row_validation.TypeAdapter
-    assert original_adapter is not None
-
-    def mock_adapter(*args: Any, **kwargs: Any) -> Any:
-        adapter = original_adapter(*args, **kwargs)  # type: ignore[misc]
-
-        def failing_validate(*args: Any, **kwargs: Any) -> Any:
-            raise TypeError("Forced fallback to iterative")
-
-        adapter.validate_python = failing_validate
-        return adapter
-
-    mocker.patch.object(row_validation, "TypeAdapter", side_effect=mock_adapter)
-
-    with pytest.raises(AssertionError) as exc_info:
-        validate_dataframe_rows(df, SimpleValidator, max_errors=5)
-
-    message = str(exc_info.value)
-    assert "Row validation failed" in message
-    assert "Row 1:" in message or "Row 2:" in message
-
-
-def test_iterative_validation_fallback_polars(mocker: Any) -> None:
-    require_pydantic()
-
-    df = pl.DataFrame(
-        {
-            "name": ["Alice", "Bob", "Charlie"],
-            "age": [25, -5, 150],
-            "price": [10.5, 20.0, 30.0],
-        }
-    )
-
-    from daffy import row_validation
-
-    original_adapter = row_validation.TypeAdapter
-    assert original_adapter is not None
-
-    def mock_adapter(*args: Any, **kwargs: Any) -> Any:
-        adapter = original_adapter(*args, **kwargs)  # type: ignore[misc]
-
-        def failing_validate(*args: Any, **kwargs: Any) -> Any:
-            raise TypeError("Forced fallback to iterative")
-
-        adapter.validate_python = failing_validate
-        return adapter
-
-    mocker.patch.object(row_validation, "TypeAdapter", side_effect=mock_adapter)
-
-    with pytest.raises(AssertionError) as exc_info:
-        validate_dataframe_rows(df, SimpleValidator, max_errors=5)
-
-    message = str(exc_info.value)
-    assert "Row validation failed" in message
+    with pytest.raises(TypeError, match="Expected DataFrame"):
+        validate_dataframe_rows(fake_df, SimpleValidator)  # type: ignore[arg-type]
