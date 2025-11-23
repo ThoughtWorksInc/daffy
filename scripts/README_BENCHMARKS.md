@@ -41,16 +41,25 @@ python scripts/benchmark_row_validation.py --size 10000
 
 | Method | Time | Throughput | vs Daffy |
 |--------|------|------------|----------|
-| Pandantic | 145ms | 688K rows/s | 1.7x faster |
-| Daffy (polars) | 214ms | 467K rows/s | 1.2x faster |
-| Daffy (pandas) | 246ms | 407K rows/s | baseline |
+| Daffy (pandas) | 133ms | 751K rows/s | baseline |
+| Daffy (polars) | 145ms | 688K rows/s | 1.09x slower |
+| Pandantic | 149ms | 669K rows/s | 1.12x slower |
+
+### 100,000 rows - Medium Validation
+
+| Method | Time | Throughput | vs Daffy |
+|--------|------|------------|----------|
+| Daffy (pandas) | 220ms | 454K rows/s | baseline |
+| Daffy (polars) | 273ms | 367K rows/s | 1.24x slower |
+| Pandantic | 296ms | 338K rows/s | 1.34x slower |
 
 ### Key Findings
 
-1. **Pandantic is faster** - Pandantic outperforms daffy by ~40-70% across scenarios
-2. **Polars helps** - Using polars improves performance by ~15-20% vs pandas
-3. **All are fast** - All libraries process 200K-700K rows/second
-4. **Much better than naive** - All batch approaches are 5-10x faster than row-by-row
+1. **Daffy is now fastest** - Optimizations make daffy 12-34% faster than competitors
+2. **Major speedup** - 1.8-2.2x faster than previous daffy implementation
+3. **Polars is competitive** - Polars performance is close to pandas for validation
+4. **All are fast** - All libraries process 300K-750K rows/second
+5. **Much better than naive** - Optimized approaches are 5-10x faster than row-by-row baseline
 
 ## Why Benchmark?
 
