@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "0.17.0"
+version = "0.17.1"
 description = "Function decorators for Pandas and Polars Dataframe column name and data type validation"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
@@ -8,7 +8,7 @@ authors = [
 license = "MIT"
 requires-python = ">=3.9"
 readme = "README.md"
-keywords = ["pandas", "dataframe", "typing", "validation"]
+keywords = ["pandas", "polars", "pydantic", "dataframe", "decorator", "validation", "schema", "data-validation", "typing"]
 classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -22,7 +22,11 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Development Status :: 4 - Beta",
-    "License :: OSI Approved :: MIT License"
+    "License :: OSI Approved :: MIT License",
+    "Framework :: Pydantic",
+    "Framework :: Pydantic :: 2",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed"
 ]
 
 dependencies = [
@@ -33,6 +37,8 @@ dependencies = [
 homepage = "https://github.com/ThoughtWorksInc/daffy"
 repository = "https://github.com/ThoughtWorksInc/daffy.git"
 documentation = "https://github.com/ThoughtWorksInc/daffy/blob/master/README.md"
+changelog = "https://github.com/ThoughtWorksInc/daffy/blob/master/CHANGELOG.md"
+issues = "https://github.com/ThoughtWorksInc/daffy/issues"
 
 [dependency-groups]
 # Minimal dependencies for running tests - must support Python 3.9+

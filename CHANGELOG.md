@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.17.1
+
+- Improve package discoverability on PyPI and GitHub
+  - Add polars, pydantic, decorator to PyPI keywords
+  - Add Framework::Pydantic, Testing, and Typing classifiers
+  - Add changelog and issues URLs to package metadata
+  - Set GitHub topics for better search visibility
+
 ## 0.17.0
 
 - Add optional row-level validation using Pydantic models (requires Pydantic >= 2.4.0)
