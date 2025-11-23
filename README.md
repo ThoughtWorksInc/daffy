@@ -86,7 +86,19 @@ def process_inventory(df):
     return df
 ```
 
-**Performance note:** Column validation has minimal overhead. Row validation validates data values and will impact performance on large DataFrames. Use row validation when data quality is critical.
+## Performance
+
+**Column validation** is essentially free - it only checks column names and types, adding negligible overhead to your functions.
+
+**Row validation** validates actual data values and is naturally more expensive, but has been optimized to be performant:
+- **Simple validation**: ~770K rows/sec (100K rows in 130ms)
+- **Complex validation**: ~165K rows/sec (32 columns, missing values, cross-field validation)
+
+Performance depends on:
+- **Model complexity**: Number of fields, validators, and custom validation logic
+- **Data characteristics**: DataFrame size, missing values, data types
+
+For detailed benchmarks and optimization strategies, see [scripts/README_BENCHMARKS.md](https://github.com/ThoughtWorksInc/daffy/blob/master/scripts/README_BENCHMARKS.md).
 
 ## License
 
