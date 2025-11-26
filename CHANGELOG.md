@@ -19,11 +19,6 @@ All notable changes to this project will be documented in this file.
   - Default: `True` (stops after `max_errors` for performance)
   - Set to `False` to scan entire DataFrame and get exact error count
 
-### Documentation
-
-- Added early termination benchmark (`scripts/benchmark_early_termination.py`)
-- Updated tests to cover early termination scenarios
-
 ## 0.18.0
 
 ### Major Performance Improvements
