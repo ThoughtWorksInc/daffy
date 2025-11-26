@@ -55,6 +55,19 @@ def validate_dataframe(
     func_name: Optional[str] = None,
     is_return_value: bool = False,
 ) -> None:
+    """Validate DataFrame columns and optionally data types.
+
+    Args:
+        df: DataFrame to validate (pandas or polars)
+        columns: Column specification - list of names/patterns or dict mapping names to dtypes
+        strict: If True, disallow extra columns not in the specification
+        param_name: Parameter name for error context
+        func_name: Function name for error context
+        is_return_value: True if validating a return value
+
+    Raises:
+        AssertionError: If validation fails (missing columns, dtype mismatch, or extra columns in strict mode)
+    """
     df_columns = list(df.columns)  # Cache the column list conversion
     all_missing_columns = []
     all_dtype_mismatches = []
