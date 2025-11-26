@@ -248,6 +248,18 @@ row_validation_max_errors = 5  # Show up to 5 failed rows (default: 5)
 row_validation_convert_nans = true  # Convert NaN to None (default: true)
 ```
 
+### Performance Optimization
+
+Row validation includes an early termination optimization. When validation errors are found, scanning stops after collecting `max_errors` failures instead of processing the entire DataFrame.
+
+**Performance impact:**
+- **DataFrames with errors:** 71-124x faster (stops early)
+- **DataFrames without errors:** No overhead (must scan all rows)
+
+For example, validating 100k rows with early errors takes ~1.2ms instead of ~140ms.
+
+This optimization is enabled by default. Error messages will show "X out of Y+ rows" when early termination occurs, indicating there may be additional errors beyond those displayed.
+
 ### Advanced Features
 
 Pydantic's validation features work seamlessly:
