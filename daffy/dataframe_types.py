@@ -54,10 +54,10 @@ def get_dataframe_types() -> tuple[Any, ...]:
         tuple: Tuple of available DataFrame classes (pd.DataFrame, pl.DataFrame, or both)
     """
     dataframe_types: list[Any] = []
-    if HAS_PANDAS:
-        dataframe_types.append(pd.DataFrame)  # type: ignore[union-attr]
-    if HAS_POLARS:
-        dataframe_types.append(pl.DataFrame)  # type: ignore[union-attr]
+    if HAS_PANDAS and pd is not None:
+        dataframe_types.append(pd.DataFrame)
+    if HAS_POLARS and pl is not None:
+        dataframe_types.append(pl.DataFrame)
     return tuple(dataframe_types)
 
 
@@ -77,11 +77,11 @@ def get_available_library_names() -> list[str]:
 
 
 def is_pandas_dataframe(df: Any) -> bool:
-    return HAS_PANDAS and isinstance(df, pd.DataFrame)  # type: ignore[arg-type]
+    return HAS_PANDAS and pd is not None and isinstance(df, pd.DataFrame)
 
 
 def is_polars_dataframe(df: Any) -> bool:
-    return HAS_POLARS and isinstance(df, pl.DataFrame)  # type: ignore[arg-type]
+    return HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame)
 
 
 # Cache the types tuple at module level for efficiency

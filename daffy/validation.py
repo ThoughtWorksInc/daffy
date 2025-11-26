@@ -73,19 +73,18 @@ def validate_dataframe(
     all_dtype_mismatches = []
     all_matched_by_regex = set()
 
-    if isinstance(columns, list):
-        processed_columns = compile_regex_patterns(columns)
-        for column_spec in processed_columns:
-            all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
-            all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
-    else:
-        # columns is ColumnsDict here (dict), not ColumnsList
-        for column, expected_dtype in columns.items():  # type: ignore[union-attr]
+    if isinstance(columns, dict):
+        for column, expected_dtype in columns.items():
             column_spec = (
                 compile_regex_pattern(column) if isinstance(column, str) and is_regex_string(column) else column
             )
             all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
             all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
+            all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
+    else:
+        processed_columns = compile_regex_patterns(columns)
+        for column_spec in processed_columns:
+            all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
             all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
 
     param_info = format_param_context(param_name, func_name, is_return_value)

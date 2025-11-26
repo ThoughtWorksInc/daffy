@@ -32,17 +32,16 @@ def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
     For pandas DataFrames with NaN conversion enabled, converts NaN to None.
     This requires converting numeric columns to object dtype to preserve None values.
     """
-    if convert_nans and is_pandas_dataframe(df):
+    if convert_nans and is_pandas_dataframe(df) and pd is not None:
         # Copy DataFrame to avoid modifying original
         df = df.copy()
 
         # Convert float/numeric columns with NaN to object dtype and replace NaN with None
         # This is necessary because pandas float64 columns convert None back to NaN
         for col in df.columns:
-            # pd is guaranteed to be available here since is_pandas_dataframe(df) was True
-            if pd.api.types.is_float_dtype(df[col]) or pd.api.types.is_integer_dtype(df[col]):  # type: ignore[union-attr]
+            if pd.api.types.is_float_dtype(df[col]) or pd.api.types.is_integer_dtype(df[col]):
                 if df[col].isna().any():
-                    mask = pd.isna(df[col])  # type: ignore[union-attr]
+                    mask = pd.isna(df[col])
                     df[col] = df[col].astype("object")
                     df.loc[mask, col] = None
 
