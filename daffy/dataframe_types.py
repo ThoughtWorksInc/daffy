@@ -1,5 +1,7 @@
 """DataFrame type handling for DAFFY - supports Pandas and Polars."""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any, Union
 
 # Lazy imports - only import what's available
@@ -26,6 +28,8 @@ except ImportError:  # pragma: no cover
 # Build DataFrame type dynamically based on what's available
 if TYPE_CHECKING:
     # For static type checking, assume both are available
+    from typing import TypeGuard
+
     from pandas import DataFrame as PandasDataFrame
     from polars import DataFrame as PolarsDataFrame
 
@@ -76,11 +80,11 @@ def get_available_library_names() -> list[str]:
     return available_libs
 
 
-def is_pandas_dataframe(df: Any) -> bool:
+def is_pandas_dataframe(df: Any) -> TypeGuard[PandasDataFrame]:
     return HAS_PANDAS and pd is not None and isinstance(df, pd.DataFrame)
 
 
-def is_polars_dataframe(df: Any) -> bool:
+def is_polars_dataframe(df: Any) -> TypeGuard[PolarsDataFrame]:
     return HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame)
 
 

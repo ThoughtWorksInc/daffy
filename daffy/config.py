@@ -46,24 +46,9 @@ def load_config() -> dict[str, Any]:
 
 
 def find_config_file() -> Optional[str]:
-    """
-    Find pyproject.toml in the user's project directory.
-
-    This searches only in the current working directory (where the user's code is running),
-    not in daffy's installation directory.
-
-    Returns:
-        str or None: Path to pyproject.toml if found, None otherwise
-    """
-    # Only look for pyproject.toml in the current working directory,
-    # which should be the user's project directory, not daffy's installation directory
-    current_dir = os.getcwd()
-    config_path = os.path.join(current_dir, "pyproject.toml")
-
-    if os.path.isfile(config_path):
-        return config_path
-
-    return None
+    """Find pyproject.toml in the current working directory."""
+    path = os.path.join(os.getcwd(), "pyproject.toml")
+    return path if os.path.isfile(path) else None
 
 
 @lru_cache(maxsize=1)

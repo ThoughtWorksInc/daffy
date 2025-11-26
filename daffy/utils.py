@@ -8,13 +8,11 @@ from collections.abc import Callable
 from typing import Any
 
 from daffy.dataframe_types import (
-    HAS_PANDAS,
-    HAS_POLARS,
     DataFrameType,
     get_available_library_names,
     get_dataframe_types,
-    pd,
-    pl,
+    is_pandas_dataframe,
+    is_polars_dataframe,
 )
 
 
@@ -105,10 +103,10 @@ def get_parameter_name(func: Callable[..., Any], name: str | None = None, *args:
 def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
     result = f"columns: {list(df.columns)}"
     if include_dtypes:
-        if HAS_PANDAS and pd is not None and isinstance(df, pd.DataFrame):
+        if is_pandas_dataframe(df):
             readable_dtypes = [dtype.name for dtype in df.dtypes]
             result += f" with dtypes {readable_dtypes}"
-        elif HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame):
+        elif is_polars_dataframe(df):
             result += f" with dtypes {df.dtypes}"
     return result
 

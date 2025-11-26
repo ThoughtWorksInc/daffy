@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from daffy.utils import HAS_PANDAS, HAS_POLARS
+from daffy.dataframe_types import HAS_PANDAS, HAS_POLARS
 
 
 class TestOptionalDependenciesDetection:
