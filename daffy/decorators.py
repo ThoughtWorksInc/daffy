@@ -1,5 +1,7 @@
 """Decorators for DAFFY DataFrame Column Validator."""
 
+from __future__ import annotations
+
 import logging
 from collections.abc import Callable
 from functools import wraps

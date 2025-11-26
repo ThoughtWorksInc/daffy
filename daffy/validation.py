@@ -1,5 +1,7 @@
 """Validation logic for DAFFY DataFrame Column Validator."""
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 from typing import Any
 
