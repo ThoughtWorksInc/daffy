@@ -1,6 +1,6 @@
 """DataFrame type handling for DAFFY - supports Pandas and Polars."""
 
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, Any, Union
 
 # Lazy imports - only import what's available
 try:
@@ -54,19 +54,19 @@ def get_dataframe_types() -> tuple[Any, ...]:
         tuple: Tuple of available DataFrame classes (pd.DataFrame, pl.DataFrame, or both)
     """
     dataframe_types: list[Any] = []
-    if HAS_PANDAS and pd is not None:
-        dataframe_types.append(pd.DataFrame)
-    if HAS_POLARS and pl is not None:
-        dataframe_types.append(pl.DataFrame)
+    if HAS_PANDAS:
+        dataframe_types.append(pd.DataFrame)  # type: ignore[union-attr]
+    if HAS_POLARS:
+        dataframe_types.append(pl.DataFrame)  # type: ignore[union-attr]
     return tuple(dataframe_types)
 
 
-def get_available_library_names() -> List[str]:
+def get_available_library_names() -> list[str]:
     """
     Get list of available DataFrame library names for error messages.
 
     Returns:
-        List[str]: List of available library names (e.g., ["Pandas", "Polars"])
+        list[str]: List of available library names (e.g., ["Pandas", "Polars"])
     """
     available_libs = []
     if HAS_PANDAS:
@@ -77,11 +77,11 @@ def get_available_library_names() -> List[str]:
 
 
 def is_pandas_dataframe(df: Any) -> bool:
-    return HAS_PANDAS and pd is not None and isinstance(df, pd.DataFrame)
+    return HAS_PANDAS and isinstance(df, pd.DataFrame)  # type: ignore[arg-type]
 
 
 def is_polars_dataframe(df: Any) -> bool:
-    return HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame)
+    return HAS_POLARS and isinstance(df, pl.DataFrame)  # type: ignore[arg-type]
 
 
 # Cache the types tuple at module level for efficiency

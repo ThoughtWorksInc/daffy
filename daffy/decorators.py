@@ -1,8 +1,9 @@
 """Decorators for DAFFY DataFrame Column Validator."""
 
 import logging
+from collections.abc import Callable
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
     # For static type checking, assume both are available
@@ -30,7 +31,7 @@ from daffy.validation import ColumnsDef, validate_dataframe
 # Type variables for preserving return types
 T = TypeVar("T")  # Generic type var for df_log
 if TYPE_CHECKING:
-    DF = TypeVar("DF", bound=Union[PandasDataFrame, PolarsDataFrame])
+    DF = TypeVar("DF", bound=PandasDataFrame | PolarsDataFrame)
 else:
     DF = TypeVar("DF", bound=DataFrameType)
 R = TypeVar("R")  # Return type for df_in
@@ -40,7 +41,7 @@ def _validate_rows_with_context(
     df: Any,
     row_validator: "type[BaseModel]",
     func_name: str,
-    param_name: Optional[str],
+    param_name: str | None,
     is_return_value: bool,
 ) -> None:
     """Validate DataFrame rows with Pydantic model and add context to errors.
@@ -68,8 +69,8 @@ def _validate_rows_with_context(
 
 def df_out(
     columns: ColumnsDef = None,
-    strict: Optional[bool] = None,
-    row_validator: Optional["type[BaseModel]"] = None,
+    strict: bool | None = None,
+    row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
     """Decorate a function that returns a Pandas or Polars DataFrame.
 
@@ -109,10 +110,10 @@ def df_out(
 
 
 def df_in(
-    name: Optional[str] = None,
+    name: str | None = None,
     columns: ColumnsDef = None,
-    strict: Optional[bool] = None,
-    row_validator: Optional["type[BaseModel]"] = None,
+    strict: bool | None = None,
+    row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """Decorate a function parameter that is a Pandas or Polars DataFrame.
 

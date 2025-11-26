@@ -1,12 +1,13 @@
 """Configuration handling for DAFFY."""
 
 import os
-from typing import Any, Dict, Optional
+from functools import lru_cache
+from typing import Any, Optional
 
 import tomli
 
 
-def load_config() -> Dict[str, Any]:
+def load_config() -> dict[str, Any]:
     """
     Load daffy configuration from pyproject.toml.
 
@@ -65,21 +66,15 @@ def find_config_file() -> Optional[str]:
     return None
 
 
-# Cache config to avoid reading the file multiple times
-_config_cache = None
+@lru_cache(maxsize=1)
+def get_config() -> dict[str, Any]:
+    """Get the daffy configuration, cached after first load."""
+    return load_config()
 
 
-def get_config() -> Dict[str, Any]:
-    """
-    Get the daffy configuration, loading it if necessary.
-
-    Returns:
-        dict: Configuration dictionary with daffy settings
-    """
-    global _config_cache
-    if _config_cache is None:
-        _config_cache = load_config()
-    return _config_cache
+def clear_config_cache() -> None:
+    """Clear the configuration cache. Primarily for testing."""
+    get_config.cache_clear()
 
 
 def get_strict(strict_param: Optional[bool] = None) -> bool:
@@ -97,7 +92,7 @@ def get_strict(strict_param: Optional[bool] = None) -> bool:
     return bool(get_config()["strict"])
 
 
-def get_row_validation_config() -> Dict[str, Any]:
+def get_row_validation_config() -> dict[str, Any]:
     """Get all row validation configuration options."""
     config = get_config()
     return {

@@ -2,7 +2,8 @@
 
 import inspect
 import logging
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from daffy.dataframe_types import (
     HAS_PANDAS,
@@ -30,9 +31,7 @@ def assert_is_dataframe(obj: Any, context: str) -> None:
         raise AssertionError(f"Wrong {context}. Expected {libs_str} DataFrame, got {type(obj).__name__} instead.")
 
 
-def format_param_context(
-    param_name: Optional[str], func_name: Optional[str] = None, is_return_value: bool = False
-) -> str:
+def format_param_context(param_name: str | None, func_name: str | None = None, is_return_value: bool = False) -> str:
     """Format context information for error messages.
 
     Args:
@@ -57,7 +56,7 @@ def format_param_context(
     return ""
 
 
-def get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
+def get_parameter(func: Callable[..., Any], name: str | None = None, *args: Any, **kwargs: Any) -> Any:
     """Extract a parameter value from function arguments.
 
     Args:
@@ -90,9 +89,7 @@ def get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: A
     return args[parameter_location]
 
 
-def get_parameter_name(
-    func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any
-) -> Optional[str]:
+def get_parameter_name(func: Callable[..., Any], name: str | None = None, *args: Any, **kwargs: Any) -> str | None:
     if name:
         return name
 
@@ -106,10 +103,10 @@ def get_parameter_name(
 def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
     result = f"columns: {list(df.columns)}"
     if include_dtypes:
-        if HAS_PANDAS and pd is not None and isinstance(df, pd.DataFrame):
+        if HAS_PANDAS and isinstance(df, pd.DataFrame):  # type: ignore[union-attr]
             readable_dtypes = [dtype.name for dtype in df.dtypes]
             result += f" with dtypes {readable_dtypes}"
-        elif HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame):
+        elif HAS_POLARS and isinstance(df, pl.DataFrame):  # type: ignore[union-attr]
             result += f" with dtypes {df.dtypes}"
     return result
 

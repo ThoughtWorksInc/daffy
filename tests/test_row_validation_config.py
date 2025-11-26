@@ -24,17 +24,15 @@ row_validation_convert_nans = false
 
     monkeypatch.chdir(tmp_path)
 
-    from daffy import config
+    from daffy.config import clear_config_cache, get_row_validation_config
 
-    config._config_cache = None
-
-    from daffy.config import get_row_validation_config
+    clear_config_cache()
 
     cfg = get_row_validation_config()
     assert cfg["max_errors"] == 10
     assert cfg["convert_nans"] is False
 
-    config._config_cache = None
+    clear_config_cache()
 
 
 def test_explicit_overrides_config() -> None:
