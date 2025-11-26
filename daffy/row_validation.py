@@ -59,6 +59,7 @@ def validate_dataframe_rows(
     row_validator: type[BaseModel],
     max_errors: int = 5,
     convert_nans: bool = True,
+    early_termination: bool = True,
 ) -> None:
     """
     Validate DataFrame rows against a Pydantic model.
@@ -71,6 +72,7 @@ def validate_dataframe_rows(
         row_validator: Pydantic BaseModel class for validation
         max_errors: Maximum number of errors to collect before stopping
         convert_nans: Whether to convert NaN to None for Pydantic
+        early_termination: Stop scanning after max_errors reached (faster for large datasets)
 
     Raises:
         AssertionError: If any rows fail validation (consistent with Daffy)
@@ -89,7 +91,7 @@ def validate_dataframe_rows(
     df_prepared = _prepare_dataframe_for_validation(df, convert_nans)
 
     # Use optimized row-by-row validation
-    _validate_optimized(df_prepared, row_validator, max_errors, convert_nans)
+    _validate_optimized(df_prepared, row_validator, max_errors, convert_nans, early_termination)
 
 
 def _validate_optimized(
@@ -97,6 +99,7 @@ def _validate_optimized(
     row_validator: type[BaseModel],
     max_errors: int,
     convert_nans: bool,
+    early_termination: bool,
 ) -> None:
     """Optimized row-by-row validation with fast DataFrame conversion."""
     failed_rows: list[tuple[Any, PydanticValidationError]] = []
@@ -120,6 +123,9 @@ def _validate_optimized(
                 total_errors += 1
                 if len(failed_rows) < max_errors:
                     failed_rows.append((idx_label, e))
+                elif early_termination:
+                    # Stop scanning after collecting max_errors
+                    break
 
     elif is_polars_dataframe(df):
         # Polars: use iter_rows which is already optimized
@@ -134,17 +140,21 @@ def _validate_optimized(
                 total_errors += 1
                 if len(failed_rows) < max_errors:
                     failed_rows.append((idx, e))
+                elif early_termination:
+                    # Stop scanning after collecting max_errors
+                    break
     else:
         raise TypeError(f"Unknown DataFrame type: {type(df)}")
 
     if failed_rows:
-        _raise_validation_error(df, failed_rows, total_errors)
+        _raise_validation_error(df, failed_rows, total_errors, early_termination)
 
 
 def _raise_validation_error(
     df: DataFrameType,
     errors: list[tuple[Any, Any]],
     total_errors: int,
+    stopped_early: bool,
 ) -> None:
     """Format and raise AssertionError with row validation details."""
     error_lines = [
@@ -162,7 +172,11 @@ def _raise_validation_error(
 
         error_lines.append("")
 
-    if total_errors > len(errors):
+    if stopped_early and total_errors > len(errors):
+        error_lines.append(
+            f"  ... stopped scanning early (at least {total_errors - len(errors)} more row(s) with errors)"
+        )
+    elif total_errors > len(errors):
         error_lines.append(f"  ... and {total_errors - len(errors)} more row(s) with errors")
 
     raise AssertionError("\n".join(error_lines))

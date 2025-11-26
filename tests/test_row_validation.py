@@ -234,7 +234,7 @@ def test_max_errors_limit() -> None:
     )
 
     with pytest.raises(AssertionError) as exc_info:
-        validate_dataframe_rows(df, SimpleValidator, max_errors=3)
+        validate_dataframe_rows(df, SimpleValidator, max_errors=3, early_termination=False)
 
     message = str(exc_info.value)
 
@@ -243,7 +243,7 @@ def test_max_errors_limit() -> None:
     assert "Row 1:" in message
     assert "Row 2:" in message
 
-    # Should indicate more errors exist
+    # Should indicate more errors exist (exact count since early_termination=False)
     assert "7 more row(s) with errors" in message
 
 
@@ -310,3 +310,73 @@ def test_unknown_dataframe_type() -> None:
 
     with pytest.raises(TypeError, match="Expected DataFrame"):
         validate_dataframe_rows(fake_df, SimpleValidator)  # type: ignore[arg-type]
+
+
+def test_early_termination_enabled() -> None:
+    # Create large DataFrame with many invalid rows
+    df = pd.DataFrame(
+        {
+            "name": [str(i) for i in range(100)],
+            "age": [-1] * 100,  # All invalid
+            "price": [10.0] * 100,
+        }
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        validate_dataframe_rows(df, SimpleValidator, max_errors=5, early_termination=True)
+
+    message = str(exc_info.value)
+
+    # Should show first 5 errors
+    assert "Row 0:" in message
+    assert "Row 4:" in message
+
+    # Should indicate stopped early
+    assert "stopped scanning early" in message
+    assert "at least" in message
+
+
+def test_early_termination_disabled() -> None:
+    # Create DataFrame with many invalid rows
+    df = pd.DataFrame(
+        {
+            "name": [str(i) for i in range(100)],
+            "age": [-1] * 100,  # All invalid
+            "price": [10.0] * 100,
+        }
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        validate_dataframe_rows(df, SimpleValidator, max_errors=5, early_termination=False)
+
+    message = str(exc_info.value)
+
+    # Should show first 5 errors
+    assert "Row 0:" in message
+    assert "Row 4:" in message
+
+    # Should indicate exact count (scanned all rows)
+    assert "95 more row(s) with errors" in message
+    assert "stopped scanning early" not in message
+
+
+def test_early_termination_with_polars() -> None:
+    df = pl.DataFrame(
+        {
+            "name": [str(i) for i in range(100)],
+            "age": [-1] * 100,  # All invalid
+            "price": [10.0] * 100,
+        }
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        validate_dataframe_rows(df, SimpleValidator, max_errors=5, early_termination=True)
+
+    message = str(exc_info.value)
+
+    # Should show first 5 errors
+    assert "Row 0:" in message
+    assert "Row 4:" in message
+
+    # Should indicate stopped early
+    assert "stopped scanning early" in message

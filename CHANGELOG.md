@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.19.0
+
+### Performance Improvements
+
+- **Early termination for row validation** - Dramatically faster when validation errors exist
+  - Stops scanning after collecting `max_errors` (default behavior)
+  - **71-124x speedup** when errors are present (1.2ms vs 140ms for 100k rows with errors)
+  - **No overhead** for valid data (maintains 767K rows/sec throughput)
+  - Can be disabled with `early_termination=False` parameter for exact error counts
+  - Error messages now indicate when scanning stopped early: "stopped scanning early (at least N more row(s) with errors)"
+
+### New Features
+
+- Added `early_termination` parameter to `validate_dataframe_rows()`
+  - Default: `True` (stops after `max_errors` for performance)
+  - Set to `False` to scan entire DataFrame and get exact error count
+
 ## 0.18.0
 
 ### Major Performance Improvements
