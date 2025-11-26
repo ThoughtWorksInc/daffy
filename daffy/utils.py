@@ -16,6 +16,15 @@ from daffy.dataframe_types import (
 
 
 def assert_is_dataframe(obj: Any, context: str) -> None:
+    """Verify that an object is a pandas or polars DataFrame.
+
+    Args:
+        obj: Object to validate
+        context: Context string for the error message (e.g., "parameter type", "return type")
+
+    Raises:
+        AssertionError: If obj is not a DataFrame
+    """
     if not isinstance(obj, get_dataframe_types()):
         libs_str = " or ".join(get_available_library_names())
         raise AssertionError(f"Wrong {context}. Expected {libs_str} DataFrame, got {type(obj).__name__} instead.")
@@ -24,6 +33,16 @@ def assert_is_dataframe(obj: Any, context: str) -> None:
 def format_param_context(
     param_name: Optional[str], func_name: Optional[str] = None, is_return_value: bool = False
 ) -> str:
+    """Format context information for error messages.
+
+    Args:
+        param_name: Name of the parameter being validated
+        func_name: Name of the function being validated
+        is_return_value: True if validating a return value
+
+    Returns:
+        Formatted context string like " in function 'foo' parameter 'bar'"
+    """
     context_parts = []
     if func_name:
         context_parts.append(f"function '{func_name}'")
@@ -39,6 +58,20 @@ def format_param_context(
 
 
 def get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: Any, **kwargs: Any) -> Any:
+    """Extract a parameter value from function arguments.
+
+    Args:
+        func: The function whose parameters to inspect
+        name: Name of the parameter to extract. If None, returns first positional arg or kwarg.
+        *args: Positional arguments passed to the function
+        **kwargs: Keyword arguments passed to the function
+
+    Returns:
+        The value of the requested parameter
+
+    Raises:
+        ValueError: If the named parameter cannot be found in args or kwargs
+    """
     if not name:
         return args[0] if args else next(iter(kwargs.values()), None)
 
@@ -47,6 +80,13 @@ def get_parameter(func: Callable[..., Any], name: Optional[str] = None, *args: A
 
     func_params_in_order = list(inspect.signature(func).parameters.keys())
     parameter_location = func_params_in_order.index(name)
+
+    if parameter_location >= len(args):
+        raise ValueError(
+            f"Parameter '{name}' not found in function arguments. "
+            f"Expected at position {parameter_location}, but only {len(args)} positional arguments provided."
+        )
+
     return args[parameter_location]
 
 
