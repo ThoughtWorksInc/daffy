@@ -14,10 +14,12 @@ else:
     PandasDataFrame = None
     PolarsDataFrame = None
 
-from daffy.config import get_strict
+from daffy.config import get_row_validation_config, get_strict
 from daffy.dataframe_types import DataFrameType
+from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
     assert_is_dataframe,
+    format_param_context,
     get_parameter,
     get_parameter_name,
     log_dataframe_input,
@@ -50,10 +52,6 @@ def _validate_rows_with_context(
         param_name: Name of the parameter being validated (None for return values)
         is_return_value: True if validating a return value
     """
-    from daffy.config import get_row_validation_config
-    from daffy.row_validation import validate_dataframe_rows
-    from daffy.utils import format_param_context
-
     config = get_row_validation_config()
 
     try:
