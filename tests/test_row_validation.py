@@ -313,8 +313,6 @@ def test_unknown_dataframe_type() -> None:
 
 
 def test_early_termination_enabled() -> None:
-    """Test that early termination stops scanning after max_errors."""
-
     # Create large DataFrame with many invalid rows
     df = pd.DataFrame(
         {
@@ -339,8 +337,6 @@ def test_early_termination_enabled() -> None:
 
 
 def test_early_termination_disabled() -> None:
-    """Test that early termination can be disabled to scan all rows."""
-
     # Create DataFrame with many invalid rows
     df = pd.DataFrame(
         {
@@ -365,8 +361,6 @@ def test_early_termination_disabled() -> None:
 
 
 def test_early_termination_with_polars() -> None:
-    """Test that early termination works with polars DataFrames."""
-
     df = pl.DataFrame(
         {
             "name": [str(i) for i in range(100)],
