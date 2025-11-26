@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Union
 
 from daffy.dataframe_types import DataFrameType
 from daffy.patterns import (
@@ -17,9 +17,9 @@ from daffy.patterns import (
 )
 from daffy.utils import describe_dataframe, format_param_context
 
-ColumnsList = Sequence[str | RegexColumnDef]
-ColumnsDict = dict[str | RegexColumnDef, Any]
-ColumnsDef = ColumnsList | ColumnsDict | None
+ColumnsList = Sequence[Union[str, RegexColumnDef]]
+ColumnsDict = dict[Union[str, RegexColumnDef], Any]
+ColumnsDef = Union[ColumnsList, ColumnsDict, None]
 
 
 def _find_missing_columns(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
