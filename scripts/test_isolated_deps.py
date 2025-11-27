@@ -56,7 +56,7 @@ def test_pandas_only() -> bool:
 
     try:
         from daffy import df_in, df_out
-        from daffy.utils import HAS_PANDAS, HAS_POLARS
+        from daffy.dataframe_types import HAS_PANDAS, HAS_POLARS
 
         assert HAS_PANDAS, f"HAS_PANDAS should be True, got {HAS_PANDAS}"
         assert not HAS_POLARS, f"HAS_POLARS should be False, got {HAS_POLARS}"
@@ -107,7 +107,7 @@ def test_polars_only() -> bool:
 
     try:
         from daffy import df_in, df_out
-        from daffy.utils import HAS_PANDAS, HAS_POLARS
+        from daffy.dataframe_types import HAS_PANDAS, HAS_POLARS
 
         assert not HAS_PANDAS, f"HAS_PANDAS should be False, got {HAS_PANDAS}"
         assert HAS_POLARS, f"HAS_POLARS should be True, got {HAS_POLARS}"
@@ -150,7 +150,7 @@ def test_both() -> bool:
 
     try:
         from daffy import df_in
-        from daffy.utils import HAS_PANDAS, HAS_POLARS
+        from daffy.dataframe_types import HAS_PANDAS, HAS_POLARS
 
         assert HAS_PANDAS, f"HAS_PANDAS should be True, got {HAS_PANDAS}"
         assert HAS_POLARS, f"HAS_POLARS should be True, got {HAS_POLARS}"
@@ -277,7 +277,7 @@ def test_none() -> bool:
         print("✅ Polars correctly not available")
 
     try:
-        from daffy.utils import HAS_PANDAS, HAS_POLARS  # noqa: F401
+        from daffy.dataframe_types import HAS_PANDAS, HAS_POLARS  # noqa: F401
 
         print("❌ Should have failed during import")
         return False

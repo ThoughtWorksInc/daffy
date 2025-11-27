@@ -52,6 +52,15 @@ Install with your favorite Python dependency manager:
 pip install daffy
 ```
 
+Daffy works with **pandas**, **polars**, or both - install whichever you need:
+
+```sh
+pip install pandas   # for pandas support
+pip install polars   # for polars support
+```
+
+**Python version support:** 3.9 - 3.14
+
 ## Quick Start
 
 ### Column Validation
@@ -69,7 +78,7 @@ def apply_discount(cars_df):
 
 ### Row Validation
 
-For validating actual data values (requires `pip install pydantic`):
+For validating actual data values (requires `pip install 'pydantic>=2.4.0'`):
 
 ```python
 from pydantic import BaseModel, Field

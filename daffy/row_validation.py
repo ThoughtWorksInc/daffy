@@ -10,8 +10,10 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Any
 
-from daffy.dataframe_types import get_dataframe_types, is_pandas_dataframe, is_polars_dataframe
+from daffy.dataframe_types import get_dataframe_types, is_pandas_dataframe, is_polars_dataframe, pd
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
+
+_PYDANTIC_ROOT_FIELD = "__root__"
 
 if TYPE_CHECKING:
     from pydantic import BaseModel, ValidationError  # noqa: F401
@@ -30,9 +32,7 @@ def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
     For pandas DataFrames with NaN conversion enabled, converts NaN to None.
     This requires converting numeric columns to object dtype to preserve None values.
     """
-    if convert_nans and is_pandas_dataframe(df):
-        import pandas as pd
-
+    if convert_nans and is_pandas_dataframe(df) and pd is not None:
         # Copy DataFrame to avoid modifying original
         df = df.copy()
 
@@ -167,7 +167,7 @@ def _raise_validation_error(
 
         # error is always a Pydantic ValidationError with .errors() method
         for err_dict in error.errors():
-            field = ".".join(str(loc) for loc in err_dict["loc"] if loc != "__root__")
+            field = ".".join(str(loc) for loc in err_dict["loc"] if loc != _PYDANTIC_ROOT_FIELD)
             error_lines.append(f"    - {field}: {err_dict['msg']}" if field else f"    - {err_dict['msg']}")
 
         error_lines.append("")

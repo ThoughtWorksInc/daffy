@@ -1,8 +1,11 @@
 """Decorators for DAFFY DataFrame Column Validator."""
 
+from __future__ import annotations
+
 import logging
+from collections.abc import Callable
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
     # For static type checking, assume both are available
@@ -14,10 +17,12 @@ else:
     PandasDataFrame = None
     PolarsDataFrame = None
 
-from daffy.config import get_strict
+from daffy.config import get_row_validation_config, get_strict
 from daffy.dataframe_types import DataFrameType
+from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
     assert_is_dataframe,
+    format_param_context,
     get_parameter,
     get_parameter_name,
     log_dataframe_input,
@@ -28,16 +33,46 @@ from daffy.validation import ColumnsDef, validate_dataframe
 # Type variables for preserving return types
 T = TypeVar("T")  # Generic type var for df_log
 if TYPE_CHECKING:
-    DF = TypeVar("DF", bound=Union[PandasDataFrame, PolarsDataFrame])
+    DF = TypeVar("DF", bound=PandasDataFrame | PolarsDataFrame)
 else:
     DF = TypeVar("DF", bound=DataFrameType)
 R = TypeVar("R")  # Return type for df_in
 
 
+def _validate_rows_with_context(
+    df: Any,
+    row_validator: "type[BaseModel]",
+    func_name: str,
+    param_name: str | None,
+    is_return_value: bool,
+) -> None:
+    """Validate DataFrame rows with Pydantic model and add context to errors.
+
+    Args:
+        df: DataFrame to validate
+        row_validator: Pydantic model class for row validation
+        func_name: Name of the decorated function
+        param_name: Name of the parameter being validated (None for return values)
+        is_return_value: True if validating a return value
+    """
+    config = get_row_validation_config()
+
+    try:
+        validate_dataframe_rows(
+            df,
+            row_validator,
+            max_errors=config["max_errors"],
+            convert_nans=config["convert_nans"],
+        )
+    except AssertionError as e:
+        context = format_param_context(param_name, func_name, is_return_value)
+        raise AssertionError(f"{str(e)}{context}") from e
+
+
 def df_out(
     columns: ColumnsDef = None,
-    strict: Optional[bool] = None,
-    row_validator: Optional["type[BaseModel]"] = None,
+    strict: bool | None = None,
+    row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
     """Decorate a function that returns a Pandas or Polars DataFrame.
 
@@ -67,22 +102,7 @@ def df_out(
                 validate_dataframe(result, columns, get_strict(strict), None, func.__name__, True)
 
             if row_validator is not None:
-                from daffy.config import get_row_validation_config
-                from daffy.row_validation import validate_dataframe_rows
-                from daffy.utils import format_param_context
-
-                config = get_row_validation_config()
-
-                try:
-                    validate_dataframe_rows(
-                        result,
-                        row_validator,
-                        max_errors=config["max_errors"],
-                        convert_nans=config["convert_nans"],
-                    )
-                except AssertionError as e:
-                    context = format_param_context(None, func.__name__, True)
-                    raise AssertionError(f"{str(e)}{context}") from e
+                _validate_rows_with_context(result, row_validator, func.__name__, None, True)
 
             return result
 
@@ -92,10 +112,10 @@ def df_out(
 
 
 def df_in(
-    name: Optional[str] = None,
+    name: str | None = None,
     columns: ColumnsDef = None,
-    strict: Optional[bool] = None,
-    row_validator: Optional["type[BaseModel]"] = None,
+    strict: bool | None = None,
+    row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """Decorate a function parameter that is a Pandas or Polars DataFrame.
 
@@ -127,22 +147,7 @@ def df_in(
                 validate_dataframe(df, columns, get_strict(strict), param_name, func.__name__)
 
             if row_validator is not None:
-                from daffy.config import get_row_validation_config
-                from daffy.row_validation import validate_dataframe_rows
-                from daffy.utils import format_param_context
-
-                config = get_row_validation_config()
-
-                try:
-                    validate_dataframe_rows(
-                        df,
-                        row_validator,
-                        max_errors=config["max_errors"],
-                        convert_nans=config["convert_nans"],
-                    )
-                except AssertionError as e:
-                    context = format_param_context(param_name, func.__name__, False)
-                    raise AssertionError(f"{str(e)}{context}") from e
+                _validate_rows_with_context(df, row_validator, func.__name__, param_name, False)
 
             return func(*args, **kwargs)
 

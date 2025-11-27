@@ -4,7 +4,7 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from daffy.config import get_config, get_strict
+from daffy.config import clear_config_cache, get_config, get_strict
 
 
 def test_get_config_default() -> None:
@@ -44,10 +44,9 @@ strict = true
 
         # Test loading from this file
         with patch("daffy.config.os.getcwd", return_value=tmpdir):
-            # Reset the cache to force reloading
             from daffy.config import load_config
 
-            globals()["_config_cache"] = None
+            clear_config_cache()
 
             config = load_config()
             assert config["strict"] is True
@@ -65,9 +64,7 @@ def test_load_config_returns_default_when_toml_malformed() -> None:
             f.write("invalid toml [[[")
 
         with patch("daffy.config.os.getcwd", return_value=tmpdir):
-            import daffy.config
-
-            daffy.config._config_cache = None
+            clear_config_cache()
 
             config = get_config()
             assert config["strict"] is False
@@ -91,9 +88,7 @@ other_setting = "value"
             """)
 
         with patch("daffy.config.os.getcwd", return_value=tmpdir):
-            import daffy.config
-
-            daffy.config._config_cache = None
+            clear_config_cache()
 
             config = get_config()
             assert config["strict"] is False
@@ -108,9 +103,7 @@ some_other_setting = "value"
             """)
 
         with patch("daffy.config.os.getcwd", return_value=tmpdir):
-            import daffy.config
-
-            daffy.config._config_cache = None
+            clear_config_cache()
 
             config = get_config()
             assert config["strict"] is False

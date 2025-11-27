@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0
+
+### Stable Release
+
+Daffy 1.0.0 marks the first stable release. The public API (`df_in`, `df_out`, `df_log`) is now considered stable and follows semantic versioning.
+
+### Changed
+
+- Development status upgraded from Beta to Production/Stable
+- Updated documentation to reflect current tooling (uv, ruff, pyrefly)
+
+### Fixed
+
+- Improved error handling for invalid regex patterns in column specifications
+- Better error messages when parameter extraction fails
+
+### Internal
+
+- Extracted duplicate row validation logic into shared helper function
+- Added docstrings to public-facing utility functions
+
+### API Stability
+
+As of 1.0.0, Daffy follows semantic versioning:
+- Major versions (2.0, 3.0) may contain breaking changes
+- Minor versions (1.1, 1.2) add features without breaking changes
+- Patch versions (1.0.1, 1.0.2) contain bug fixes only
+
 ## 0.19.0
 
 ### Performance Improvements
