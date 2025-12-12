@@ -4,3 +4,27 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    versioning-strategy: "increase"
+    groups:
+      dev-dependencies:
+        patterns:
+          - "ruff"
+          - "pyrefly"
+          - "pytest*"
+          - "coverage*"
+          - "pre-commit"
+          - "pydocstyle"
+      test-dependencies:
+        patterns:
+          - "pandas"
+          - "polars"
+          - "pydantic"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
