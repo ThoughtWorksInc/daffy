@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "1.0.1"
+version = "1.0.2"
 description = "Function decorators for Pandas and Polars DataFrame validation - columns, data types, and row-level validation with Pydantic"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
@@ -35,7 +35,7 @@ dependencies = [
 
 [project.urls]
 homepage = "https://github.com/vertti/daffy"
-repository = "https://github.com/vertti/daffy.git"
+repository = "https://github.com/vertti/daffy"
 documentation = "https://github.com/vertti/daffy/blob/master/README.md"
 changelog = "https://github.com/vertti/daffy/blob/master/CHANGELOG.md"
 issues = "https://github.com/vertti/daffy/issues"
