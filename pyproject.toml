@@ -1,14 +1,14 @@
 [project]
 name = "daffy"
 version = "1.0.0"
-description = "Function decorators for Pandas and Polars Dataframe column name and data type validation"
+description = "Function decorators for Pandas and Polars DataFrame validation - columns, data types, and row-level validation with Pydantic"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
 ]
 license = "MIT"
 requires-python = ">=3.9"
 readme = "README.md"
-keywords = ["pandas", "polars", "pydantic", "dataframe", "decorator", "validation", "schema", "data-validation", "typing", "data-quality", "column-validation", "dataframe-schema"]
+keywords = ["pandas", "polars", "pydantic", "dataframe", "decorator", "validation", "schema", "data-validation", "typing", "data-quality", "column-validation", "dataframe-schema", "row-validation", "runtime-validation", "data-pipeline"]
 classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -34,11 +34,11 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://github.com/ThoughtWorksInc/daffy"
-repository = "https://github.com/ThoughtWorksInc/daffy.git"
-documentation = "https://github.com/ThoughtWorksInc/daffy/blob/master/README.md"
-changelog = "https://github.com/ThoughtWorksInc/daffy/blob/master/CHANGELOG.md"
-issues = "https://github.com/ThoughtWorksInc/daffy/issues"
+homepage = "https://github.com/vertti/daffy"
+repository = "https://github.com/vertti/daffy.git"
+documentation = "https://github.com/vertti/daffy/blob/master/README.md"
+changelog = "https://github.com/vertti/daffy/blob/master/CHANGELOG.md"
+issues = "https://github.com/vertti/daffy/issues"
 
 [dependency-groups]
 # Minimal dependencies for running tests - must support Python 3.9+
