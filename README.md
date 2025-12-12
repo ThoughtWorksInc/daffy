@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
-![test](https://github.com/fourkind/daffy/workflows/test/badge.svg)
+![CI](https://github.com/vertti/daffy/actions/workflows/main.yml/badge.svg)
 [![codecov](https://codecov.io/gh/vertti/daffy/graph/badge.svg?token=00OL75TW4W)](https://codecov.io/gh/vertti/daffy)
 
 ## Description
@@ -40,9 +40,9 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 
 ## Documentation
 
-- [Usage Guide](https://github.com/ThoughtWorksInc/daffy/blob/master/docs/usage.md) - Detailed usage instructions
-- [Development Guide](https://github.com/ThoughtWorksInc/daffy/blob/master/docs/development.md) - Guide for contributing to Daffy
-- [Changelog](https://github.com/ThoughtWorksInc/daffy/blob/master/CHANGELOG.md) - Version history and release notes
+- [Usage Guide](https://github.com/vertti/daffy/blob/master/docs/usage.md) - Detailed usage instructions
+- [Development Guide](https://github.com/vertti/daffy/blob/master/docs/development.md) - Guide for contributing to Daffy
+- [Changelog](https://github.com/vertti/daffy/blob/master/CHANGELOG.md) - Version history and release notes
 
 ## Installation
 
@@ -108,7 +108,7 @@ def process_inventory(df):
 - **Data characteristics**: DataFrame size, missing values, data types
 - **Hardware**: CPU speed, available memory
 
-For detailed benchmarks and optimization strategies, see [scripts/README_BENCHMARKS.md](https://github.com/ThoughtWorksInc/daffy/blob/master/scripts/README_BENCHMARKS.md).
+For detailed benchmarks and optimization strategies, see [scripts/README_BENCHMARKS.md](https://github.com/vertti/daffy/blob/master/scripts/README_BENCHMARKS.md).
 
 ## License
 
