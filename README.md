@@ -38,9 +38,28 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 - Integrated logging for DataFrame structure inspection
 - Enhanced type annotations for improved IDE and type checker support
 
+## When to Use Daffy
+
+Different tools serve different needs. Here's how Daffy compares:
+
+| Use Case | Daffy | Pandera | Great Expectations |
+|----------|-------|---------|-------------------|
+| Function boundary guardrails | Primary focus | Possible via decorators | Not designed for this |
+| Quick column/type checks | Lightweight | Requires schema definitions | Requires Data Context setup |
+| Complex statistical checks | Limited | Many built-in | Extensive |
+| Pipeline/warehouse-wide QA | Not designed for this | Some support | Primary focus |
+
+## Philosophy
+
+- **Non-intrusive**: Just add decorators - no refactoring, no custom DataFrame types, no schema files
+- **Easy to adopt and remove**: Add Daffy in 30 seconds, remove it just as fast if needed
+- **Stay in-process**: No external stores, orchestrators, or infrastructure
+- **Minimal overhead**: Column validation is essentially free; pay for row validation only when you need it
+
 ## Documentation
 
 - [Usage Guide](https://github.com/vertti/daffy/blob/master/docs/usage.md) - Detailed usage instructions
+- [Recipes & Patterns](https://github.com/vertti/daffy/blob/master/docs/recipes.md) - Common usage patterns
 - [Development Guide](https://github.com/vertti/daffy/blob/master/docs/development.md) - Guide for contributing to Daffy
 - [Changelog](https://github.com/vertti/daffy/blob/master/CHANGELOG.md) - Version history and release notes
 
