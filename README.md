@@ -44,10 +44,10 @@ Different tools serve different needs. Here's how Daffy compares:
 
 | Use Case | Daffy | Pandera | Great Expectations |
 |----------|-------|---------|-------------------|
-| Function boundary guardrails | Primary focus | Possible via decorators | Not designed for this |
-| Quick column/type checks | Lightweight | Requires schema definitions | Requires Data Context setup |
-| Complex statistical checks | Limited | Many built-in | Extensive |
-| Pipeline/warehouse-wide QA | Not designed for this | Some support | Primary focus |
+| Function boundary guardrails | ✅ Primary focus | ⚠️ Possible via decorators | ❌ Not designed for this |
+| Quick column/type checks | ✅ Lightweight | ⚠️ Requires schema definitions | ⚠️ Requires Data Context setup |
+| Complex statistical checks | ⚠️ Limited | ✅ Many built-in | ✅ Extensive |
+| Pipeline/warehouse-wide QA | ❌ Not designed for this | ⚠️ Some support | ✅ Primary focus |
 
 ## Philosophy
 
