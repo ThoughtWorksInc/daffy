@@ -121,3 +121,45 @@ class TestUniqueWithDtype:
         df_valid = pl.DataFrame({"user_id": [1, 2, 3, 4]})
         result = f(df_valid)
         assert len(result) == 4
+
+
+class TestUniqueWithNullable:
+    def test_unique_and_nullable_false_pandas(self) -> None:
+        @df_in(columns={"user_id": {"unique": True, "nullable": False}})
+        def f(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        # Has nulls
+        df_nulls = pd.DataFrame({"user_id": [1.0, None, 3.0]})
+        with pytest.raises(AssertionError, match="null value"):
+            f(df_nulls)
+
+        # Has duplicates
+        df_dups = pd.DataFrame({"user_id": [1, 2, 2, 3]})
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f(df_dups)
+
+        # Valid
+        df_valid = pd.DataFrame({"user_id": [1, 2, 3, 4]})
+        result = f(df_valid)
+        assert len(result) == 4
+
+    def test_unique_and_nullable_false_polars(self) -> None:
+        @df_in(columns={"user_id": {"unique": True, "nullable": False}})
+        def f(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        # Has nulls
+        df_nulls = pl.DataFrame({"user_id": [1.0, None, 3.0]})
+        with pytest.raises(AssertionError, match="null value"):
+            f(df_nulls)
+
+        # Has duplicates
+        df_dups = pl.DataFrame({"user_id": [1, 2, 2, 3]})
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f(df_dups)
+
+        # Valid
+        df_valid = pl.DataFrame({"user_id": [1, 2, 3, 4]})
+        result = f(df_valid)
+        assert len(result) == 4
