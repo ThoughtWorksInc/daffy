@@ -4,7 +4,7 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from daffy import df_in
+from daffy import df_in, df_out
 
 
 class TestUniqueBasic:
@@ -195,3 +195,37 @@ class TestUniqueWithRegex:
         df_valid = pl.DataFrame({"ID_1": [1, 2, 3], "ID_2": [4, 5, 6]})
         result = f(df_valid)
         assert len(result) == 3
+
+
+class TestUniqueWithDfOut:
+    def test_df_out_unique_rejects_duplicates_pandas(self) -> None:
+        @df_out(columns={"id": {"unique": True}})
+        def f() -> pd.DataFrame:
+            return pd.DataFrame({"id": [1, 2, 2, 3]})
+
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f()
+
+    def test_df_out_unique_rejects_duplicates_polars(self) -> None:
+        @df_out(columns={"id": {"unique": True}})
+        def f() -> pl.DataFrame:
+            return pl.DataFrame({"id": [1, 2, 2, 3]})
+
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f()
+
+    def test_df_out_unique_passes_when_valid_pandas(self) -> None:
+        @df_out(columns={"id": {"unique": True}})
+        def f() -> pd.DataFrame:
+            return pd.DataFrame({"id": [1, 2, 3, 4]})
+
+        result = f()
+        assert len(result) == 4
+
+    def test_df_out_unique_passes_when_valid_polars(self) -> None:
+        @df_out(columns={"id": {"unique": True}})
+        def f() -> pl.DataFrame:
+            return pl.DataFrame({"id": [1, 2, 3, 4]})
+
+        result = f()
+        assert len(result) == 4
