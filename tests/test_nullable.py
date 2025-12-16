@@ -83,3 +83,42 @@ class TestNullableWithDtype:
         df = pd.DataFrame({"price": [1.0, 2.0, 3.0]})  # float64, not int64
         with pytest.raises(AssertionError, match="wrong dtype"):
             f(df)
+
+
+class TestNullableDefault:
+    def test_nullable_default_allows_nulls_pandas(self) -> None:
+        # When nullable is not specified, it defaults to True (allow nulls)
+        @df_in(columns={"price": {"dtype": "float64"}})
+        def f(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"price": [1.0, None, 3.0]})
+        result = f(df)  # Should NOT raise
+        assert len(result) == 3
+
+    def test_nullable_default_allows_nulls_polars(self) -> None:
+        @df_in(columns={"price": {"dtype": pl.Float64}})
+        def f(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        df = pl.DataFrame({"price": [1.0, None, 3.0]})
+        result = f(df)  # Should NOT raise
+        assert len(result) == 3
+
+    def test_nullable_true_explicit_pandas(self) -> None:
+        @df_in(columns={"price": {"nullable": True}})
+        def f(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"price": [1.0, None, 3.0]})
+        result = f(df)  # Should NOT raise
+        assert len(result) == 3
+
+    def test_nullable_true_explicit_polars(self) -> None:
+        @df_in(columns={"price": {"nullable": True}})
+        def f(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        df = pl.DataFrame({"price": [1.0, None, 3.0]})
+        result = f(df)  # Should NOT raise
+        assert len(result) == 3
