@@ -79,3 +79,45 @@ class TestUniqueBasic:
         df = pl.DataFrame({"user_id": [1, 2, 2, 3]})
         result = f(df)
         assert len(result) == 4
+
+
+class TestUniqueWithDtype:
+    def test_unique_with_dtype_validates_both_pandas(self) -> None:
+        @df_in(columns={"user_id": {"dtype": "int64", "unique": True}})
+        def f(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        # Wrong dtype
+        df_wrong_dtype = pd.DataFrame({"user_id": ["a", "b", "c"]})
+        with pytest.raises(AssertionError, match="wrong dtype"):
+            f(df_wrong_dtype)
+
+        # Duplicates
+        df_dups = pd.DataFrame({"user_id": [1, 2, 2, 3]})
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f(df_dups)
+
+        # Valid
+        df_valid = pd.DataFrame({"user_id": [1, 2, 3, 4]})
+        result = f(df_valid)
+        assert len(result) == 4
+
+    def test_unique_with_dtype_validates_both_polars(self) -> None:
+        @df_in(columns={"user_id": {"dtype": pl.Int64, "unique": True}})
+        def f(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        # Wrong dtype
+        df_wrong_dtype = pl.DataFrame({"user_id": ["a", "b", "c"]})
+        with pytest.raises(AssertionError, match="wrong dtype"):
+            f(df_wrong_dtype)
+
+        # Duplicates
+        df_dups = pl.DataFrame({"user_id": [1, 2, 2, 3]})
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f(df_dups)
+
+        # Valid
+        df_valid = pl.DataFrame({"user_id": [1, 2, 3, 4]})
+        result = f(df_valid)
+        assert len(result) == 4
