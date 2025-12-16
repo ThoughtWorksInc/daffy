@@ -6,6 +6,16 @@ from typing import Any, Optional
 
 import tomli
 
+# Configuration keys
+_KEY_STRICT = "strict"
+_KEY_ROW_VALIDATION_MAX_ERRORS = "row_validation_max_errors"
+_KEY_ROW_VALIDATION_CONVERT_NANS = "row_validation_convert_nans"
+
+# Default values
+_DEFAULT_STRICT = False
+_DEFAULT_MAX_ERRORS = 5
+_DEFAULT_CONVERT_NANS = True
+
 
 def load_config() -> dict[str, Any]:
     """
@@ -15,9 +25,9 @@ def load_config() -> dict[str, Any]:
         dict: Configuration dictionary with daffy settings
     """
     default_config = {
-        "strict": False,
-        "row_validation_max_errors": 5,
-        "row_validation_convert_nans": True,
+        _KEY_STRICT: _DEFAULT_STRICT,
+        _KEY_ROW_VALIDATION_MAX_ERRORS: _DEFAULT_MAX_ERRORS,
+        _KEY_ROW_VALIDATION_CONVERT_NANS: _DEFAULT_CONVERT_NANS,
     }
 
     # Try to find pyproject.toml in the current directory or parent directories
@@ -33,12 +43,12 @@ def load_config() -> dict[str, Any]:
         daffy_config = pyproject.get("tool", {}).get("daffy", {})
 
         # Update default config with values from pyproject.toml
-        if "strict" in daffy_config:
-            default_config["strict"] = bool(daffy_config["strict"])
-        if "row_validation_max_errors" in daffy_config:
-            default_config["row_validation_max_errors"] = int(daffy_config["row_validation_max_errors"])
-        if "row_validation_convert_nans" in daffy_config:
-            default_config["row_validation_convert_nans"] = bool(daffy_config["row_validation_convert_nans"])
+        if _KEY_STRICT in daffy_config:
+            default_config[_KEY_STRICT] = bool(daffy_config[_KEY_STRICT])
+        if _KEY_ROW_VALIDATION_MAX_ERRORS in daffy_config:
+            default_config[_KEY_ROW_VALIDATION_MAX_ERRORS] = int(daffy_config[_KEY_ROW_VALIDATION_MAX_ERRORS])
+        if _KEY_ROW_VALIDATION_CONVERT_NANS in daffy_config:
+            default_config[_KEY_ROW_VALIDATION_CONVERT_NANS] = bool(daffy_config[_KEY_ROW_VALIDATION_CONVERT_NANS])
 
         return default_config
     except (FileNotFoundError, tomli.TOMLDecodeError):
@@ -74,15 +84,15 @@ def get_strict(strict_param: Optional[bool] = None) -> bool:
     """
     if strict_param is not None:
         return strict_param
-    return bool(get_config()["strict"])
+    return bool(get_config()[_KEY_STRICT])
 
 
 def get_row_validation_config() -> dict[str, Any]:
     """Get all row validation configuration options."""
     config = get_config()
     return {
-        "max_errors": config["row_validation_max_errors"],
-        "convert_nans": config["row_validation_convert_nans"],
+        "max_errors": config[_KEY_ROW_VALIDATION_MAX_ERRORS],
+        "convert_nans": config[_KEY_ROW_VALIDATION_CONVERT_NANS],
     }
 
 
@@ -90,11 +100,11 @@ def get_row_validation_max_errors(max_errors: Optional[int] = None) -> int:
     """Get max_errors setting for row validation."""
     if max_errors is not None:
         return max_errors
-    return int(get_config()["row_validation_max_errors"])
+    return int(get_config()[_KEY_ROW_VALIDATION_MAX_ERRORS])
 
 
 def get_row_validation_convert_nans(convert_nans: Optional[bool] = None) -> bool:
     """Get convert_nans setting for row validation."""
     if convert_nans is not None:
         return convert_nans
-    return bool(get_config()["row_validation_convert_nans"])
+    return bool(get_config()[_KEY_ROW_VALIDATION_CONVERT_NANS])
