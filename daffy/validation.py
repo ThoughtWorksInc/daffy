@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Union
 
-from daffy.dataframe_types import DataFrameType, has_null_values
+from daffy.dataframe_types import DataFrameType, count_null_values
 from daffy.patterns import (
     RegexColumnDef,
     compile_regex_pattern,
@@ -20,9 +20,6 @@ from daffy.utils import describe_dataframe, format_param_context
 ColumnsList = Sequence[Union[str, RegexColumnDef]]
 ColumnsDict = dict[Union[str, RegexColumnDef], Any]
 ColumnsDef = Union[ColumnsList, ColumnsDict, None]
-
-# Rich column spec type: dict value can be {"dtype": ..., "nullable": ..., etc.}
-RichColumnSpec = dict[str, Any]
 
 
 def _find_missing_columns(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
@@ -63,21 +60,16 @@ def _find_nullable_violations(
     violations: list[tuple[str, int]] = []
     if isinstance(column_spec, str):
         if column_spec in df_columns:
-            has_nulls, count = has_null_values(df, column_spec)
-            if has_nulls:
-                violations.append((column_spec, count))
+            null_count = count_null_values(df, column_spec)
+            if null_count > 0:
+                violations.append((column_spec, null_count))
     elif is_regex_pattern(column_spec):
         matches = match_column_with_regex(column_spec, df_columns)
         for matched_col in matches:
-            has_nulls, count = has_null_values(df, matched_col)
-            if has_nulls:
-                violations.append((matched_col, count))
+            null_count = count_null_values(df, matched_col)
+            if null_count > 0:
+                violations.append((matched_col, null_count))
     return violations
-
-
-def _is_rich_column_spec(value: Any) -> bool:
-    """Check if a column spec value is a rich spec dict (not just dtype string)."""
-    return isinstance(value, dict)
 
 
 def validate_dataframe(
@@ -116,7 +108,7 @@ def validate_dataframe(
             all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
 
             # Handle both simple dtype specs ("float64") and rich specs ({"dtype": ..., "nullable": ...})
-            if _is_rich_column_spec(spec_value):
+            if isinstance(spec_value, dict):
                 # Rich column spec: {"dtype": ..., "nullable": ..., etc.}
                 expected_dtype = spec_value.get("dtype")
                 nullable = spec_value.get("nullable", True)  # Default to True (allow nulls)
@@ -149,13 +141,10 @@ def validate_dataframe(
     if all_nullable_violations:
         if len(all_nullable_violations) == 1:
             col, count = all_nullable_violations[0]
-            raise AssertionError(
-                f"Column '{col}'{param_info} contains {count} null value{'s' if count > 1 else ''} but nullable=False"
-            )
+            raise AssertionError(f"Column '{col}'{param_info} contains {count} null values but nullable=False")
         else:
             violation_desc = ", ".join(
-                f"Column '{col}' contains {count} null value{'s' if count > 1 else ''}"
-                for col, count in all_nullable_violations
+                f"Column '{col}' contains {count} null values" for col, count in all_nullable_violations
             )
             raise AssertionError(f"Nullable violations: {violation_desc}{param_info}")
 
