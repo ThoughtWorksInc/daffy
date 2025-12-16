@@ -78,6 +78,10 @@ def get_parameter(func: Callable[..., Any], name: str | None = None, *args: Any,
         return kwargs[name]
 
     func_params_in_order = list(inspect.signature(func).parameters.keys())
+
+    if name not in func_params_in_order:
+        raise ValueError(f"Parameter '{name}' not found in function signature. Available: {func_params_in_order}")
+
     parameter_location = func_params_in_order.index(name)
 
     if parameter_location >= len(args):

@@ -6,6 +6,10 @@ import re
 from collections.abc import Sequence
 from typing import Any
 
+# Regex column pattern format delimiters
+_REGEX_PREFIX = "r/"
+_REGEX_SUFFIX = "/"
+
 RegexColumnDef = tuple[str, re.Pattern[str]]
 
 
@@ -26,7 +30,7 @@ def as_regex_pattern(column: str | RegexColumnDef) -> RegexColumnDef | None:
 
 
 def is_regex_string(column: str) -> bool:
-    return column.startswith("r/") and column.endswith("/")
+    return column.startswith(_REGEX_PREFIX) and column.endswith(_REGEX_SUFFIX)
 
 
 def compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
@@ -41,7 +45,7 @@ def compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
     Raises:
         ValueError: If the regex pattern is invalid
     """
-    pattern_str = pattern_string[2:-1]
+    pattern_str = pattern_string[len(_REGEX_PREFIX) : -len(_REGEX_SUFFIX)]
     try:
         compiled_pattern = re.compile(pattern_str)
     except re.error as e:
