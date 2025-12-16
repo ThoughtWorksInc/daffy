@@ -1,5 +1,7 @@
 """Tests for nullable column validation."""
 
+from typing import Any
+
 import pandas as pd
 import polars as pl
 import pytest
@@ -7,40 +9,23 @@ import pytest
 from daffy import df_in, df_out
 
 
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestNullableBasic:
-    def test_nullable_false_rejects_nulls_pandas(self) -> None:
+    def test_nullable_false_rejects_nulls(self, df_lib: Any) -> None:
         @df_in(columns={"price": {"nullable": False}})
-        def f(df: pd.DataFrame) -> pd.DataFrame:
+        def f(df: Any) -> Any:
             return df
 
-        df = pd.DataFrame({"price": [1.0, None, 3.0]})
+        df = df_lib.DataFrame({"price": [1.0, None, 3.0]})
         with pytest.raises(AssertionError, match="null value"):
             f(df)
 
-    def test_nullable_false_rejects_nulls_polars(self) -> None:
+    def test_nullable_false_passes_without_nulls(self, df_lib: Any) -> None:
         @df_in(columns={"price": {"nullable": False}})
-        def f(df: pl.DataFrame) -> pl.DataFrame:
+        def f(df: Any) -> Any:
             return df
 
-        df = pl.DataFrame({"price": [1.0, None, 3.0]})
-        with pytest.raises(AssertionError, match="null value"):
-            f(df)
-
-    def test_nullable_false_passes_without_nulls_pandas(self) -> None:
-        @df_in(columns={"price": {"nullable": False}})
-        def f(df: pd.DataFrame) -> pd.DataFrame:
-            return df
-
-        df = pd.DataFrame({"price": [1.0, 2.0, 3.0]})
-        result = f(df)
-        assert len(result) == 3
-
-    def test_nullable_false_passes_without_nulls_polars(self) -> None:
-        @df_in(columns={"price": {"nullable": False}})
-        def f(df: pl.DataFrame) -> pl.DataFrame:
-            return df
-
-        df = pl.DataFrame({"price": [1.0, 2.0, 3.0]})
+        df = df_lib.DataFrame({"price": [1.0, 2.0, 3.0]})
         result = f(df)
         assert len(result) == 3
 
@@ -51,7 +36,6 @@ class TestNullableWithDtype:
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
-        # Should check both dtype AND nullable
         df = pd.DataFrame({"price": [1.0, None, 3.0]})
         with pytest.raises(AssertionError, match="null value"):
             f(df)
@@ -70,7 +54,6 @@ class TestNullableWithDtype:
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
-        # Should still validate dtype
         df = pd.DataFrame({"price": [1.0, 2.0, 3.0]})
         result = f(df)
         assert len(result) == 3
@@ -85,15 +68,26 @@ class TestNullableWithDtype:
             f(df)
 
 
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestNullableDefault:
+    def test_nullable_true_explicit_allows_nulls(self, df_lib: Any) -> None:
+        @df_in(columns={"price": {"nullable": True}})
+        def f(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"price": [1.0, None, 3.0]})
+        result = f(df)
+        assert len(result) == 3
+
+
+class TestNullableDefaultWithDtype:
     def test_nullable_default_allows_nulls_pandas(self) -> None:
-        # When nullable is not specified, it defaults to True (allow nulls)
         @df_in(columns={"price": {"dtype": "float64"}})
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
         df = pd.DataFrame({"price": [1.0, None, 3.0]})
-        result = f(df)  # Should NOT raise
+        result = f(df)
         assert len(result) == 3
 
     def test_nullable_default_allows_nulls_polars(self) -> None:
@@ -102,67 +96,40 @@ class TestNullableDefault:
             return df
 
         df = pl.DataFrame({"price": [1.0, None, 3.0]})
-        result = f(df)  # Should NOT raise
-        assert len(result) == 3
-
-    def test_nullable_true_explicit_pandas(self) -> None:
-        @df_in(columns={"price": {"nullable": True}})
-        def f(df: pd.DataFrame) -> pd.DataFrame:
-            return df
-
-        df = pd.DataFrame({"price": [1.0, None, 3.0]})
-        result = f(df)  # Should NOT raise
-        assert len(result) == 3
-
-    def test_nullable_true_explicit_polars(self) -> None:
-        @df_in(columns={"price": {"nullable": True}})
-        def f(df: pl.DataFrame) -> pl.DataFrame:
-            return df
-
-        df = pl.DataFrame({"price": [1.0, None, 3.0]})
-        result = f(df)  # Should NOT raise
+        result = f(df)
         assert len(result) == 3
 
 
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestNullableWithRegex:
-    def test_regex_pattern_nullable_false_pandas(self) -> None:
+    def test_regex_pattern_nullable_false(self, df_lib: Any) -> None:
         @df_in(columns={"r/Price_\\d+/": {"nullable": False}})
-        def f(df: pd.DataFrame) -> pd.DataFrame:
+        def f(df: Any) -> Any:
             return df
 
-        # Price_1 has nulls, should fail
-        df = pd.DataFrame({"Price_1": [1.0, None], "Price_2": [2.0, 3.0]})
+        df = df_lib.DataFrame({"Price_1": [1.0, None], "Price_2": [2.0, 3.0]})
         with pytest.raises(AssertionError, match="Price_1"):
             f(df)
 
-    def test_regex_pattern_nullable_false_polars(self) -> None:
+    def test_regex_pattern_nullable_passes(self, df_lib: Any) -> None:
         @df_in(columns={"r/Price_\\d+/": {"nullable": False}})
-        def f(df: pl.DataFrame) -> pl.DataFrame:
+        def f(df: Any) -> Any:
             return df
 
-        df = pl.DataFrame({"Price_1": [1.0, None], "Price_2": [2.0, 3.0]})
-        with pytest.raises(AssertionError, match="Price_1"):
-            f(df)
+        df = df_lib.DataFrame({"Price_1": [1.0, 2.0], "Price_2": [2.0, 3.0]})
+        result = f(df)
+        assert len(result) == 2
 
+
+class TestNullableWithRegexPandasSpecific:
     def test_regex_pattern_all_columns_checked(self) -> None:
         @df_in(columns={"r/Price_\\d+/": {"nullable": False}})
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
-        # Both columns have nulls - should report both
         df = pd.DataFrame({"Price_1": [1.0, None], "Price_2": [None, 3.0]})
         with pytest.raises(AssertionError, match="Null violations"):
             f(df)
-
-    def test_regex_pattern_nullable_passes(self) -> None:
-        @df_in(columns={"r/Price_\\d+/": {"nullable": False}})
-        def f(df: pd.DataFrame) -> pd.DataFrame:
-            return df
-
-        # No nulls - should pass
-        df = pd.DataFrame({"Price_1": [1.0, 2.0], "Price_2": [2.0, 3.0]})
-        result = f(df)
-        assert len(result) == 2
 
     def test_regex_with_dtype_and_nullable(self) -> None:
         @df_in(columns={"r/Price_\\d+/": {"dtype": "float64", "nullable": False}})
@@ -174,31 +141,26 @@ class TestNullableWithRegex:
             f(df)
 
 
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestNullableDfOut:
-    def test_df_out_nullable_false_pandas(self) -> None:
+    def test_df_out_nullable_false_rejects_nulls(self, df_lib: Any) -> None:
         @df_out(columns={"price": {"nullable": False}})
-        def f() -> pd.DataFrame:
-            return pd.DataFrame({"price": [1.0, None, 3.0]})
+        def f() -> Any:
+            return df_lib.DataFrame({"price": [1.0, None, 3.0]})
 
         with pytest.raises(AssertionError, match="return value"):
             f()
 
-    def test_df_out_nullable_false_polars(self) -> None:
+    def test_df_out_nullable_passes(self, df_lib: Any) -> None:
         @df_out(columns={"price": {"nullable": False}})
-        def f() -> pl.DataFrame:
-            return pl.DataFrame({"price": [1.0, None, 3.0]})
-
-        with pytest.raises(AssertionError, match="return value"):
-            f()
-
-    def test_df_out_nullable_passes(self) -> None:
-        @df_out(columns={"price": {"nullable": False}})
-        def f() -> pd.DataFrame:
-            return pd.DataFrame({"price": [1.0, 2.0, 3.0]})
+        def f() -> Any:
+            return df_lib.DataFrame({"price": [1.0, 2.0, 3.0]})
 
         result = f()
         assert len(result) == 3
 
+
+class TestNullableDfOutPandasSpecific:
     def test_df_out_with_dtype_and_nullable(self) -> None:
         @df_out(columns={"price": {"dtype": "float64", "nullable": False}})
         def f() -> pd.DataFrame:
@@ -208,11 +170,20 @@ class TestNullableDfOut:
             f()
 
 
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestBackwardsCompatibility:
-    """Test that existing usage patterns still work correctly."""
+    def test_list_columns_spec(self, df_lib: Any) -> None:
+        @df_in(columns=["price", "qty"])
+        def f(df: Any) -> Any:
+            return df
 
+        df = df_lib.DataFrame({"price": [1.0], "qty": [1]})
+        result = f(df)
+        assert len(result) == 1
+
+
+class TestBackwardsCompatibilityPandasSpecific:
     def test_string_dtype_spec_pandas(self) -> None:
-        # Existing dict-based dtype spec should work
         @df_in(columns={"price": "float64"})
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
@@ -230,33 +201,13 @@ class TestBackwardsCompatibility:
         result = f(df)
         assert len(result) == 3
 
-    def test_list_columns_spec_pandas(self) -> None:
-        # Existing list-based column spec should work
-        @df_in(columns=["price", "qty"])
-        def f(df: pd.DataFrame) -> pd.DataFrame:
-            return df
-
-        df = pd.DataFrame({"price": [1.0], "qty": [1]})
-        result = f(df)
-        assert len(result) == 1
-
-    def test_list_columns_spec_polars(self) -> None:
-        @df_in(columns=["price", "qty"])
-        def f(df: pl.DataFrame) -> pl.DataFrame:
-            return df
-
-        df = pl.DataFrame({"price": [1.0], "qty": [1]})
-        result = f(df)
-        assert len(result) == 1
-
     def test_string_dtype_with_nulls_allowed(self) -> None:
-        # Old string dtype specs should still allow nulls (no change in behavior)
         @df_in(columns={"price": "float64"})
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
         df = pd.DataFrame({"price": [1.0, None, 3.0]})
-        result = f(df)  # Should NOT raise - nulls allowed by default
+        result = f(df)
         assert len(result) == 3
 
     def test_list_columns_with_nulls_allowed(self) -> None:
@@ -265,11 +216,10 @@ class TestBackwardsCompatibility:
             return df
 
         df = pd.DataFrame({"price": [1.0, None, 3.0]})
-        result = f(df)  # Should NOT raise
+        result = f(df)
         assert len(result) == 3
 
     def test_regex_dtype_spec(self) -> None:
-        # Existing regex with dtype should work
         @df_in(columns={"r/Price_\\d+/": "float64"})
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
@@ -279,7 +229,6 @@ class TestBackwardsCompatibility:
         assert len(result) == 2
 
     def test_strict_mode_with_rich_spec(self) -> None:
-        # Strict mode should work with rich column specs
         @df_in(columns={"price": {"dtype": "float64"}}, strict=True)
         def f(df: pd.DataFrame) -> pd.DataFrame:
             return df
