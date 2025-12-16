@@ -88,5 +88,22 @@ def is_polars_dataframe(df: Any) -> TypeGuard[PolarsDataFrame]:
     return HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame)
 
 
+def count_null_values(df: Any, column: str) -> int:
+    """Count null values in a DataFrame column.
+
+    Args:
+        df: DataFrame (pandas or polars)
+        column: Column name to check
+
+    Returns:
+        Number of null values in the column
+    """
+    if is_pandas_dataframe(df):
+        return int(df[column].isnull().sum())
+    elif is_polars_dataframe(df):
+        return int(df[column].is_null().sum())
+    return 0
+
+
 # Cache the types tuple at module level for efficiency
 _DATAFRAME_TYPES = get_dataframe_types()

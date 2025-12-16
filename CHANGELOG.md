@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.1.0
+
+### New Features
+
+- **Nullable column validation** - Validate that columns contain no null values
+  - Use rich column spec format: `{"column": {"nullable": False}}`
+  - Combines with dtype validation: `{"column": {"dtype": "float64", "nullable": False}}`
+  - Works with regex patterns: `{"r/Price_\\d+/": {"nullable": False}}`
+  - Default behavior unchanged (nullable=True, nulls allowed)
+
 ## 1.0.0
 
 ### Stable Release

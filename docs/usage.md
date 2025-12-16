@@ -135,6 +135,49 @@ If a column matches the regex pattern but has the wrong dtype, an error is raise
 AssertionError: Column Price_2 in function 'process_data' parameter 'df' has wrong dtype. Was float64, expected int64
 ```
 
+## Nullable Validation
+
+You can validate that columns contain no null values using the rich column spec format:
+
+```python
+@df_in(columns={"price": {"nullable": False}})
+def process_prices(df):
+    # price column must not contain any null/NaN values
+    ...
+```
+
+### Combining with Data Type Validation
+
+Nullable validation can be combined with dtype validation:
+
+```python
+@df_in(columns={"price": {"dtype": "float64", "nullable": False}})
+def process_prices(df):
+    # price must be float64 AND contain no nulls
+    ...
+```
+
+### With Regex Patterns
+
+Nullable validation works with regex patterns, applying to all matched columns:
+
+```python
+@df_in(columns={"r/Price_\\d+/": {"nullable": False}})
+def process_data(df):
+    # All columns matching Price_1, Price_2, etc. must not contain nulls
+    ...
+```
+
+### Default Behavior
+
+By default, `nullable=True`, meaning null values are allowed. This preserves backwards compatibility - existing code continues to work unchanged.
+
+If a column contains null values when `nullable=False`, an error is raised:
+
+```
+AssertionError: Column 'price' in function 'process_prices' parameter 'df' contains 3 null values but nullable=False
+```
+
 ## Strict Mode
 
 You can enable strict-mode for both `@df_in` and `@df_out`. This will raise an error if the DataFrame contains columns not defined in the annotation:
