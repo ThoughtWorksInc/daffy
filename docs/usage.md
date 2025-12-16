@@ -178,6 +178,49 @@ If a column contains null values when `nullable=False`, an error is raised:
 AssertionError: Column 'price' in function 'process_prices' parameter 'df' contains 3 null values but nullable=False
 ```
 
+## Uniqueness Validation
+
+You can validate that columns contain only unique values using the rich column spec format:
+
+```python
+@df_in(columns={"user_id": {"unique": True}})
+def process_users(df):
+    # user_id column must not contain any duplicate values
+    ...
+```
+
+### Combining with Other Validations
+
+Uniqueness validation can be combined with dtype and nullable validation:
+
+```python
+@df_in(columns={"user_id": {"dtype": "int64", "unique": True, "nullable": False}})
+def process_users(df):
+    # user_id must be int64, contain no nulls, AND have no duplicates
+    ...
+```
+
+### With Regex Patterns
+
+Uniqueness validation works with regex patterns, applying to all matched columns:
+
+```python
+@df_in(columns={"r/ID_\\d+/": {"unique": True}})
+def process_data(df):
+    # All columns matching ID_1, ID_2, etc. must have unique values
+    ...
+```
+
+### Default Behavior
+
+By default, `unique=False`, meaning duplicate values are allowed. This preserves backwards compatibility - existing code continues to work unchanged.
+
+If a column contains duplicate values when `unique=True`, an error is raised:
+
+```
+AssertionError: Column 'user_id' in function 'process_users' parameter 'df' contains 5 duplicate values but unique=True
+```
+
 ## Strict Mode
 
 You can enable strict-mode for both `@df_in` and `@df_out`. This will raise an error if the DataFrame contains columns not defined in the annotation:

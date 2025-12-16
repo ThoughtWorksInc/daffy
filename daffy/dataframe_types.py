@@ -105,5 +105,23 @@ def count_null_values(df: Any, column: str) -> int:
     return 0
 
 
+def count_duplicate_values(df: Any, column: str) -> int:
+    """Count duplicate values in a DataFrame column.
+
+    Args:
+        df: DataFrame (pandas or polars)
+        column: Column name to check
+
+    Returns:
+        Number of duplicate values in the column (excludes first occurrence)
+    """
+    if is_pandas_dataframe(df):
+        return int(df[column].duplicated().sum())
+    elif is_polars_dataframe(df):
+        # polars is_duplicated() marks ALL occurrences, use n_rows - n_unique instead
+        return len(df) - df[column].n_unique()
+    return 0
+
+
 # Cache the types tuple at module level for efficiency
 _DATAFRAME_TYPES = get_dataframe_types()

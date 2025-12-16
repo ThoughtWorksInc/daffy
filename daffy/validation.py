@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any, Union
 
-from daffy.dataframe_types import DataFrameType, count_null_values
+from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
 from daffy.patterns import (
     RegexColumnDef,
     compile_regex_pattern,
@@ -20,6 +20,15 @@ from daffy.utils import describe_dataframe, format_param_context
 ColumnsList = Sequence[Union[str, RegexColumnDef]]
 ColumnsDict = dict[Union[str, RegexColumnDef], Any]
 ColumnsDef = Union[ColumnsList, ColumnsDict, None]
+
+
+def _get_columns_to_check(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
+    """Get list of existing column names to check for a given spec."""
+    if isinstance(column_spec, str):
+        return [column_spec] if column_spec in df_columns else []
+    elif is_regex_pattern(column_spec):
+        return match_column_with_regex(column_spec, df_columns)
+    return []
 
 
 def _find_missing_columns(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
@@ -49,26 +58,49 @@ def _find_dtype_mismatches(
     return mismatches
 
 
-def _find_nullable_violations(
-    column_spec: str | RegexColumnDef, df: DataFrameType, df_columns: list[str]
+def _format_violation_error(
+    violations: list[tuple[str, int]],
+    param_info: str,
+    violation_type: str,
+    constraint: str,
+) -> str:
+    """Format an error message for column violations.
+
+    Args:
+        violations: List of (column_name, count) tuples
+        param_info: Parameter context string (e.g., " in function 'f' parameter 'df'")
+        violation_type: Type of violation (e.g., "null", "duplicate")
+        constraint: The constraint that was violated (e.g., "nullable=False", "unique=True")
+    """
+    if len(violations) == 1:
+        col, count = violations[0]
+        return f"Column '{col}'{param_info} contains {count} {violation_type} values but {constraint}"
+    violation_desc = ", ".join(f"Column '{col}' contains {count} {violation_type} values" for col, count in violations)
+    return f"{violation_type.capitalize()} violations: {violation_desc}{param_info}"
+
+
+def _find_column_violations(
+    column_spec: str | RegexColumnDef,
+    df: DataFrameType,
+    df_columns: list[str],
+    count_fn: Callable[[Any, str], int],
 ) -> list[tuple[str, int]]:
-    """Find nullable violations for a column spec.
+    """Find violations for a column spec using the given count function.
+
+    Args:
+        column_spec: Column name or regex pattern
+        df: DataFrame to check
+        df_columns: List of column names in the DataFrame
+        count_fn: Function that counts violations (e.g., count_null_values, count_duplicate_values)
 
     Returns:
-        List of (column_name, null_count) tuples for columns with null values.
+        List of (column_name, violation_count) tuples for columns with violations.
     """
     violations: list[tuple[str, int]] = []
-    if isinstance(column_spec, str):
-        if column_spec in df_columns:
-            null_count = count_null_values(df, column_spec)
-            if null_count > 0:
-                violations.append((column_spec, null_count))
-    elif is_regex_pattern(column_spec):
-        matches = match_column_with_regex(column_spec, df_columns)
-        for matched_col in matches:
-            null_count = count_null_values(df, matched_col)
-            if null_count > 0:
-                violations.append((matched_col, null_count))
+    for col in _get_columns_to_check(column_spec, df_columns):
+        count = count_fn(df, col)
+        if count > 0:
+            violations.append((col, count))
     return violations
 
 
@@ -97,6 +129,7 @@ def validate_dataframe(
     all_missing_columns: list[str] = []
     all_dtype_mismatches: list[tuple[str, Any, Any]] = []
     all_nullable_violations: list[tuple[str, int]] = []
+    all_uniqueness_violations: list[tuple[str, int]] = []
     all_matched_by_regex: set[str] = set()
 
     if isinstance(columns, dict):
@@ -109,14 +142,21 @@ def validate_dataframe(
 
             # Handle both simple dtype specs ("float64") and rich specs ({"dtype": ..., "nullable": ...})
             if isinstance(spec_value, dict):
-                # Rich column spec: {"dtype": ..., "nullable": ..., etc.}
+                # Rich column spec: {"dtype": ..., "nullable": ..., "unique": ..., etc.}
                 expected_dtype = spec_value.get("dtype")
                 nullable = spec_value.get("nullable", True)  # Default to True (allow nulls)
+                unique = spec_value.get("unique", False)  # Default to False (allow duplicates)
 
                 if expected_dtype is not None:
                     all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
                 if not nullable:
-                    all_nullable_violations.extend(_find_nullable_violations(column_spec, df, df_columns))
+                    all_nullable_violations.extend(
+                        _find_column_violations(column_spec, df, df_columns, count_null_values)
+                    )
+                if unique:
+                    all_uniqueness_violations.extend(
+                        _find_column_violations(column_spec, df, df_columns, count_duplicate_values)
+                    )
             else:
                 # Simple dtype spec: just the dtype string
                 all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, spec_value, df_columns))
@@ -139,14 +179,10 @@ def validate_dataframe(
         raise AssertionError(mismatch_descriptions)
 
     if all_nullable_violations:
-        if len(all_nullable_violations) == 1:
-            col, count = all_nullable_violations[0]
-            raise AssertionError(f"Column '{col}'{param_info} contains {count} null values but nullable=False")
-        else:
-            violation_desc = ", ".join(
-                f"Column '{col}' contains {count} null values" for col, count in all_nullable_violations
-            )
-            raise AssertionError(f"Nullable violations: {violation_desc}{param_info}")
+        raise AssertionError(_format_violation_error(all_nullable_violations, param_info, "null", "nullable=False"))
+
+    if all_uniqueness_violations:
+        raise AssertionError(_format_violation_error(all_uniqueness_violations, param_info, "duplicate", "unique=True"))
 
     if strict:
         explicit_columns = {col for col in columns if isinstance(col, str)}

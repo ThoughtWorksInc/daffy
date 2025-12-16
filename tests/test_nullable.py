@@ -151,7 +151,7 @@ class TestNullableWithRegex:
 
         # Both columns have nulls - should report both
         df = pd.DataFrame({"Price_1": [1.0, None], "Price_2": [None, 3.0]})
-        with pytest.raises(AssertionError, match="Nullable violations"):
+        with pytest.raises(AssertionError, match="Null violations"):
             f(df)
 
     def test_regex_pattern_nullable_passes(self) -> None:
