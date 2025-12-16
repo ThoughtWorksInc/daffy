@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.2.0
+
+### New Features
+
+- **Uniqueness column validation** - Validate that columns contain only unique values
+  - Use rich column spec format: `{"column": {"unique": True}}`
+  - Combines with dtype and nullable: `{"column": {"dtype": "int64", "unique": True, "nullable": False}}`
+  - Works with regex patterns: `{"r/ID_\\d+/": {"unique": True}}`
+  - Default behavior unchanged (unique=False, duplicates allowed)
+
 ## 1.1.0
 
 ### New Features

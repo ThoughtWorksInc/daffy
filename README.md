@@ -26,6 +26,7 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 - Support regex patterns for matching column names (e.g., `"r/column_\d+/"`)
 - Check data types of columns
 - Validate columns contain no null values (`nullable=False`)
+- Validate columns contain only unique values (`unique=True`)
 - Control strictness of validation (allow or disallow extra columns)
 
 **Row Validation** (optional, requires Pydantic >= 2.4.0):
