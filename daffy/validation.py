@@ -58,6 +58,27 @@ def _find_dtype_mismatches(
     return mismatches
 
 
+def _format_violation_error(
+    violations: list[tuple[str, int]],
+    param_info: str,
+    violation_type: str,
+    constraint: str,
+) -> str:
+    """Format an error message for column violations.
+
+    Args:
+        violations: List of (column_name, count) tuples
+        param_info: Parameter context string (e.g., " in function 'f' parameter 'df'")
+        violation_type: Type of violation (e.g., "null", "duplicate")
+        constraint: The constraint that was violated (e.g., "nullable=False", "unique=True")
+    """
+    if len(violations) == 1:
+        col, count = violations[0]
+        return f"Column '{col}'{param_info} contains {count} {violation_type} values but {constraint}"
+    violation_desc = ", ".join(f"Column '{col}' contains {count} {violation_type} values" for col, count in violations)
+    return f"{violation_type.capitalize()} violations: {violation_desc}{param_info}"
+
+
 def _find_column_violations(
     column_spec: str | RegexColumnDef,
     df: DataFrameType,
@@ -158,24 +179,10 @@ def validate_dataframe(
         raise AssertionError(mismatch_descriptions)
 
     if all_nullable_violations:
-        if len(all_nullable_violations) == 1:
-            col, count = all_nullable_violations[0]
-            raise AssertionError(f"Column '{col}'{param_info} contains {count} null values but nullable=False")
-        else:
-            violation_desc = ", ".join(
-                f"Column '{col}' contains {count} null values" for col, count in all_nullable_violations
-            )
-            raise AssertionError(f"Nullable violations: {violation_desc}{param_info}")
+        raise AssertionError(_format_violation_error(all_nullable_violations, param_info, "null", "nullable=False"))
 
     if all_uniqueness_violations:
-        if len(all_uniqueness_violations) == 1:
-            col, count = all_uniqueness_violations[0]
-            raise AssertionError(f"Column '{col}'{param_info} contains {count} duplicate values but unique=True")
-        else:
-            violation_desc = ", ".join(
-                f"Column '{col}' contains {count} duplicate values" for col, count in all_uniqueness_violations
-            )
-            raise AssertionError(f"Uniqueness violations: {violation_desc}{param_info}")
+        raise AssertionError(_format_violation_error(all_uniqueness_violations, param_info, "duplicate", "unique=True"))
 
     if strict:
         explicit_columns = {col for col in columns if isinstance(col, str)}
