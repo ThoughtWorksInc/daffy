@@ -163,3 +163,35 @@ class TestUniqueWithNullable:
         df_valid = pl.DataFrame({"user_id": [1, 2, 3, 4]})
         result = f(df_valid)
         assert len(result) == 4
+
+
+class TestUniqueWithRegex:
+    def test_regex_unique_applies_to_all_matched_pandas(self) -> None:
+        @df_in(columns={"r/ID_\\d+/": {"unique": True}})
+        def f(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        # ID_1 has duplicates
+        df_dups = pd.DataFrame({"ID_1": [1, 1, 3], "ID_2": [1, 2, 3]})
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f(df_dups)
+
+        # All unique
+        df_valid = pd.DataFrame({"ID_1": [1, 2, 3], "ID_2": [4, 5, 6]})
+        result = f(df_valid)
+        assert len(result) == 3
+
+    def test_regex_unique_applies_to_all_matched_polars(self) -> None:
+        @df_in(columns={"r/ID_\\d+/": {"unique": True}})
+        def f(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        # ID_1 has duplicates
+        df_dups = pl.DataFrame({"ID_1": [1, 1, 3], "ID_2": [1, 2, 3]})
+        with pytest.raises(AssertionError, match="duplicate value"):
+            f(df_dups)
+
+        # All unique
+        df_valid = pl.DataFrame({"ID_1": [1, 2, 3], "ID_2": [4, 5, 6]})
+        result = f(df_valid)
+        assert len(result) == 3
