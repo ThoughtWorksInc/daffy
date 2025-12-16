@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import Any, Union
+from typing import Any, TypedDict, Union
 
 from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
 from daffy.patterns import (
@@ -16,6 +16,19 @@ from daffy.patterns import (
     match_column_with_regex,
 )
 from daffy.utils import describe_dataframe, format_param_context
+
+
+class ColumnConstraints(TypedDict, total=False):
+    """Type-safe specification for column constraints.
+
+    All fields are optional. Use this instead of untyped dicts to catch
+    typos like {"nulllable": False} at type-check time.
+    """
+
+    dtype: Any
+    nullable: bool
+    unique: bool
+
 
 ColumnsList = Sequence[Union[str, RegexColumnDef]]
 ColumnsDict = dict[Union[str, RegexColumnDef], Any]

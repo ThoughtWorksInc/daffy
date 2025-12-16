@@ -7,5 +7,6 @@ the input and output on runtime.
 """
 
 from .decorators import df_in, df_log, df_out
+from .validation import ColumnConstraints
 
-__all__ = ["df_in", "df_out", "df_log"]
+__all__ = ["df_in", "df_out", "df_log", "ColumnConstraints"]
