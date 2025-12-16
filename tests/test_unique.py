@@ -229,3 +229,41 @@ class TestUniqueWithDfOut:
 
         result = f()
         assert len(result) == 4
+
+
+class TestUniqueBackwardsCompatibility:
+    def test_list_format_still_works_pandas(self) -> None:
+        @df_in(columns=["user_id", "name"])
+        def f(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"user_id": [1, 1, 2], "name": ["a", "b", "c"]})
+        result = f(df)
+        assert len(result) == 3
+
+    def test_list_format_still_works_polars(self) -> None:
+        @df_in(columns=["user_id", "name"])
+        def f(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        df = pl.DataFrame({"user_id": [1, 1, 2], "name": ["a", "b", "c"]})
+        result = f(df)
+        assert len(result) == 3
+
+    def test_simple_dtype_dict_still_works_pandas(self) -> None:
+        @df_in(columns={"user_id": "int64"})
+        def f(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"user_id": [1, 1, 2]})
+        result = f(df)
+        assert len(result) == 3
+
+    def test_simple_dtype_dict_still_works_polars(self) -> None:
+        @df_in(columns={"user_id": pl.Int64})
+        def f(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        df = pl.DataFrame({"user_id": [1, 1, 2]})
+        result = f(df)
+        assert len(result) == 3
