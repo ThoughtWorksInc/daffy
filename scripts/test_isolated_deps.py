@@ -240,7 +240,7 @@ def test_pandas_no_pydantic() -> bool:
             print("❌ require_pydantic should have raised ImportError")
             return False
         except ImportError as e:
-            if "Pydantic >= 2.4.0 is required" in str(e):
+            if "Pydantic is required" in str(e):
                 print("✅ Row validation requirement check works correctly")
             else:
                 print(f"❌ Wrong error message: {e}")

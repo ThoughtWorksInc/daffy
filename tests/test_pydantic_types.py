@@ -2,7 +2,6 @@
 
 from daffy.pydantic_types import (
     HAS_PYDANTIC,
-    PYDANTIC_VERSION,
     BaseModel,
     ConfigDict,
     TypeAdapter,
@@ -26,12 +25,3 @@ def test_pydantic_imports_available() -> None:
     assert ValidationError is not None
     assert ConfigDict is not None
     assert TypeAdapter is not None
-
-
-def test_pydantic_version() -> None:
-    assert PYDANTIC_VERSION is not None
-    assert isinstance(PYDANTIC_VERSION, str)
-    major, minor = map(int, PYDANTIC_VERSION.split(".")[:2])
-    assert major >= 2
-    if major == 2:
-        assert minor >= 4
