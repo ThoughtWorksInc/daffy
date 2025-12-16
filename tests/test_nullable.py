@@ -4,7 +4,7 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from daffy import df_in
+from daffy import df_in, df_out
 
 
 class TestNullableBasic:
@@ -172,3 +172,37 @@ class TestNullableWithRegex:
         df = pd.DataFrame({"Price_1": [1.0, None], "Price_2": [2.0, 3.0]})
         with pytest.raises(AssertionError, match="null value"):
             f(df)
+
+
+class TestNullableDfOut:
+    def test_df_out_nullable_false_pandas(self) -> None:
+        @df_out(columns={"price": {"nullable": False}})
+        def f() -> pd.DataFrame:
+            return pd.DataFrame({"price": [1.0, None, 3.0]})
+
+        with pytest.raises(AssertionError, match="return value"):
+            f()
+
+    def test_df_out_nullable_false_polars(self) -> None:
+        @df_out(columns={"price": {"nullable": False}})
+        def f() -> pl.DataFrame:
+            return pl.DataFrame({"price": [1.0, None, 3.0]})
+
+        with pytest.raises(AssertionError, match="return value"):
+            f()
+
+    def test_df_out_nullable_passes(self) -> None:
+        @df_out(columns={"price": {"nullable": False}})
+        def f() -> pd.DataFrame:
+            return pd.DataFrame({"price": [1.0, 2.0, 3.0]})
+
+        result = f()
+        assert len(result) == 3
+
+    def test_df_out_with_dtype_and_nullable(self) -> None:
+        @df_out(columns={"price": {"dtype": "float64", "nullable": False}})
+        def f() -> pd.DataFrame:
+            return pd.DataFrame({"price": [1.0, None, 3.0]})
+
+        with pytest.raises(AssertionError, match="null value"):
+            f()
