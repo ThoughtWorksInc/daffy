@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any, Union
 
 from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
@@ -20,6 +20,15 @@ from daffy.utils import describe_dataframe, format_param_context
 ColumnsList = Sequence[Union[str, RegexColumnDef]]
 ColumnsDict = dict[Union[str, RegexColumnDef], Any]
 ColumnsDef = Union[ColumnsList, ColumnsDict, None]
+
+
+def _get_columns_to_check(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
+    """Get list of existing column names to check for a given spec."""
+    if isinstance(column_spec, str):
+        return [column_spec] if column_spec in df_columns else []
+    elif is_regex_pattern(column_spec):
+        return match_column_with_regex(column_spec, df_columns)
+    return []
 
 
 def _find_missing_columns(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
@@ -49,49 +58,28 @@ def _find_dtype_mismatches(
     return mismatches
 
 
-def _find_nullable_violations(
-    column_spec: str | RegexColumnDef, df: DataFrameType, df_columns: list[str]
+def _find_column_violations(
+    column_spec: str | RegexColumnDef,
+    df: DataFrameType,
+    df_columns: list[str],
+    count_fn: Callable[[Any, str], int],
 ) -> list[tuple[str, int]]:
-    """Find nullable violations for a column spec.
+    """Find violations for a column spec using the given count function.
+
+    Args:
+        column_spec: Column name or regex pattern
+        df: DataFrame to check
+        df_columns: List of column names in the DataFrame
+        count_fn: Function that counts violations (e.g., count_null_values, count_duplicate_values)
 
     Returns:
-        List of (column_name, null_count) tuples for columns with null values.
+        List of (column_name, violation_count) tuples for columns with violations.
     """
     violations: list[tuple[str, int]] = []
-    if isinstance(column_spec, str):
-        if column_spec in df_columns:
-            null_count = count_null_values(df, column_spec)
-            if null_count > 0:
-                violations.append((column_spec, null_count))
-    elif is_regex_pattern(column_spec):
-        matches = match_column_with_regex(column_spec, df_columns)
-        for matched_col in matches:
-            null_count = count_null_values(df, matched_col)
-            if null_count > 0:
-                violations.append((matched_col, null_count))
-    return violations
-
-
-def _find_uniqueness_violations(
-    column_spec: str | RegexColumnDef, df: DataFrameType, df_columns: list[str]
-) -> list[tuple[str, int]]:
-    """Find uniqueness violations for a column spec.
-
-    Returns:
-        List of (column_name, duplicate_count) tuples for columns with duplicates.
-    """
-    violations: list[tuple[str, int]] = []
-    if isinstance(column_spec, str):
-        if column_spec in df_columns:
-            dup_count = count_duplicate_values(df, column_spec)
-            if dup_count > 0:
-                violations.append((column_spec, dup_count))
-    elif is_regex_pattern(column_spec):
-        matches = match_column_with_regex(column_spec, df_columns)
-        for matched_col in matches:
-            dup_count = count_duplicate_values(df, matched_col)
-            if dup_count > 0:
-                violations.append((matched_col, dup_count))
+    for col in _get_columns_to_check(column_spec, df_columns):
+        count = count_fn(df, col)
+        if count > 0:
+            violations.append((col, count))
     return violations
 
 
@@ -141,9 +129,13 @@ def validate_dataframe(
                 if expected_dtype is not None:
                     all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
                 if not nullable:
-                    all_nullable_violations.extend(_find_nullable_violations(column_spec, df, df_columns))
+                    all_nullable_violations.extend(
+                        _find_column_violations(column_spec, df, df_columns, count_null_values)
+                    )
                 if unique:
-                    all_uniqueness_violations.extend(_find_uniqueness_violations(column_spec, df, df_columns))
+                    all_uniqueness_violations.extend(
+                        _find_column_violations(column_spec, df, df_columns, count_duplicate_values)
+                    )
             else:
                 # Simple dtype spec: just the dtype string
                 all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, spec_value, df_columns))
