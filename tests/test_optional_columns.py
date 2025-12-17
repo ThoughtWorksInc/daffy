@@ -91,3 +91,23 @@ def test_required_default_true() -> None:
 
     with pytest.raises(AssertionError, match="Missing columns"):
         process(df)
+
+
+def test_multiple_optional_columns() -> None:
+    """Multiple optional columns can be missing."""
+
+    @df_in(
+        columns={
+            "A": "int64",
+            "B": {"dtype": "float64", "required": False},
+            "C": {"dtype": "object", "required": False},
+        }
+    )
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # Only column A is present, both optional columns are missing
+    df = pd.DataFrame({"A": [1, 2, 3]})
+    result = process(df)
+
+    assert list(result.columns) == ["A"]
