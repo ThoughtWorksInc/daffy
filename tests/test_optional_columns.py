@@ -1,156 +1,178 @@
 """Tests for optional columns (required=False) feature."""
 
+from typing import Any
+
 import pandas as pd
+import polars as pl
+import pytest
 
 from daffy import df_in, df_out
 
 
-def test_optional_column_missing_ok() -> None:
-    """Optional column that is missing should not raise an error."""
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
+class TestOptionalColumnsBasic:
+    def test_optional_column_missing_ok(self, df_lib: Any) -> None:
+        """Optional column that is missing should not raise an error."""
 
-    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        @df_in(columns={"A": {"required": True}, "B": {"required": False}})
+        def process(df: Any) -> Any:
+            return df
 
-    # DataFrame only has column A, missing optional column B
-    df = pd.DataFrame({"A": [1, 2, 3]})
-    result = process(df)
+        df = df_lib.DataFrame({"A": [1, 2, 3]})
+        result = process(df)
 
-    assert list(result.columns) == ["A"]
+        assert list(result.columns) == ["A"]
 
+    def test_optional_column_present_validated(self, df_lib: Any) -> None:
+        """Optional column that is present should be validated normally."""
 
-def test_optional_column_present_validated() -> None:
-    """Optional column that is present should be validated normally."""
+        @df_in(columns={"A": {"required": True}, "B": {"required": False}})
+        def process(df: Any) -> Any:
+            return df
 
-    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        df = df_lib.DataFrame({"A": [1, 2, 3], "B": [1.0, 2.0, 3.0]})
+        result = process(df)
 
-    # DataFrame has both columns, dtype is correct
-    df = pd.DataFrame({"A": [1, 2, 3], "B": [1.0, 2.0, 3.0]})
-    result = process(df)
+        assert list(result.columns) == ["A", "B"]
 
-    assert list(result.columns) == ["A", "B"]
+    def test_optional_column_nullable_violation(self, df_lib: Any) -> None:
+        """Optional column with null values when nullable=False should raise an error."""
 
+        @df_in(columns={"A": {"required": True}, "B": {"nullable": False, "required": False}})
+        def process(df: Any) -> Any:
+            return df
 
-def test_optional_column_dtype_mismatch() -> None:
-    """Optional column with wrong dtype should raise an error."""
-    import pytest
+        df = df_lib.DataFrame({"A": [1, 2, 3], "B": [1.0, None, 3.0]})
 
-    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        with pytest.raises(AssertionError, match="null value"):
+            process(df)
 
-    # Column B is present but has wrong dtype (int instead of float)
-    df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})
+    def test_optional_column_unique_violation(self, df_lib: Any) -> None:
+        """Optional column with duplicate values when unique=True should raise an error."""
 
-    with pytest.raises(AssertionError, match="wrong dtype"):
-        process(df)
+        @df_in(columns={"A": {"required": True}, "B": {"unique": True, "required": False}})
+        def process(df: Any) -> Any:
+            return df
 
+        df = df_lib.DataFrame({"A": [1, 2, 3], "B": [1.0, 1.0, 3.0]})
 
-def test_optional_column_nullable_violation() -> None:
-    """Optional column with null values when nullable=False should raise an error."""
-    import pytest
+        with pytest.raises(AssertionError, match="duplicate value"):
+            process(df)
 
-    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "nullable": False, "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+    def test_required_default_true(self, df_lib: Any) -> None:
+        """Column without required key should be required by default."""
 
-    # Column B is present but contains null values
-    df = pd.DataFrame({"A": [1, 2, 3], "B": [1.0, None, 3.0]})
+        @df_in(columns={"A": {"required": True}, "B": {}})
+        def process(df: Any) -> Any:
+            return df
 
-    with pytest.raises(AssertionError, match="null values"):
-        process(df)
+        df = df_lib.DataFrame({"A": [1, 2, 3]})
 
+        with pytest.raises(AssertionError, match="Missing columns"):
+            process(df)
 
-def test_optional_column_unique_violation() -> None:
-    """Optional column with duplicate values when unique=True should raise an error."""
-    import pytest
+    def test_multiple_optional_columns(self, df_lib: Any) -> None:
+        """Multiple optional columns can be missing."""
 
-    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "unique": True, "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        @df_in(
+            columns={
+                "A": {"required": True},
+                "B": {"required": False},
+                "C": {"required": False},
+            }
+        )
+        def process(df: Any) -> Any:
+            return df
 
-    # Column B is present but contains duplicate values
-    df = pd.DataFrame({"A": [1, 2, 3], "B": [1.0, 1.0, 3.0]})
+        df = df_lib.DataFrame({"A": [1, 2, 3]})
+        result = process(df)
 
-    with pytest.raises(AssertionError, match="duplicate values"):
-        process(df)
+        assert list(result.columns) == ["A"]
 
+    def test_df_out_optional_column_missing_ok(self, df_lib: Any) -> None:
+        """Optional column in df_out that is missing should not raise an error."""
 
-def test_required_default_true() -> None:
-    """Column without required key should be required by default."""
-    import pytest
+        @df_out(columns={"A": {"required": True}, "B": {"required": False}})
+        def process(df: Any) -> Any:
+            return df
 
-    @df_in(columns={"A": "int64", "B": {"dtype": "float64"}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        df = df_lib.DataFrame({"A": [1, 2, 3]})
+        result = process(df)
 
-    # DataFrame missing column B (which is required by default)
-    df = pd.DataFrame({"A": [1, 2, 3]})
-
-    with pytest.raises(AssertionError, match="Missing columns"):
-        process(df)
-
-
-def test_multiple_optional_columns() -> None:
-    """Multiple optional columns can be missing."""
-
-    @df_in(
-        columns={
-            "A": "int64",
-            "B": {"dtype": "float64", "required": False},
-            "C": {"dtype": "object", "required": False},
-        }
-    )
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
-
-    # Only column A is present, both optional columns are missing
-    df = pd.DataFrame({"A": [1, 2, 3]})
-    result = process(df)
-
-    assert list(result.columns) == ["A"]
+        assert list(result.columns) == ["A"]
 
 
-def test_optional_with_regex() -> None:
-    """Regex pattern column with required=False should be optional."""
+class TestOptionalColumnsWithDtype:
+    """Tests that require library-specific dtype specifications."""
 
-    @df_in(columns={"A": "int64", "r/price_\\d+/": {"dtype": "float64", "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+    def test_optional_column_dtype_mismatch_pandas(self) -> None:
+        """Optional column with wrong dtype should raise an error (pandas)."""
 
-    # No columns matching regex pattern, but that's OK since required=False
-    df = pd.DataFrame({"A": [1, 2, 3]})
-    result = process(df)
+        @df_in(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
 
-    assert list(result.columns) == ["A"]
+        df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})
 
+        with pytest.raises(AssertionError, match="wrong dtype"):
+            process(df)
 
-def test_df_out_optional_column_missing_ok() -> None:
-    """Optional column in df_out that is missing should not raise an error."""
+    def test_optional_column_dtype_mismatch_polars(self) -> None:
+        """Optional column with wrong dtype should raise an error (polars)."""
 
-    @df_out(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        @df_in(columns={"A": pl.Int64, "B": {"dtype": pl.Float64, "required": False}})
+        def process(df: pl.DataFrame) -> pl.DataFrame:
+            return df
 
-    # Return DataFrame only has column A, missing optional column B
-    df = pd.DataFrame({"A": [1, 2, 3]})
-    result = process(df)
+        df = pl.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})
 
-    assert list(result.columns) == ["A"]
+        with pytest.raises(AssertionError, match="wrong dtype"):
+            process(df)
 
+    def test_optional_with_regex_pandas(self) -> None:
+        """Regex pattern column with required=False should be optional (pandas)."""
 
-def test_df_out_optional_column_present_validated() -> None:
-    """Optional column in df_out that is present should be validated."""
-    import pytest
+        @df_in(columns={"A": "int64", "r/price_\\d+/": {"dtype": "float64", "required": False}})
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
 
-    @df_out(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
-    def process(df: pd.DataFrame) -> pd.DataFrame:
-        return df
+        df = pd.DataFrame({"A": [1, 2, 3]})
+        result = process(df)
 
-    # Return DataFrame has column B with wrong dtype
-    df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})  # B is int, not float
+        assert list(result.columns) == ["A"]
 
-    with pytest.raises(AssertionError, match="wrong dtype"):
-        process(df)
+    def test_optional_with_regex_polars(self) -> None:
+        """Regex pattern column with required=False should be optional (polars)."""
+
+        @df_in(columns={"A": pl.Int64, "r/price_\\d+/": {"dtype": pl.Float64, "required": False}})
+        def process(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        df = pl.DataFrame({"A": [1, 2, 3]})
+        result = process(df)
+
+        assert list(result.columns) == ["A"]
+
+    def test_df_out_optional_column_validated_pandas(self) -> None:
+        """Optional column in df_out that is present should be validated (pandas)."""
+
+        @df_out(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})  # B is int, not float
+
+        with pytest.raises(AssertionError, match="wrong dtype"):
+            process(df)
+
+    def test_df_out_optional_column_validated_polars(self) -> None:
+        """Optional column in df_out that is present should be validated (polars)."""
+
+        @df_out(columns={"A": pl.Int64, "B": {"dtype": pl.Float64, "required": False}})
+        def process(df: pl.DataFrame) -> pl.DataFrame:
+            return df
+
+        df = pl.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})  # B is int, not float
+
+        with pytest.raises(AssertionError, match="wrong dtype"):
+            process(df)
