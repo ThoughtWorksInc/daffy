@@ -61,3 +61,18 @@ def test_optional_column_nullable_violation() -> None:
 
     with pytest.raises(AssertionError, match="null values"):
         process(df)
+
+
+def test_optional_column_unique_violation() -> None:
+    """Optional column with duplicate values when unique=True should raise an error."""
+    import pytest
+
+    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "unique": True, "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # Column B is present but contains duplicate values
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [1.0, 1.0, 3.0]})
+
+    with pytest.raises(AssertionError, match="duplicate values"):
+        process(df)
