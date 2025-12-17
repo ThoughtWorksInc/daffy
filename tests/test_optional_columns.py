@@ -31,3 +31,18 @@ def test_optional_column_present_validated() -> None:
     result = process(df)
 
     assert list(result.columns) == ["A", "B"]
+
+
+def test_optional_column_dtype_mismatch() -> None:
+    """Optional column with wrong dtype should raise an error."""
+    import pytest
+
+    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # Column B is present but has wrong dtype (int instead of float)
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})
+
+    with pytest.raises(AssertionError, match="wrong dtype"):
+        process(df)
