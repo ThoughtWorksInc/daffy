@@ -1,0 +1,19 @@
+"""Tests for optional columns (required=False) feature."""
+
+import pandas as pd
+
+from daffy import df_in
+
+
+def test_optional_column_missing_ok() -> None:
+    """Optional column that is missing should not raise an error."""
+
+    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # DataFrame only has column A, missing optional column B
+    df = pd.DataFrame({"A": [1, 2, 3]})
+    result = process(df)
+
+    assert list(result.columns) == ["A"]
