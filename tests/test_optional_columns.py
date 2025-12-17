@@ -46,3 +46,18 @@ def test_optional_column_dtype_mismatch() -> None:
 
     with pytest.raises(AssertionError, match="wrong dtype"):
         process(df)
+
+
+def test_optional_column_nullable_violation() -> None:
+    """Optional column with null values when nullable=False should raise an error."""
+    import pytest
+
+    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "nullable": False, "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # Column B is present but contains null values
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [1.0, None, 3.0]})
+
+    with pytest.raises(AssertionError, match="null values"):
+        process(df)
