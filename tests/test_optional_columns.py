@@ -176,3 +176,67 @@ class TestOptionalColumnsWithDtype:
 
         with pytest.raises(AssertionError, match="wrong dtype"):
             process(df)
+
+
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
+class TestBackwardsCompatibility:
+    """Test that existing usage without required key still works."""
+
+    def test_list_columns_unchanged(self, df_lib: Any) -> None:
+        """List-based columns still work as before."""
+
+        @df_in(columns=["A", "B"])
+        def process(df: Any) -> Any:
+            return df
+
+        # All columns present - works
+        df = df_lib.DataFrame({"A": [1, 2], "B": [3, 4]})
+        result = process(df)
+        assert list(result.columns) == ["A", "B"]
+
+    def test_list_columns_missing_error(self, df_lib: Any) -> None:
+        """List-based columns still require all columns."""
+
+        @df_in(columns=["A", "B"])
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"A": [1, 2]})
+
+        with pytest.raises(AssertionError, match="Missing columns"):
+            process(df)
+
+    def test_simple_dtype_spec_unchanged(self, df_lib: Any) -> None:
+        """Simple dtype specs (string values) still work as before."""
+
+        @df_in(columns={"A": {"required": True}, "B": {"required": True}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"A": [1, 2], "B": [3.0, 4.0]})
+        result = process(df)
+        assert list(result.columns) == ["A", "B"]
+
+    def test_simple_dtype_spec_missing_error(self, df_lib: Any) -> None:
+        """Simple dtype specs still require columns."""
+
+        @df_in(columns={"A": {"required": True}, "B": {"required": True}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"A": [1, 2]})
+
+        with pytest.raises(AssertionError, match="Missing columns"):
+            process(df)
+
+    def test_rich_spec_without_required_defaults_true(self, df_lib: Any) -> None:
+        """Rich specs without required key default to required=True."""
+
+        @df_in(columns={"A": {}, "B": {"nullable": True}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"A": [1, 2]})
+
+        with pytest.raises(AssertionError, match="Missing columns"):
+            process(df)
