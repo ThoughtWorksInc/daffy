@@ -76,3 +76,18 @@ def test_optional_column_unique_violation() -> None:
 
     with pytest.raises(AssertionError, match="duplicate values"):
         process(df)
+
+
+def test_required_default_true() -> None:
+    """Column without required key should be required by default."""
+    import pytest
+
+    @df_in(columns={"A": "int64", "B": {"dtype": "float64"}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # DataFrame missing column B (which is required by default)
+    df = pd.DataFrame({"A": [1, 2, 3]})
+
+    with pytest.raises(AssertionError, match="Missing columns"):
+        process(df)
