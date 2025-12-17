@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from daffy import df_in
+from daffy import df_in, df_out
 
 
 def test_optional_column_missing_ok() -> None:
@@ -125,3 +125,32 @@ def test_optional_with_regex() -> None:
     result = process(df)
 
     assert list(result.columns) == ["A"]
+
+
+def test_df_out_optional_column_missing_ok() -> None:
+    """Optional column in df_out that is missing should not raise an error."""
+
+    @df_out(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # Return DataFrame only has column A, missing optional column B
+    df = pd.DataFrame({"A": [1, 2, 3]})
+    result = process(df)
+
+    assert list(result.columns) == ["A"]
+
+
+def test_df_out_optional_column_present_validated() -> None:
+    """Optional column in df_out that is present should be validated."""
+    import pytest
+
+    @df_out(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # Return DataFrame has column B with wrong dtype
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})  # B is int, not float
+
+    with pytest.raises(AssertionError, match="wrong dtype"):
+        process(df)
