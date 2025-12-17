@@ -111,3 +111,17 @@ def test_multiple_optional_columns() -> None:
     result = process(df)
 
     assert list(result.columns) == ["A"]
+
+
+def test_optional_with_regex() -> None:
+    """Regex pattern column with required=False should be optional."""
+
+    @df_in(columns={"A": "int64", "r/price_\\d+/": {"dtype": "float64", "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # No columns matching regex pattern, but that's OK since required=False
+    df = pd.DataFrame({"A": [1, 2, 3]})
+    result = process(df)
+
+    assert list(result.columns) == ["A"]
