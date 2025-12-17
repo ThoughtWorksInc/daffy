@@ -17,3 +17,17 @@ def test_optional_column_missing_ok() -> None:
     result = process(df)
 
     assert list(result.columns) == ["A"]
+
+
+def test_optional_column_present_validated() -> None:
+    """Optional column that is present should be validated normally."""
+
+    @df_in(columns={"A": "int64", "B": {"dtype": "float64", "required": False}})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    # DataFrame has both columns, dtype is correct
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [1.0, 2.0, 3.0]})
+    result = process(df)
+
+    assert list(result.columns) == ["A", "B"]
