@@ -32,6 +32,9 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         mask = ~(series < check_value)
     elif check_name == "le":
         mask = ~(series <= check_value)
+    elif check_name == "between":
+        lo, hi = check_value
+        mask = ~((series >= lo) & (series <= hi))
     else:
         raise ValueError(f"Unknown check: {check_name}")
 

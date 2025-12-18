@@ -64,6 +64,30 @@ class TestComparisonChecks:
             apply_check(series, "unknown", 0)
 
 
+class TestBetweenCheck:
+    def test_between_passes(self) -> None:
+        series = pd.Series([0, 50, 100])
+        fail_count, samples = apply_check(series, "between", (0, 100))
+        assert fail_count == 0
+
+    def test_between_fails_below(self) -> None:
+        series = pd.Series([-1, 50, 100])
+        fail_count, samples = apply_check(series, "between", (0, 100))
+        assert fail_count == 1
+        assert samples == [-1]
+
+    def test_between_fails_above(self) -> None:
+        series = pd.Series([0, 50, 101])
+        fail_count, samples = apply_check(series, "between", (0, 100))
+        assert fail_count == 1
+        assert samples == [101]
+
+    def test_between_inclusive(self) -> None:
+        series = pd.Series([0, 100])
+        fail_count, samples = apply_check(series, "between", (0, 100))
+        assert fail_count == 0
+
+
 class TestValidateChecks:
     def test_single_check_passes(self) -> None:
         df = pd.DataFrame({"price": [1, 2, 3]})
