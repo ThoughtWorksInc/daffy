@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.3.0
+
+### New Features
+
+- **Optional columns** - Mark columns as optional with `required=False`
+  - Use rich column spec format: `{"column": {"required": False}}`
+  - Optional columns are not required to exist in the DataFrame
+  - If present, all other validations (dtype, nullable, unique) still apply
+  - Works with regex patterns: `{"r/extra_\\d+/": {"required": False}}`
+  - Default behavior unchanged (required=True, columns must exist)
+
 ## 1.2.0
 
 ### New Features

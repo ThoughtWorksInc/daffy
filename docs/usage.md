@@ -221,6 +221,52 @@ If a column contains duplicate values when `unique=True`, an error is raised:
 AssertionError: Column 'user_id' in function 'process_users' parameter 'df' contains 5 duplicate values but unique=True
 ```
 
+## Optional Columns
+
+By default, all specified columns are required. You can mark columns as optional using `required=False`:
+
+```python
+@df_in(columns={
+    "user_id": {"dtype": "int64"},
+    "nickname": {"dtype": "object", "required": False}
+})
+def process_users(df):
+    # user_id is required, nickname is optional
+    ...
+```
+
+### Behavior
+
+- If an optional column is missing, no error is raised
+- If an optional column is present, all other validations (dtype, nullable, unique) still apply
+
+```python
+@df_in(columns={
+    "discount": {"dtype": "float64", "nullable": False, "required": False}
+})
+def process_orders(df):
+    # discount is optional, but if present it must be float64 with no nulls
+    ...
+```
+
+### With Regex Patterns
+
+Optional columns work with regex patterns:
+
+```python
+@df_in(columns={
+    "id": {"dtype": "int64"},
+    "r/extra_\\d+/": {"dtype": "object", "required": False}
+})
+def process_data(df):
+    # Must have 'id', may optionally have extra_1, extra_2, etc.
+    ...
+```
+
+### Default Behavior
+
+By default, `required=True`, meaning all columns must exist. This preserves backwards compatibility - existing code continues to work unchanged.
+
 ## Strict Mode
 
 You can enable strict-mode for both `@df_in` and `@df_out`. This will raise an error if the DataFrame contains columns not defined in the annotation:
