@@ -1,0 +1,103 @@
+"""Tests for value checks."""
+
+import pandas as pd
+import pytest
+
+from daffy.checks import apply_check, format_check_error, validate_checks
+
+
+class TestComparisonChecks:
+    def test_gt_passes(self) -> None:
+        series = pd.Series([1, 2, 3])
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 0
+        assert samples == []
+
+    def test_gt_fails(self) -> None:
+        series = pd.Series([0, 1, 2, 3])
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 1
+        assert samples == [0]
+
+    def test_ge_passes(self) -> None:
+        series = pd.Series([0, 1, 2])
+        fail_count, samples = apply_check(series, "ge", 0)
+        assert fail_count == 0
+
+    def test_ge_fails(self) -> None:
+        series = pd.Series([-1, 0, 1])
+        fail_count, samples = apply_check(series, "ge", 0)
+        assert fail_count == 1
+        assert samples == [-1]
+
+    def test_lt_passes(self) -> None:
+        series = pd.Series([1, 2, 3])
+        fail_count, samples = apply_check(series, "lt", 10)
+        assert fail_count == 0
+
+    def test_lt_fails(self) -> None:
+        series = pd.Series([5, 10, 15])
+        fail_count, samples = apply_check(series, "lt", 10)
+        assert fail_count == 2
+        assert 10 in samples
+        assert 15 in samples
+
+    def test_le_passes(self) -> None:
+        series = pd.Series([1, 5, 10])
+        fail_count, samples = apply_check(series, "le", 10)
+        assert fail_count == 0
+
+    def test_le_fails(self) -> None:
+        series = pd.Series([5, 10, 15])
+        fail_count, samples = apply_check(series, "le", 10)
+        assert fail_count == 1
+        assert samples == [15]
+
+    def test_null_values_treated_as_failures(self) -> None:
+        series = pd.Series([1, None, 3])
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 1
+
+    def test_unknown_check_raises(self) -> None:
+        series = pd.Series([1, 2, 3])
+        with pytest.raises(ValueError, match="Unknown check"):
+            apply_check(series, "unknown", 0)
+
+
+class TestValidateChecks:
+    def test_single_check_passes(self) -> None:
+        df = pd.DataFrame({"price": [1, 2, 3]})
+        violations = validate_checks(df, "price", {"gt": 0})
+        assert violations == []
+
+    def test_single_check_fails(self) -> None:
+        df = pd.DataFrame({"price": [0, 1, 2]})
+        violations = validate_checks(df, "price", {"gt": 0})
+        assert len(violations) == 1
+        col, check, count, samples = violations[0]
+        assert col == "price"
+        assert check == "gt"
+        assert count == 1
+        assert samples == [0]
+
+    def test_multiple_checks_all_pass(self) -> None:
+        df = pd.DataFrame({"score": [50, 60, 70]})
+        violations = validate_checks(df, "score", {"gt": 0, "lt": 100})
+        assert violations == []
+
+    def test_multiple_checks_one_fails(self) -> None:
+        df = pd.DataFrame({"score": [50, 60, 150]})
+        violations = validate_checks(df, "score", {"gt": 0, "lt": 100})
+        assert len(violations) == 1
+        assert violations[0][1] == "lt"
+
+
+class TestFormatCheckError:
+    def test_format_numeric(self) -> None:
+        assert format_check_error("gt", 0) == "gt(0)"
+
+    def test_format_string(self) -> None:
+        assert format_check_error("eq", "active") == "eq('active')"
+
+    def test_format_list(self) -> None:
+        assert format_check_error("isin", ["a", "b"]) == "isin(['a', 'b'])"
