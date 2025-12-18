@@ -206,8 +206,8 @@ class TestBackwardsCompatibility:
         with pytest.raises(AssertionError, match="Missing columns"):
             process(df)
 
-    def test_simple_dtype_spec_unchanged(self, df_lib: Any) -> None:
-        """Simple dtype specs (string values) still work as before."""
+    def test_rich_spec_columns_present(self, df_lib: Any) -> None:
+        """Rich specs with only required key work correctly."""
 
         @df_in(columns={"A": {"required": True}, "B": {"required": True}})
         def process(df: Any) -> Any:
@@ -217,8 +217,8 @@ class TestBackwardsCompatibility:
         result = process(df)
         assert list(result.columns) == ["A", "B"]
 
-    def test_simple_dtype_spec_missing_error(self, df_lib: Any) -> None:
-        """Simple dtype specs still require columns."""
+    def test_rich_spec_missing_required_column(self, df_lib: Any) -> None:
+        """Rich specs with required=True raise error on missing columns."""
 
         @df_in(columns={"A": {"required": True}, "B": {"required": True}})
         def process(df: Any) -> Any:

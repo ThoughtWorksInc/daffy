@@ -153,18 +153,14 @@ def validate_dataframe(
             )
             all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
 
-            # Handle both simple dtype specs ("float64") and rich specs ({"dtype": ..., "nullable": ...})
             if isinstance(spec_value, dict):
-                # Rich column spec: {"dtype": ..., "nullable": ..., "unique": ..., "required": ..., etc.}
-                required = spec_value.get("required", True)  # Default to True (column must exist)
+                required = spec_value.get("required", True)
                 expected_dtype = spec_value.get("dtype")
-                nullable = spec_value.get("nullable", True)  # Default to True (allow nulls)
-                unique = spec_value.get("unique", False)  # Default to False (allow duplicates)
+                nullable = spec_value.get("nullable", True)
+                unique = spec_value.get("unique", False)
 
-                # Only check for missing columns if required=True
                 if required:
                     all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
-
                 if expected_dtype is not None:
                     all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
                 if not nullable:
@@ -176,7 +172,6 @@ def validate_dataframe(
                         _find_column_violations(column_spec, df, df_columns, count_duplicate_values)
                     )
             else:
-                # Simple dtype spec: just the dtype string (always required)
                 all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
                 all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, spec_value, df_columns))
     else:
