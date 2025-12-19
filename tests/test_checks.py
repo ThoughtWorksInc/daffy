@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from daffy.checks import apply_check, format_check_error, validate_checks
+from daffy.checks import apply_check, validate_checks
 
 
 class TestComparisonChecks:
@@ -190,14 +190,3 @@ class TestValidateChecks:
         violations = validate_checks(df, "score", {"gt": 0, "lt": 100})
         assert len(violations) == 1
         assert violations[0][1] == "lt"
-
-
-class TestFormatCheckError:
-    def test_format_numeric(self) -> None:
-        assert format_check_error("gt", 0) == "gt(0)"
-
-    def test_format_string(self) -> None:
-        assert format_check_error("eq", "active") == "eq('active')"
-
-    def test_format_list(self) -> None:
-        assert format_check_error("isin", ["a", "b"]) == "isin(['a', 'b'])"

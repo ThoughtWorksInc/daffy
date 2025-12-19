@@ -84,8 +84,3 @@ def validate_checks(df: Any, column: str, checks: dict[str, Any], max_samples: i
             violations.append((column, check_name, fail_count, samples))
 
     return violations
-
-
-def format_check_error(check_name: str, check_value: Any) -> str:
-    """Format a check name and value for error messages."""
-    return f"{check_name}({check_value!r})"
