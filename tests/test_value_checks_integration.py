@@ -1,6 +1,9 @@
 """Integration tests for value checks with df_in/df_out decorators."""
 
+from typing import Any
+
 import pandas as pd
+import polars as pl
 import pytest
 
 from daffy import df_in, df_out
@@ -107,6 +110,90 @@ class TestDfOutWithChecks:
         df = pd.DataFrame({"result": [-1, 0, 1]})
         with pytest.raises(AssertionError, match="ge"):
             process(df)
+
+
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
+class TestChecksWithBothLibraries:
+    def test_gt_check_passes(self, df_lib: Any) -> None:
+        @df_in(columns={"price": {"checks": {"gt": 0}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"price": [1, 2, 3]})
+        result = process(df)
+        assert list(result["price"]) == [1, 2, 3]
+
+    def test_gt_check_fails(self, df_lib: Any) -> None:
+        @df_in(columns={"price": {"checks": {"gt": 0}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"price": [0, 1, 2]})
+        with pytest.raises(AssertionError, match="gt"):
+            process(df)
+
+    def test_between_check(self, df_lib: Any) -> None:
+        @df_in(columns={"score": {"checks": {"between": (0, 100)}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"score": [0, 50, 100]})
+        result = process(df)
+        assert list(result["score"]) == [0, 50, 100]
+
+    def test_isin_check(self, df_lib: Any) -> None:
+        @df_in(columns={"status": {"checks": {"isin": ["a", "b", "c"]}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"status": ["a", "b", "c"]})
+        result = process(df)
+        assert list(result["status"]) == ["a", "b", "c"]
+
+    def test_notnull_check_passes(self, df_lib: Any) -> None:
+        @df_in(columns={"value": {"checks": {"notnull": True}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"value": [1, 2, 3]})
+        result = process(df)
+        assert list(result["value"]) == [1, 2, 3]
+
+    def test_notnull_check_fails(self, df_lib: Any) -> None:
+        @df_in(columns={"value": {"checks": {"notnull": True}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"value": [1, None, 3]})
+        with pytest.raises(AssertionError, match="notnull"):
+            process(df)
+
+    def test_eq_check(self, df_lib: Any) -> None:
+        @df_in(columns={"flag": {"checks": {"eq": "yes"}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"flag": ["yes", "yes", "yes"]})
+        result = process(df)
+        assert list(result["flag"]) == ["yes", "yes", "yes"]
+
+    def test_ne_check(self, df_lib: Any) -> None:
+        @df_in(columns={"flag": {"checks": {"ne": "deleted"}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"flag": ["active", "pending", "closed"]})
+        result = process(df)
+        assert list(result["flag"]) == ["active", "pending", "closed"]
+
+    def test_str_regex_check(self, df_lib: Any) -> None:
+        @df_in(columns={"code": {"checks": {"str_regex": r"^[A-Z]{2}\d{3}$"}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"code": ["AB123", "CD456", "EF789"]})
+        result = process(df)
+        assert list(result["code"]) == ["AB123", "CD456", "EF789"]
 
 
 class TestErrorMessages:

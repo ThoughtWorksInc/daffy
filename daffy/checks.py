@@ -40,7 +40,10 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
     elif check_name == "ne":
         mask = series == check_value
     elif check_name == "isin":
-        mask = ~series.isin(check_value)
+        if hasattr(series, "is_in"):
+            mask = ~series.is_in(check_value)
+        else:
+            mask = ~series.isin(check_value)
     elif check_name == "notnull":
         if hasattr(series, "is_null"):
             mask = series.is_null()
