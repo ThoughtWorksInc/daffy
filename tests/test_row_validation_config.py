@@ -33,27 +33,3 @@ row_validation_convert_nans = false
     assert cfg["convert_nans"] is False
 
     clear_config_cache()
-
-
-def test_explicit_overrides_config() -> None:
-    from daffy.config import (
-        get_row_validation_convert_nans,
-        get_row_validation_max_errors,
-    )
-
-    assert get_row_validation_max_errors(20) == 20
-    assert get_row_validation_convert_nans(False) is False
-
-
-def test_row_validation_max_errors_uses_default() -> None:
-    from daffy.config import get_row_validation_max_errors
-
-    result = get_row_validation_max_errors(None)
-    assert result == 5
-
-
-def test_row_validation_convert_nans_uses_default() -> None:
-    from daffy.config import get_row_validation_convert_nans
-
-    result = get_row_validation_convert_nans(None)
-    assert result is True

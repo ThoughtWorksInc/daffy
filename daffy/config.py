@@ -101,20 +101,6 @@ def get_row_validation_config() -> dict[str, Any]:
     }
 
 
-def get_row_validation_max_errors(max_errors: Optional[int] = None) -> int:
-    """Get max_errors setting for row validation."""
-    if max_errors is not None:
-        return max_errors
-    return int(get_config()[_KEY_ROW_VALIDATION_MAX_ERRORS])
-
-
-def get_row_validation_convert_nans(convert_nans: Optional[bool] = None) -> bool:
-    """Get convert_nans setting for row validation."""
-    if convert_nans is not None:
-        return convert_nans
-    return bool(get_config()[_KEY_ROW_VALIDATION_CONVERT_NANS])
-
-
 def get_checks_max_samples(max_samples: Optional[int] = None) -> int:
     """Get max_samples setting for value checks."""
     if max_samples is not None:

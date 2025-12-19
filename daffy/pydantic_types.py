@@ -11,24 +11,17 @@ from typing import TYPE_CHECKING
 
 # Runtime import with availability flag
 try:
-    from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
+    from pydantic import BaseModel, ValidationError
 
     HAS_PYDANTIC = True
 except ImportError:  # pragma: no cover
     BaseModel = None  # type: ignore[assignment, misc]
     ValidationError = None  # type: ignore[assignment, misc]
-    ConfigDict = None  # type: ignore[assignment, misc]
-    TypeAdapter = None  # type: ignore[assignment, misc]
     HAS_PYDANTIC = False
 
 # Compile-time types for type checkers
 if TYPE_CHECKING:
-    from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError  # noqa: F401
-
-
-def get_pydantic_available() -> bool:
-    """Check if Pydantic is available."""
-    return HAS_PYDANTIC
+    from pydantic import BaseModel, ValidationError  # noqa: F401
 
 
 def require_pydantic() -> None:
