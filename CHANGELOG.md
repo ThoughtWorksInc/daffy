@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.4.0
+
+### New Features
+
+- **Vectorized value checks** - Fast validation of column values using native pandas/polars operations
+  - Comparison checks: `gt`, `ge`, `lt`, `le` (greater than, greater or equal, less than, less or equal)
+  - Range check: `between` for inclusive range validation
+  - Equality checks: `eq`, `ne` for exact value matching
+  - Set membership: `isin` for validating values against a list
+  - Null check: `notnull` for ensuring no null values
+  - Regex matching: `str_regex` for pattern validation on string columns
+  - Use rich column spec format: `{"price": {"checks": {"gt": 0, "lt": 10000}}}`
+  - Combine multiple checks: `{"age": {"checks": {"ge": 0, "le": 120}}}`
+  - Works with other validations: `{"price": {"dtype": "float64", "nullable": False, "checks": {"gt": 0}}}`
+  - Supports regex column patterns: `{"r/score_\\d+/": {"checks": {"between": (0, 100)}}}`
+  - Checks are skipped for missing optional columns
+  - Error messages include sample failing values for debugging
+  - Configurable via `checks_max_samples` in pyproject.toml
+
 ## 1.3.0
 
 ### New Features

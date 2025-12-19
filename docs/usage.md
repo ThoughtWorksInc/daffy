@@ -267,6 +267,115 @@ def process_data(df):
 
 By default, `required=True`, meaning all columns must exist. This preserves backwards compatibility - existing code continues to work unchanged.
 
+## Value Checks
+
+You can validate column values using vectorized checks. This is faster than row-by-row validation because it uses native pandas/polars operations:
+
+```python
+@df_in(columns={
+    "price": {"checks": {"gt": 0}},
+    "score": {"checks": {"between": (0, 100)}},
+    "status": {"checks": {"isin": ["active", "pending", "closed"]}},
+})
+def process_data(df):
+    ...
+```
+
+### Available Checks
+
+| Check | Argument | Description | Example |
+|-------|----------|-------------|---------|
+| `gt` | number | Greater than | `{"gt": 0}` |
+| `ge` | number | Greater than or equal | `{"ge": 0}` |
+| `lt` | number | Less than | `{"lt": 100}` |
+| `le` | number | Less than or equal | `{"le": 100}` |
+| `eq` | value | Equal to | `{"eq": "active"}` |
+| `ne` | value | Not equal to | `{"ne": "deleted"}` |
+| `between` | (lo, hi) | Value in range (inclusive) | `{"between": (0, 100)}` |
+| `isin` | list | Value in set | `{"isin": ["a", "b", "c"]}` |
+| `notnull` | True | No null values | `{"notnull": True}` |
+| `str_regex` | pattern | String matches regex | `{"str_regex": r"^\d+$"}` |
+
+### Multiple Checks
+
+You can combine multiple checks on a single column:
+
+```python
+@df_in(columns={
+    "price": {"checks": {"gt": 0, "lt": 10000}},
+    "age": {"checks": {"ge": 0, "le": 120}},
+})
+def process_data(df):
+    ...
+```
+
+### Combining with Other Validations
+
+Checks work alongside other column validations:
+
+```python
+@df_in(columns={
+    "price": {
+        "dtype": "float64",
+        "nullable": False,
+        "checks": {"gt": 0}
+    }
+})
+def process_data(df):
+    ...
+```
+
+### With Regex Column Patterns
+
+Checks apply to all columns matching a regex pattern:
+
+```python
+@df_in(columns={
+    "r/score_\\d+/": {"checks": {"between": (0, 100)}}
+})
+def process_data(df):
+    # All columns like score_1, score_2, etc. must be in range 0-100
+    ...
+```
+
+### With Optional Columns
+
+If a column is optional and missing, checks are skipped:
+
+```python
+@df_in(columns={
+    "discount": {"required": False, "checks": {"ge": 0, "le": 1}}
+})
+def process_data(df):
+    # If discount column exists, it must be between 0 and 1
+    ...
+```
+
+### Error Messages
+
+When checks fail, you get informative error messages:
+
+```
+AssertionError: Column 'price' in function 'process_data' parameter 'df' failed check gt: 3 values failed. Examples: [-5, 0, -1]
+```
+
+For multiple failures:
+
+```
+AssertionError: Check violations in function 'process_data' parameter 'df':
+  Column 'price' failed gt: 3 values. Examples: [-5, 0, -1]
+  Column 'status' failed isin: 2 values. Examples: ['deleted', 'unknown']
+```
+
+### Configuration
+
+You can configure the maximum number of sample values shown in error messages:
+
+```toml
+[tool.daffy]
+checks_max_samples = 5  # Default: 5
+```
+
 ## Strict Mode
 
 You can enable strict-mode for both `@df_in` and `@df_out`. This will raise an error if the DataFrame contains columns not defined in the annotation:
