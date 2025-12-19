@@ -226,6 +226,51 @@ class TestChecksWithRegexPatterns:
         assert list(result["val_1"]) == [50, 60, 70]
 
 
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
+class TestChecksWithOptionalColumns:
+    def test_checks_skipped_for_missing_optional_column(self, df_lib: Any) -> None:
+        @df_in(
+            columns={
+                "required_col": {"checks": {"gt": 0}},
+                "optional_col": {"required": False, "checks": {"gt": 0}},
+            }
+        )
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"required_col": [1, 2, 3]})
+        result = process(df)
+        assert list(result["required_col"]) == [1, 2, 3]
+
+    def test_checks_run_for_present_optional_column(self, df_lib: Any) -> None:
+        @df_in(
+            columns={
+                "required_col": {"checks": {"gt": 0}},
+                "optional_col": {"required": False, "checks": {"gt": 0}},
+            }
+        )
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"required_col": [1, 2, 3], "optional_col": [0, 1, 2]})
+        with pytest.raises(AssertionError, match="gt"):
+            process(df)
+
+    def test_optional_column_with_passing_checks(self, df_lib: Any) -> None:
+        @df_in(
+            columns={
+                "required_col": {},
+                "optional_col": {"required": False, "checks": {"gt": 0}},
+            }
+        )
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"required_col": [1, 2, 3], "optional_col": [1, 2, 3]})
+        result = process(df)
+        assert list(result["optional_col"]) == [1, 2, 3]
+
+
 class TestErrorMessages:
     def test_error_includes_column_name(self) -> None:
         @df_in(columns={"price": {"checks": {"gt": 0}}})
