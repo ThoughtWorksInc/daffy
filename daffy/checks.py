@@ -41,6 +41,11 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         mask = series == check_value
     elif check_name == "isin":
         mask = ~series.isin(check_value)
+    elif check_name == "notnull":
+        if hasattr(series, "is_null"):
+            mask = series.is_null()
+        else:
+            mask = series.isna()
     else:
         raise ValueError(f"Unknown check: {check_name}")
 

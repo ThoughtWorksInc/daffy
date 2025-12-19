@@ -132,6 +132,18 @@ class TestIsinCheck:
         assert samples == [99]
 
 
+class TestNotnullCheck:
+    def test_notnull_passes(self) -> None:
+        series = pd.Series([1, 2, 3])
+        fail_count, samples = apply_check(series, "notnull", True)
+        assert fail_count == 0
+
+    def test_notnull_fails(self) -> None:
+        series = pd.Series([1, None, 3, None])
+        fail_count, samples = apply_check(series, "notnull", True)
+        assert fail_count == 2
+
+
 class TestValidateChecks:
     def test_single_check_passes(self) -> None:
         df = pd.DataFrame({"price": [1, 2, 3]})
