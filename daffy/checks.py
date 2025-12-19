@@ -39,6 +39,8 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         mask = series != check_value
     elif check_name == "ne":
         mask = series == check_value
+    elif check_name == "isin":
+        mask = ~series.isin(check_value)
     else:
         raise ValueError(f"Unknown check: {check_name}")
 

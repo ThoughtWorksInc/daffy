@@ -112,6 +112,26 @@ class TestEqualityChecks:
         assert samples == ["deleted"]
 
 
+class TestIsinCheck:
+    def test_isin_passes(self) -> None:
+        series = pd.Series(["active", "pending", "closed"])
+        fail_count, samples = apply_check(series, "isin", ["active", "pending", "closed"])
+        assert fail_count == 0
+
+    def test_isin_fails(self) -> None:
+        series = pd.Series(["active", "deleted", "unknown"])
+        fail_count, samples = apply_check(series, "isin", ["active", "pending", "closed"])
+        assert fail_count == 2
+        assert "deleted" in samples
+        assert "unknown" in samples
+
+    def test_isin_with_numbers(self) -> None:
+        series = pd.Series([1, 2, 3, 99])
+        fail_count, samples = apply_check(series, "isin", [1, 2, 3])
+        assert fail_count == 1
+        assert samples == [99]
+
+
 class TestValidateChecks:
     def test_single_check_passes(self) -> None:
         df = pd.DataFrame({"price": [1, 2, 3]})
