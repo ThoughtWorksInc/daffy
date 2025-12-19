@@ -164,6 +164,56 @@ class TestStrRegexCheck:
         assert samples == ["invalid"]
 
 
+class TestMaxSamples:
+    def test_max_samples_limits_returned_values(self) -> None:
+        series = pd.Series([0, -1, -2, -3, -4, -5, -6, -7, -8, -9])
+        fail_count, samples = apply_check(series, "gt", 0, max_samples=3)
+        assert fail_count == 10
+        assert len(samples) == 3
+
+    def test_max_samples_default_is_five(self) -> None:
+        series = pd.Series([0, -1, -2, -3, -4, -5, -6, -7, -8, -9])
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 10
+        assert len(samples) == 5
+
+    def test_max_samples_one(self) -> None:
+        series = pd.Series([-1, -2, -3])
+        fail_count, samples = apply_check(series, "gt", 0, max_samples=1)
+        assert fail_count == 3
+        assert len(samples) == 1
+
+
+class TestEdgeCases:
+    def test_empty_series_passes(self) -> None:
+        series = pd.Series([], dtype=float)
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 0
+        assert samples == []
+
+    def test_single_value_passes(self) -> None:
+        series = pd.Series([5])
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 0
+        assert samples == []
+
+    def test_single_value_fails(self) -> None:
+        series = pd.Series([-1])
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 1
+        assert samples == [-1]
+
+    def test_all_null_series_fails_notnull(self) -> None:
+        series = pd.Series([None, None, None])
+        fail_count, samples = apply_check(series, "notnull", True)
+        assert fail_count == 3
+
+    def test_all_null_series_comparison_check(self) -> None:
+        series = pd.Series([None, None, None])
+        fail_count, samples = apply_check(series, "gt", 0)
+        assert fail_count == 3
+
+
 class TestValidateChecks:
     def test_single_check_passes(self) -> None:
         df = pd.DataFrame({"price": [1, 2, 3]})
