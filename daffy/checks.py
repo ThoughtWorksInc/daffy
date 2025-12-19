@@ -18,49 +18,57 @@ def _get_failing_values(series: Any, mask: Any, max_samples: int) -> list[Any]:
         return []
 
 
+def _series_isin(series: Any, values: Any) -> Any:
+    """Check if series values are in the given set (pandas/polars compatible)."""
+    if hasattr(series, "is_in"):
+        return series.is_in(values)
+    return series.isin(values)
+
+
+def _series_is_null(series: Any) -> Any:
+    """Get null mask for a series (pandas/polars compatible)."""
+    if hasattr(series, "is_null"):
+        return series.is_null()
+    return series.isna()
+
+
+def _series_str_match(series: Any, pattern: str) -> Any:
+    """Check if string series matches regex pattern (pandas/polars compatible)."""
+    if hasattr(series, "str") and hasattr(series.str, "match"):
+        return series.str.match(pattern, na=False)
+    return series.str.contains(f"^(?:{pattern})$")
+
+
+def _fill_null_mask(mask: Any) -> Any:
+    """Fill null values in a mask with True (pandas/polars compatible)."""
+    if hasattr(mask, "fill_null"):
+        return mask.fill_null(True)
+    return mask.fillna(True)
+
+
 def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int = 5) -> tuple[int, list[Any]]:
     """Apply a single check to a series.
 
     Returns:
         Tuple of (fail_count, sample_failing_values)
     """
-    if check_name == "gt":
-        mask = ~(series > check_value)
-    elif check_name == "ge":
-        mask = ~(series >= check_value)
-    elif check_name == "lt":
-        mask = ~(series < check_value)
-    elif check_name == "le":
-        mask = ~(series <= check_value)
-    elif check_name == "between":
-        lo, hi = check_value
-        mask = ~((series >= lo) & (series <= hi))
-    elif check_name == "eq":
-        mask = series != check_value
-    elif check_name == "ne":
-        mask = series == check_value
-    elif check_name == "isin":
-        if hasattr(series, "is_in"):
-            mask = ~series.is_in(check_value)
-        else:
-            mask = ~series.isin(check_value)
-    elif check_name == "notnull":
-        if hasattr(series, "is_null"):
-            mask = series.is_null()
-        else:
-            mask = series.isna()
-    elif check_name == "str_regex":
-        if hasattr(series, "str") and hasattr(series.str, "match"):
-            mask = ~series.str.match(check_value, na=False)
-        else:
-            mask = ~series.str.contains(f"^(?:{check_value})$")
-    else:
+    check_masks = {
+        "gt": lambda: ~(series > check_value),
+        "ge": lambda: ~(series >= check_value),
+        "lt": lambda: ~(series < check_value),
+        "le": lambda: ~(series <= check_value),
+        "between": lambda: ~((series >= check_value[0]) & (series <= check_value[1])),
+        "eq": lambda: series != check_value,
+        "ne": lambda: series == check_value,
+        "isin": lambda: ~_series_isin(series, check_value),
+        "notnull": lambda: _series_is_null(series),
+        "str_regex": lambda: ~_series_str_match(series, check_value),
+    }
+
+    if check_name not in check_masks:
         raise ValueError(f"Unknown check: {check_name}")
 
-    if hasattr(mask, "fill_null"):
-        mask = mask.fill_null(True)
-    else:
-        mask = mask.fillna(True)
+    mask = _fill_null_mask(check_masks[check_name]())
 
     fail_count = int(mask.sum())
     if fail_count == 0:
