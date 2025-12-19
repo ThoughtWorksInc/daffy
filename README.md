@@ -27,6 +27,7 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 - Check data types of columns
 - Validate columns contain no null values (`nullable=False`)
 - Validate columns contain only unique values (`unique=True`)
+- Vectorized value checks: `gt`, `ge`, `lt`, `le`, `between`, `eq`, `ne`, `isin`, `notnull`, `str_regex`
 - Control strictness of validation (allow or disallow extra columns)
 
 **Row Validation** (optional, requires Pydantic >= 2.4.0):
@@ -95,6 +96,20 @@ def apply_discount(cars_df):
     cars_df = cars_df.copy()
     cars_df["Discount"] = cars_df["Price"] * 0.1
     return cars_df
+```
+
+### Value Checks
+
+Validate column values with vectorized checks (fast, no row iteration):
+
+```python
+@df_in(columns={
+    "price": {"checks": {"gt": 0, "lt": 10000}},
+    "status": {"checks": {"isin": ["active", "pending", "closed"]}},
+    "email": {"checks": {"str_regex": r"^[^@]+@[^@]+\.[^@]+$"}},
+})
+def process_orders(orders_df):
+    return orders_df
 ```
 
 ### Row Validation

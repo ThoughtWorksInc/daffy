@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, Union
 
+from daffy.checks import CheckViolation, validate_checks
+from daffy.config import get_checks_max_samples
 from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
 from daffy.patterns import (
     RegexColumnDef,
@@ -29,6 +31,7 @@ class ColumnConstraints(TypedDict, total=False):
     nullable: bool
     unique: bool
     required: bool
+    checks: dict[str, Any]
 
 
 ColumnsList = Sequence[Union[str, RegexColumnDef]]
@@ -144,6 +147,7 @@ def validate_dataframe(
     all_dtype_mismatches: list[tuple[str, Any, Any]] = []
     all_nullable_violations: list[tuple[str, int]] = []
     all_uniqueness_violations: list[tuple[str, int]] = []
+    all_check_violations: list[CheckViolation] = []
     all_matched_by_regex: set[str] = set()
 
     if isinstance(columns, dict):
@@ -158,6 +162,7 @@ def validate_dataframe(
                 expected_dtype = spec_value.get("dtype")
                 nullable = spec_value.get("nullable", True)
                 unique = spec_value.get("unique", False)
+                checks = spec_value.get("checks")
 
                 if required:
                     all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
@@ -171,6 +176,10 @@ def validate_dataframe(
                     all_uniqueness_violations.extend(
                         _find_column_violations(column_spec, df, df_columns, count_duplicate_values)
                     )
+                if checks:
+                    max_samples = get_checks_max_samples()
+                    for col in _get_columns_to_check(column_spec, df_columns):
+                        all_check_violations.extend(validate_checks(df, col, checks, max_samples))
             else:
                 all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
                 all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, spec_value, df_columns))
@@ -197,6 +206,17 @@ def validate_dataframe(
 
     if all_uniqueness_violations:
         raise AssertionError(_format_violation_error(all_uniqueness_violations, param_info, "duplicate", "unique=True"))
+
+    if all_check_violations:
+        if len(all_check_violations) == 1:
+            col, check, count, samples = all_check_violations[0]
+            raise AssertionError(
+                f"Column '{col}'{param_info} failed check {check}: {count} values failed. Examples: {samples}"
+            )
+        violation_lines: list[str] = []
+        for col, check, count, samples in all_check_violations:
+            violation_lines.append(f"Column '{col}' failed {check}: {count} values. Examples: {samples}")
+        raise AssertionError(f"Check violations{param_info}:\n  " + "\n  ".join(violation_lines))
 
     if strict:
         explicit_columns = {col for col in columns if isinstance(col, str)}
