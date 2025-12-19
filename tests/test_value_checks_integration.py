@@ -196,6 +196,36 @@ class TestChecksWithBothLibraries:
         assert list(result["code"]) == ["AB123", "CD456", "EF789"]
 
 
+@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
+class TestChecksWithRegexPatterns:
+    def test_regex_pattern_check_passes(self, df_lib: Any) -> None:
+        @df_in(columns={"r/price_\\d+/": {"checks": {"gt": 0}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"price_1": [1, 2, 3], "price_2": [4, 5, 6]})
+        result = process(df)
+        assert list(result["price_1"]) == [1, 2, 3]
+
+    def test_regex_pattern_check_fails(self, df_lib: Any) -> None:
+        @df_in(columns={"r/score_\\d+/": {"checks": {"gt": 0}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"score_1": [1, 2, 3], "score_2": [0, 5, 6]})
+        with pytest.raises(AssertionError, match="gt"):
+            process(df)
+
+    def test_regex_pattern_multiple_columns_checked(self, df_lib: Any) -> None:
+        @df_in(columns={"r/val_\\d+/": {"checks": {"between": (0, 100)}}})
+        def process(df: Any) -> Any:
+            return df
+
+        df = df_lib.DataFrame({"val_1": [50, 60, 70], "val_2": [80, 90, 100]})
+        result = process(df)
+        assert list(result["val_1"]) == [50, 60, 70]
+
+
 class TestErrorMessages:
     def test_error_includes_column_name(self) -> None:
         @df_in(columns={"price": {"checks": {"gt": 0}}})
