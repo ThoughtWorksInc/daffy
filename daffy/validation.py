@@ -213,7 +213,7 @@ def validate_dataframe(
             raise AssertionError(
                 f"Column '{col}'{param_info} failed check {check}: {count} values failed. Examples: {samples}"
             )
-        violation_lines = []
+        violation_lines: list[str] = []
         for col, check, count, samples in all_check_violations:
             violation_lines.append(f"Column '{col}' failed {check}: {count} values. Examples: {samples}")
         raise AssertionError(f"Check violations{param_info}:\n  " + "\n  ".join(violation_lines))
