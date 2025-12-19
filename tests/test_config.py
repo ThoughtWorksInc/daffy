@@ -4,7 +4,7 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from daffy.config import clear_config_cache, get_config, get_strict
+from daffy.config import clear_config_cache, get_checks_max_samples, get_config, get_strict
 
 
 def test_get_config_default() -> None:
@@ -107,3 +107,30 @@ some_other_setting = "value"
 
             config = get_config()
             assert config["strict"] is False
+
+
+def test_get_checks_max_samples_default() -> None:
+    with patch("daffy.config.get_config", return_value={"checks_max_samples": 5}):
+        assert get_checks_max_samples() == 5
+
+
+def test_get_checks_max_samples_override() -> None:
+    with patch("daffy.config.get_config", return_value={"checks_max_samples": 5}):
+        assert get_checks_max_samples(10) == 10
+
+
+def test_checks_max_samples_from_pyproject() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+checks_max_samples = 10
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import load_config
+
+            clear_config_cache()
+
+            config = load_config()
+            assert config["checks_max_samples"] == 10

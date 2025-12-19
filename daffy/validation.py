@@ -6,6 +6,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypedDict, Union
 
 from daffy.checks import CheckViolation, validate_checks
+from daffy.config import get_checks_max_samples
 from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
 from daffy.patterns import (
     RegexColumnDef,
@@ -176,8 +177,9 @@ def validate_dataframe(
                         _find_column_violations(column_spec, df, df_columns, count_duplicate_values)
                     )
                 if checks:
+                    max_samples = get_checks_max_samples()
                     for col in _get_columns_to_check(column_spec, df_columns):
-                        all_check_violations.extend(validate_checks(df, col, checks))
+                        all_check_violations.extend(validate_checks(df, col, checks, max_samples))
             else:
                 all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
                 all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, spec_value, df_columns))
