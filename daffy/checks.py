@@ -46,6 +46,11 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
             mask = series.is_null()
         else:
             mask = series.isna()
+    elif check_name == "str_regex":
+        if hasattr(series, "str") and hasattr(series.str, "match"):
+            mask = ~series.str.match(check_value, na=False)
+        else:
+            mask = ~series.str.contains(f"^(?:{check_value})$")
     else:
         raise ValueError(f"Unknown check: {check_name}")
 

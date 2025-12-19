@@ -144,6 +144,26 @@ class TestNotnullCheck:
         assert fail_count == 2
 
 
+class TestStrRegexCheck:
+    def test_str_regex_passes(self) -> None:
+        series = pd.Series(["abc123", "def456", "ghi789"])
+        fail_count, samples = apply_check(series, "str_regex", r"^[a-z]+\d+$")
+        assert fail_count == 0
+
+    def test_str_regex_fails(self) -> None:
+        series = pd.Series(["abc123", "ABC456", "123def"])
+        fail_count, samples = apply_check(series, "str_regex", r"^[a-z]+\d+$")
+        assert fail_count == 2
+        assert "ABC456" in samples
+        assert "123def" in samples
+
+    def test_str_regex_email_pattern(self) -> None:
+        series = pd.Series(["test@example.com", "invalid", "user@domain.org"])
+        fail_count, samples = apply_check(series, "str_regex", r"^[^@]+@[^@]+\.[^@]+$")
+        assert fail_count == 1
+        assert samples == ["invalid"]
+
+
 class TestValidateChecks:
     def test_single_check_passes(self) -> None:
         df = pd.DataFrame({"price": [1, 2, 3]})
