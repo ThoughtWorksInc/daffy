@@ -14,7 +14,7 @@ def _get_failing_values(series: Any, mask: Any, max_samples: int) -> list[Any]:
         if hasattr(failing, "to_list"):
             return failing.head(max_samples).to_list()
         return list(failing.head(max_samples))
-    except Exception:
+    except (AttributeError, IndexError, KeyError, TypeError):
         return []
 
 
