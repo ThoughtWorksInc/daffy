@@ -88,6 +88,30 @@ class TestBetweenCheck:
         assert fail_count == 0
 
 
+class TestEqualityChecks:
+    def test_eq_passes(self) -> None:
+        series = pd.Series(["active", "active", "active"])
+        fail_count, samples = apply_check(series, "eq", "active")
+        assert fail_count == 0
+
+    def test_eq_fails(self) -> None:
+        series = pd.Series(["active", "inactive", "active"])
+        fail_count, samples = apply_check(series, "eq", "active")
+        assert fail_count == 1
+        assert samples == ["inactive"]
+
+    def test_ne_passes(self) -> None:
+        series = pd.Series(["active", "pending", "closed"])
+        fail_count, samples = apply_check(series, "ne", "deleted")
+        assert fail_count == 0
+
+    def test_ne_fails(self) -> None:
+        series = pd.Series(["active", "deleted", "closed"])
+        fail_count, samples = apply_check(series, "ne", "deleted")
+        assert fail_count == 1
+        assert samples == ["deleted"]
+
+
 class TestValidateChecks:
     def test_single_check_passes(self) -> None:
         df = pd.DataFrame({"price": [1, 2, 3]})
