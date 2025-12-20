@@ -16,12 +16,10 @@ except ImportError:  # pragma: no cover
     HAS_PANDAS = False
 
 try:
-    import polars as pl
     from polars import DataFrame as PolarsDataFrame
 
     HAS_POLARS = True
 except ImportError:  # pragma: no cover
-    pl = None  # type: ignore
     PolarsDataFrame = None  # type: ignore
     HAS_POLARS = False
 
@@ -46,21 +44,6 @@ else:
         )
 
     DataFrameType = Union[tuple(_available_types)]
-
-
-def get_dataframe_types() -> tuple[Any, ...]:
-    """
-    Get tuple of available DataFrame types for isinstance checks.
-
-    Returns:
-        tuple: Tuple of available DataFrame classes (pd.DataFrame, pl.DataFrame, or both)
-    """
-    dataframe_types: list[Any] = []
-    if HAS_PANDAS and pd is not None:
-        dataframe_types.append(pd.DataFrame)
-    if HAS_POLARS and pl is not None:
-        dataframe_types.append(pl.DataFrame)
-    return tuple(dataframe_types)
 
 
 def get_available_library_names() -> list[str]:
@@ -106,7 +89,3 @@ def count_duplicate_values(df: Any, column: str) -> int:
     from daffy.narwhals_compat import count_duplicates
 
     return count_duplicates(df, column)
-
-
-# Cache the types tuple at module level for efficiency
-_DATAFRAME_TYPES = get_dataframe_types()
