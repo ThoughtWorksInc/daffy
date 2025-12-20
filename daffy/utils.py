@@ -11,9 +11,8 @@ from daffy.dataframe_types import (
     DataFrameType,
     get_available_library_names,
     get_dataframe_types,
-    is_pandas_dataframe,
-    is_polars_dataframe,
 )
+from daffy.narwhals_compat import get_columns, get_dtypes
 
 
 def assert_is_dataframe(obj: Any, context: str) -> None:
@@ -105,13 +104,9 @@ def get_parameter_name(func: Callable[..., Any], name: str | None = None, *args:
 
 
 def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
-    result = f"columns: {list(df.columns)}"
+    result = f"columns: {get_columns(df)}"
     if include_dtypes:
-        if is_pandas_dataframe(df):
-            readable_dtypes = [dtype.name for dtype in df.dtypes]
-            result += f" with dtypes {readable_dtypes}"
-        elif is_polars_dataframe(df):
-            result += f" with dtypes {df.dtypes}"
+        result += f" with dtypes {get_dtypes(df)}"
     return result
 
 
