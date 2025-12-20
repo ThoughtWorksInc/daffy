@@ -9,8 +9,10 @@ from daffy.narwhals_compat import (
     get_columns,
     is_pandas_backend,
     series_fill_null,
+    series_filter_to_list,
     series_is_in,
     series_is_null,
+    series_str_match,
     wrap_dataframe,
 )
 
@@ -148,3 +150,73 @@ class TestSeriesFillNull:
         series = pl.Series([1, None, 3])
         result = series_fill_null(series, 99)
         assert result.to_list() == [1, 99, 3]
+
+
+class TestSeriesStrMatch:
+    def test_pandas_all_match(self) -> None:
+        series = pd.Series(["abc", "abd", "abe"])
+        result = series_str_match(series, "ab.")
+        assert result.tolist() == [True, True, True]
+
+    def test_pandas_partial_match(self) -> None:
+        series = pd.Series(["abc", "xyz", "abd"])
+        result = series_str_match(series, "ab.")
+        assert result.tolist() == [True, False, True]
+
+    def test_pandas_no_match(self) -> None:
+        series = pd.Series(["xyz", "123"])
+        result = series_str_match(series, "ab.")
+        assert result.tolist() == [False, False]
+
+    def test_polars_all_match(self) -> None:
+        series = pl.Series(["abc", "abd", "abe"])
+        result = series_str_match(series, "ab.")
+        assert result.to_list() == [True, True, True]
+
+    def test_polars_partial_match(self) -> None:
+        series = pl.Series(["abc", "xyz", "abd"])
+        result = series_str_match(series, "ab.")
+        assert result.to_list() == [True, False, True]
+
+    def test_polars_no_match(self) -> None:
+        series = pl.Series(["xyz", "123"])
+        result = series_str_match(series, "ab.")
+        assert result.to_list() == [False, False]
+
+
+class TestSeriesFilterToList:
+    def test_pandas_filter_all(self) -> None:
+        series = pd.Series([1, 2, 3, 4, 5])
+        mask = pd.Series([True, True, True, True, True])
+        result = series_filter_to_list(series, mask, 10)
+        assert result == [1, 2, 3, 4, 5]
+
+    def test_pandas_filter_some(self) -> None:
+        series = pd.Series([1, 2, 3, 4, 5])
+        mask = pd.Series([True, False, True, False, True])
+        result = series_filter_to_list(series, mask, 10)
+        assert result == [1, 3, 5]
+
+    def test_pandas_filter_with_limit(self) -> None:
+        series = pd.Series([1, 2, 3, 4, 5])
+        mask = pd.Series([True, True, True, True, True])
+        result = series_filter_to_list(series, mask, 2)
+        assert result == [1, 2]
+
+    def test_polars_filter_all(self) -> None:
+        series = pl.Series([1, 2, 3, 4, 5])
+        mask = pl.Series([True, True, True, True, True])
+        result = series_filter_to_list(series, mask, 10)
+        assert result == [1, 2, 3, 4, 5]
+
+    def test_polars_filter_some(self) -> None:
+        series = pl.Series([1, 2, 3, 4, 5])
+        mask = pl.Series([True, False, True, False, True])
+        result = series_filter_to_list(series, mask, 10)
+        assert result == [1, 3, 5]
+
+    def test_polars_filter_with_limit(self) -> None:
+        series = pl.Series([1, 2, 3, 4, 5])
+        mask = pl.Series([True, True, True, True, True])
+        result = series_filter_to_list(series, mask, 2)
+        assert result == [1, 2]

@@ -155,3 +155,38 @@ def iter_rows(df: Any, named: bool = True) -> Any:
         Iterator of row dictionaries or tuples
     """
     return wrap_dataframe(df).iter_rows(named=named)
+
+
+def series_str_match(series: Any, pattern: str) -> Any:
+    """Check if string series matches regex pattern from start.
+
+    Uses Narwhals str.contains with ^ anchor to match from start of string.
+
+    Args:
+        series: Native string Series (pandas, polars, etc.)
+        pattern: Regex pattern to match
+
+    Returns:
+        Native boolean Series
+    """
+    nw_series = wrap_series(series)
+    # Use non-capturing group with ^ anchor to match from start
+    result = nw_series.str.contains(f"^(?:{pattern})")
+    return nw.to_native(result)
+
+
+def series_filter_to_list(series: Any, mask: Any, limit: int) -> list[Any]:
+    """Filter series by boolean mask and return as list.
+
+    Args:
+        series: Native Series (pandas, polars, etc.)
+        mask: Native boolean Series for filtering
+        limit: Maximum number of values to return
+
+    Returns:
+        List of filtered values (up to limit)
+    """
+    nw_series = wrap_series(series)
+    nw_mask = wrap_series(mask)
+    filtered = nw_series.filter(nw_mask)
+    return filtered.head(limit).to_list()

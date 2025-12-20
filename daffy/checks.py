@@ -4,42 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from daffy.narwhals_compat import series_fill_null, series_is_in, series_is_null
+from daffy.narwhals_compat import (
+    series_fill_null,
+    series_filter_to_list,
+    series_is_in,
+    series_is_null,
+    series_str_match,
+)
 
 CheckViolation = tuple[str, str, int, list[Any]]
-
-
-def _get_failing_values(series: Any, mask: Any, max_samples: int) -> list[Any]:
-    """Extract sample failing values from a series based on a boolean mask."""
-    try:
-        failing = series[mask]
-        if hasattr(failing, "to_list"):
-            return failing.head(max_samples).to_list()
-        return list(failing.head(max_samples))
-    except (AttributeError, IndexError, KeyError, TypeError):
-        return []
-
-
-def _series_isin(series: Any, values: Any) -> Any:
-    """Check if series values are in the given set."""
-    return series_is_in(series, values)
-
-
-def _series_is_null(series: Any) -> Any:
-    """Get null mask for a series."""
-    return series_is_null(series)
-
-
-def _series_str_match(series: Any, pattern: str) -> Any:
-    """Check if string series matches regex pattern (pandas/polars compatible)."""
-    if hasattr(series, "str") and hasattr(series.str, "match"):
-        return series.str.match(pattern, na=False)
-    return series.str.contains(f"^(?:{pattern})$")
-
-
-def _fill_null_mask(mask: Any) -> Any:
-    """Fill null values in a mask with True."""
-    return series_fill_null(mask, True)
 
 
 def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int = 5) -> tuple[int, list[Any]]:
@@ -56,21 +29,21 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         "between": lambda: ~((series >= check_value[0]) & (series <= check_value[1])),
         "eq": lambda: series != check_value,
         "ne": lambda: series == check_value,
-        "isin": lambda: ~_series_isin(series, check_value),
-        "notnull": lambda: _series_is_null(series),
-        "str_regex": lambda: ~_series_str_match(series, check_value),
+        "isin": lambda: ~series_is_in(series, check_value),
+        "notnull": lambda: series_is_null(series),
+        "str_regex": lambda: ~series_str_match(series, check_value),
     }
 
     if check_name not in check_masks:
         raise ValueError(f"Unknown check: {check_name}")
 
-    mask = _fill_null_mask(check_masks[check_name]())
+    mask = series_fill_null(check_masks[check_name](), True)
 
     fail_count = int(mask.sum())
     if fail_count == 0:
         return 0, []
 
-    return fail_count, _get_failing_values(series, mask, max_samples)
+    return fail_count, series_filter_to_list(series, mask, max_samples)
 
 
 def validate_checks(df: Any, column: str, checks: dict[str, Any], max_samples: int = 5) -> list[CheckViolation]:
