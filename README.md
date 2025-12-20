@@ -17,7 +17,7 @@ def analyze_housing(houses_df):
     return analyzed_df
 ```
 
-Like type hints for DataFrames, Daffy helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Column validation is lightweight and fast. For deeper validation, Daffy also supports row-level validation using Pydantic models. Compatible with both Pandas and Polars.
+Like type hints for DataFrames, Daffy helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Column validation is lightweight and fast. For deeper validation, Daffy also supports row-level validation using Pydantic models. Compatible with Pandas, Polars, Modin, and PyArrow.
 
 ## Key Features
 
@@ -36,7 +36,7 @@ Like type hints for DataFrames, Daffy helps you catch structural mismatches earl
 - Informative error messages showing which rows failed and why
 
 **General**:
-- Works with both Pandas and Polars DataFrames
+- Works with Pandas, Polars, Modin, and PyArrow DataFrames
 - Project-wide configuration via pyproject.toml
 - Integrated logging for DataFrame structure inspection
 - Enhanced type annotations for improved IDE and type checker support

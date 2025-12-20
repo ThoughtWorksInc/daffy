@@ -8,14 +8,14 @@ All notable changes to this project will be documented in this file.
 
 - **Migrated to Narwhals** - Major internal refactoring to use [Narwhals](https://narwhals-dev.github.io/narwhals/) as a unified DataFrame abstraction layer
   - Narwhals is a lightweight compatibility layer used by Plotly, Altair, Bokeh, and Marimo
-  - Enables future support for cuDF, Modin, and PyArrow DataFrames
-  - All existing functionality for pandas and polars remains unchanged
+  - **Now supports Modin and PyArrow** in addition to Pandas and Polars
+  - All existing functionality for Pandas and Polars remains unchanged
   - Public API (`df_in`, `df_out`, `df_log`) is fully backwards compatible
 
 ### Changed
 
-- `df_log` with `include_dtypes=True` now shows unified Narwhals dtype representation (e.g., `[String, Int64]`) for both pandas and polars DataFrames
-  - Previously pandas showed `['object', 'int64']` while polars showed `[String, Int64]`
+- `df_log` with `include_dtypes=True` now shows unified Narwhals dtype representation (e.g., `[String, Int64]`) for both Pandas and Polars DataFrames
+  - Previously Pandas showed `['object', 'int64']` while Polars showed `[String, Int64]`
   - This provides consistent logging output across all DataFrame libraries
 
 ### Dependencies
