@@ -269,7 +269,7 @@ By default, `required=True`, meaning all columns must exist. This preserves back
 
 ## Value Checks
 
-You can validate column values using vectorized checks. This is faster than row-by-row validation because it uses native pandas/polars operations:
+You can validate column values using vectorized checks. This is faster than row-by-row validation because it uses vectorized DataFrame operations:
 
 ```python
 @df_in(columns={

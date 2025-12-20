@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "2.0.0"
+version = "2.0.1"
 description = "Function decorators for DataFrame validation - columns, data types, and row-level validation with Pydantic. Supports Pandas, Polars, Modin, and PyArrow."
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
@@ -8,7 +8,7 @@ authors = [
 license = "MIT"
 requires-python = ">=3.9"
 readme = "README.md"
-keywords = ["pandas", "polars", "pydantic", "dataframe", "decorator", "validation", "schema", "data-validation", "typing", "data-quality", "column-validation", "dataframe-schema", "row-validation", "runtime-validation", "data-pipeline"]
+keywords = ["pandas", "polars", "modin", "pyarrow", "narwhals", "pydantic", "dataframe", "decorator", "validation", "schema", "data-validation", "typing", "data-quality", "column-validation", "dataframe-schema", "row-validation", "runtime-validation", "data-pipeline"]
 classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Python Modules",

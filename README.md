@@ -68,18 +68,11 @@ Different tools serve different needs. Here's how Daffy compares:
 
 ## Installation
 
-Install with your favorite Python dependency manager:
-
 ```sh
 pip install daffy
 ```
 
-Daffy works with **pandas**, **polars**, or both - install whichever you need:
-
-```sh
-pip install pandas   # for pandas support
-pip install polars   # for polars support
-```
+Daffy works with whatever DataFrame library you already have installed: Pandas, Polars, Modin, or PyArrow. No additional dependencies required.
 
 **Python version support:** 3.9 - 3.14
 

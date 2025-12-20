@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.1
+
+### Documentation
+
+- Simplified installation instructions - Daffy detects and works with whatever DataFrame library you have installed
+- Updated PyPI keywords to include modin, pyarrow, and narwhals
+- Added note that examples work with all supported backends (Pandas, Polars, Modin, PyArrow)
+
 ## 2.0.0
 
 ### Major Refactoring
@@ -30,7 +38,7 @@ All notable changes to this project will be documented in this file.
 
 ### New Features
 
-- **Vectorized value checks** - Fast validation of column values using native pandas/polars operations
+- **Vectorized value checks** - Fast validation of column values using vectorized DataFrame operations
   - Comparison checks: `gt`, `ge`, `lt`, `le` (greater than, greater or equal, less than, less or equal)
   - Range check: `between` for inclusive range validation
   - Equality checks: `eq`, `ne` for exact value matching
