@@ -137,8 +137,6 @@ def process_inventory(df):
 - **Data characteristics**: DataFrame size, missing values, data types
 - **Hardware**: CPU speed, available memory
 
-For detailed benchmarks and optimization strategies, see [scripts/README_BENCHMARKS.md](https://github.com/vertti/daffy/blob/master/scripts/README_BENCHMARKS.md).
-
 ## License
 
 MIT
