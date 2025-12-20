@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 if HAS_PYDANTIC:
     from pydantic import ValidationError as PydanticValidationError
 else:
-    PydanticValidationError = None  # type: ignore[assignment, misc]
+    PydanticValidationError = None  # type: ignore[assignment, misc]  # pragma: no cover
 
 
 def validate_dataframe_rows(

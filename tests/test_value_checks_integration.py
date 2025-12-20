@@ -300,8 +300,6 @@ class TestErrorMessages:
             process(df)
 
     def test_multiple_column_check_violations(self) -> None:
-        """Test error message format when multiple columns fail checks."""
-
         @df_in(
             columns={
                 "a": {"checks": {"gt": 0}},

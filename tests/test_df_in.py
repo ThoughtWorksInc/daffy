@@ -359,7 +359,6 @@ def test_check_columns_handles_invalid_column_key_in_dict() -> None:
 
 
 def test_check_columns_handles_invalid_column_key_with_constraints() -> None:
-    """Test that invalid column types with constraints are skipped silently."""
     df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
     columns: Any = {"A": {"nullable": False}, 123: {"nullable": False}}
 

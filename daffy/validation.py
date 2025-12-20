@@ -45,20 +45,20 @@ def _get_columns_to_check(column_spec: str | RegexColumnDef, df_columns: list[st
     """Get list of existing column names to check for a given spec."""
     if isinstance(column_spec, str):
         return [column_spec] if column_spec in df_columns else []
-    elif is_regex_pattern(column_spec):
+    if is_regex_pattern(column_spec):
         return match_column_with_regex(column_spec, df_columns)
-    return []
+    return []  # Invalid type - skip silently for backwards compatibility
 
 
 def _find_missing_columns(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
     """Find missing columns for a single column specification."""
     if isinstance(column_spec, str):
         return [] if column_spec in df_columns else [column_spec]
-    elif is_regex_pattern(column_spec):
+    if is_regex_pattern(column_spec):
         pattern_str, _ = column_spec
         matches = match_column_with_regex(column_spec, df_columns)
         return [] if matches else [pattern_str]
-    return []
+    return []  # Invalid type - skip silently for backwards compatibility
 
 
 def _find_dtype_mismatches(
