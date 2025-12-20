@@ -47,14 +47,10 @@ class TestOptionalDependenciesDetection:
         error_msg = str(excinfo.value)
 
         # Check that error message mentions available libraries
-        if HAS_PANDAS and HAS_POLARS:
-            assert "Pandas or Polars" in error_msg
-        elif HAS_PANDAS:
+        if HAS_PANDAS:
             assert "Pandas" in error_msg
-            assert "Polars" not in error_msg
-        elif HAS_POLARS:
+        if HAS_POLARS:
             assert "Polars" in error_msg
-            assert "Pandas" not in error_msg
 
     def test_dataframe_validation_works_with_available_libraries(self) -> None:
         """Test that DataFrame validation works with whatever libraries are available."""

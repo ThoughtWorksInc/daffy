@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Daffy is a DataFrame column validator library that provides runtime validation decorators (`@df_in`, `@df_out`, `@df_log`) for Pandas and Polars DataFrames. It validates column names (including regex patterns), data types, and enforces strictness rules through simple function decorators.
+Daffy is a DataFrame column validator library that provides runtime validation decorators (`@df_in`, `@df_out`, `@df_log`) for Pandas, Polars, Modin, and PyArrow DataFrames. It validates column names (including regex patterns), data types, and enforces strictness rules through simple function decorators.
 
 ## Workflow
 
@@ -286,7 +286,7 @@ Decorator parameters override config file settings:
 
 - **Python 3.9+ compatibility**: Code must work on Python 3.9-3.14
 - **Type hints required**: All functions should have proper type annotations (Ruff ANN rules)
-- **No hard dependencies**: pandas and polars are optional; only tomli is required
+- **No hard dependencies**: DataFrame libraries (Pandas, Polars, Modin, PyArrow) are optional; only tomli and narwhals are required
 - **Coverage threshold**: 95% minimum (excluding dataframe_types.py)
 - **Import organization**: Use TYPE_CHECKING for static vs runtime type imports
 

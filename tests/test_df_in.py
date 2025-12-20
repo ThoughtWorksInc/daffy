@@ -29,7 +29,8 @@ def test_wrong_input_type_named() -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn(my_input="foobar")
 
-    assert "Wrong parameter type. Expected Pandas or Polars DataFrame, got str instead." in str(excinfo.value)
+    assert "Wrong parameter type" in str(excinfo.value)
+    assert "got str instead" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
@@ -58,7 +59,8 @@ def test_dfin_with_no_inputs() -> None:
     with pytest.raises(AssertionError) as excinfo:
         test_fn()
 
-    assert "Wrong parameter type. Expected Pandas or Polars DataFrame, got NoneType instead." in str(excinfo.value)
+    assert "Wrong parameter type" in str(excinfo.value)
+    assert "got NoneType instead" in str(excinfo.value)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])

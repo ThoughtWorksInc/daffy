@@ -59,7 +59,7 @@ def df_out(
     strict: bool | None = None,
     row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
-    """Decorate a function that returns a Pandas or Polars DataFrame.
+    """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
     Document the return value of a function. The return value will be validated in runtime.
 
@@ -102,7 +102,7 @@ def df_in(
     strict: bool | None = None,
     row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., R]], Callable[..., R]]:
-    """Decorate a function parameter that is a Pandas or Polars DataFrame.
+    """Decorate a function parameter that is a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
     Document the contents of an input parameter. The parameter will be validated in runtime.
 
