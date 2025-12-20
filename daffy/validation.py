@@ -8,6 +8,7 @@ from typing import Any, TypedDict, Union
 from daffy.checks import CheckViolation, validate_checks
 from daffy.config import get_checks_max_samples
 from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
+from daffy.narwhals_compat import get_columns
 from daffy.patterns import (
     RegexColumnDef,
     compile_regex_pattern,
@@ -142,7 +143,7 @@ def validate_dataframe(
     Raises:
         AssertionError: If validation fails (missing columns, dtype mismatch, or extra columns in strict mode)
     """
-    df_columns = list(df.columns)  # Cache the column list conversion
+    df_columns = get_columns(df)  # Use Narwhals for unified column access
     all_missing_columns: list[str] = []
     all_dtype_mismatches: list[tuple[str, Any, Any]] = []
     all_nullable_violations: list[tuple[str, int]] = []
