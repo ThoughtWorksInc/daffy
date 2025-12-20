@@ -1,10 +1,18 @@
 from typing import Any, Callable, Union
 
-import modin.pandas as mpd
 import pandas as pd
 import polars as pl
 import pyarrow as pa
 import pytest
+
+# Modin requires ray which only supports Python 3.10-3.13
+try:
+    import modin.pandas as mpd
+
+    HAS_MODIN = True
+except ImportError:
+    mpd = None  # type: ignore[assignment]
+    HAS_MODIN = False
 
 DataFrameType = Union[pd.DataFrame, pl.DataFrame]
 
@@ -25,9 +33,9 @@ def make_polars_df(data: dict[str, Any]) -> pl.DataFrame:
     return pl.DataFrame(data)
 
 
-def make_modin_df(data: dict[str, Any]) -> mpd.DataFrame:
+def make_modin_df(data: dict[str, Any]) -> Any:
     """Create a modin DataFrame."""
-    return mpd.DataFrame(data)
+    return mpd.DataFrame(data)  # type: ignore[union-attr]
 
 
 def make_pyarrow_table(data: dict[str, Any]) -> pa.Table:
@@ -38,9 +46,11 @@ def make_pyarrow_table(data: dict[str, Any]) -> pa.Table:
 DF_FACTORIES = [
     pytest.param(make_pandas_df, id="pandas"),
     pytest.param(make_polars_df, id="polars"),
-    pytest.param(make_modin_df, id="modin"),
     pytest.param(make_pyarrow_table, id="pyarrow"),
 ]
+
+if HAS_MODIN:
+    DF_FACTORIES.insert(2, pytest.param(make_modin_df, id="modin"))
 
 
 @pytest.fixture(params=DF_FACTORIES)
