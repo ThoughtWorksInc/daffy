@@ -43,7 +43,7 @@ uv run pyrefly check .
 
 ## Testing
 
-The project uses pytest for testing. Tests are parametrized to run against both pandas and polars DataFrames.
+The project uses pytest for testing. Tests are parametrized to run against multiple DataFrame backends (Pandas, Polars, Modin, and PyArrow).
 
 ### Test Files
 

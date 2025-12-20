@@ -1,4 +1,4 @@
-"""DataFrame type handling for DAFFY - supports Pandas and Polars."""
+"""DataFrame type handling for DAFFY - supports Pandas, Polars, Modin, and PyArrow."""
 
 from __future__ import annotations
 
@@ -37,9 +37,7 @@ else:
         _available_types.append(PolarsDataFrame)
 
     if not _available_types:
-        raise ImportError(
-            "No DataFrame library found. Please install Pandas or Polars: pip install pandas  OR  pip install polars"
-        )
+        raise ImportError("No DataFrame library found. Install a supported library: pip install pandas")
 
     DataFrameType = Union[tuple(_available_types)]
 

@@ -14,7 +14,7 @@ from daffy.narwhals_compat import is_supported_dataframe
 
 
 def assert_is_dataframe(obj: Any, context: str) -> None:
-    """Verify that an object is a pandas or polars DataFrame.
+    """Verify that an object is a supported DataFrame (Pandas, Polars, Modin, or PyArrow).
 
     Args:
         obj: Object to validate

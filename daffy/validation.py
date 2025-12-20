@@ -134,7 +134,7 @@ def validate_dataframe(
     """Validate DataFrame columns and optionally data types.
 
     Args:
-        df: DataFrame to validate (pandas or polars)
+        df: DataFrame to validate (Pandas, Polars, Modin, or PyArrow)
         columns: Column specification - list of names/patterns or dict mapping names to dtypes
         strict: If True, disallow extra columns not in the specification
         param_name: Parameter name for error context

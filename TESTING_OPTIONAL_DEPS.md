@@ -1,6 +1,6 @@
 # Testing Optional Dependencies
 
-This document describes how to test daffy's optional dependency support for pandas and polars.
+This document describes how to test daffy's optional dependency support for DataFrame libraries (Pandas, Polars, Modin, PyArrow).
 
 ## Background
 
@@ -73,10 +73,10 @@ uv run --no-project --with "$WHEEL" python scripts/test_isolated_deps.py none
 #### Both Libraries
 - `HAS_PANDAS = True`, `HAS_POLARS = True`
 - Both DataFrame types work
-- Error messages mention "Pandas or Polars DataFrame"
+- Error messages mention available DataFrame types
 
 #### No Libraries
-- Import should fail with: `ImportError: No DataFrame library found. Please install Pandas or Polars`
+- Import should fail with: `ImportError: No DataFrame library found. Install a supported library: pip install pandas`
 
 ## Implementation Details
 

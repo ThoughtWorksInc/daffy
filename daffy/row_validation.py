@@ -1,8 +1,7 @@
 """Row-level DataFrame validation using Pydantic models.
 
 This module provides efficient row-by-row validation of DataFrames using Pydantic
-models. It supports both pandas and polars DataFrames with optimized conversion
-and validation strategies.
+models. It supports Pandas, Polars, Modin, and PyArrow DataFrames.
 """
 
 from __future__ import annotations
@@ -37,7 +36,7 @@ def validate_dataframe_rows(
     Validate DataFrame rows against a Pydantic model.
 
     Args:
-        df: DataFrame to validate (pandas or polars)
+        df: DataFrame to validate (Pandas, Polars, Modin, or PyArrow)
         row_validator: Pydantic BaseModel class for validation
         max_errors: Maximum number of errors to collect before stopping
         early_termination: Stop scanning after max_errors reached (faster for large datasets)
