@@ -1,7 +1,9 @@
-from typing import Union
+from typing import Any, Callable, Union
 
+import modin.pandas as mpd
 import pandas as pd
 import polars as pl
+import pyarrow as pa
 import pytest
 
 DataFrameType = Union[pd.DataFrame, pl.DataFrame]
@@ -10,6 +12,40 @@ DataFrameType = Union[pd.DataFrame, pl.DataFrame]
 @pytest.fixture(params=[pd, pl], ids=["pandas", "polars"])
 def df_lib(request: pytest.FixtureRequest) -> type:
     """Return pd or pl module for creating DataFrames."""
+    return request.param
+
+
+def make_pandas_df(data: dict[str, Any]) -> pd.DataFrame:
+    """Create a pandas DataFrame."""
+    return pd.DataFrame(data)
+
+
+def make_polars_df(data: dict[str, Any]) -> pl.DataFrame:
+    """Create a polars DataFrame."""
+    return pl.DataFrame(data)
+
+
+def make_modin_df(data: dict[str, Any]) -> mpd.DataFrame:
+    """Create a modin DataFrame."""
+    return mpd.DataFrame(data)
+
+
+def make_pyarrow_table(data: dict[str, Any]) -> pa.Table:
+    """Create a PyArrow Table."""
+    return pa.table(data)
+
+
+DF_FACTORIES = [
+    pytest.param(make_pandas_df, id="pandas"),
+    pytest.param(make_polars_df, id="polars"),
+    pytest.param(make_modin_df, id="modin"),
+    pytest.param(make_pyarrow_table, id="pyarrow"),
+]
+
+
+@pytest.fixture(params=DF_FACTORIES)
+def make_df(request: pytest.FixtureRequest) -> Callable[[dict[str, Any]], Any]:
+    """Factory fixture for creating DataFrames across all supported libraries."""
     return request.param
 
 
