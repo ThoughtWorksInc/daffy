@@ -61,9 +61,7 @@ Check if documentation needs updating:
 - **CHANGELOG.md** - Always update with changes (see existing format)
 - **Type hints** - Ensure all new functions have proper annotations
 
-### 5. Important: Commit and PR Messages
-- **NEVER mention AI tools or assistants** in commit messages, PR descriptions, or code comments
-- Write commit messages as if you wrote the code yourself
+### 5. Commit and PR Messages
 - Use conventional commit format when appropriate (e.g., "fix:", "feat:", "docs:")
 - Focus on what changed and why, not how it was developed
 
