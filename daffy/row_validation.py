@@ -9,8 +9,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import narwhals as nw
+
 from daffy.dataframe_types import pd
-from daffy.narwhals_compat import is_pandas_backend, is_supported_dataframe, iter_rows
+from daffy.narwhals_compat import is_pandas_backend, is_supported_dataframe
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
 
 _PYDANTIC_ROOT_FIELD = "__root__"
@@ -109,7 +111,7 @@ def _validate_optimized(
     total_errors = 0
 
     # Unified iteration using Narwhals - works for pandas, polars, and future backends
-    for idx, row in enumerate(iter_rows(df, named=True)):
+    for idx, row in enumerate(nw.from_native(df, eager_only=True).iter_rows(named=True)):
         try:
             row_validator.model_validate(row)
         except PydanticValidationError as e:  # type: ignore[misc]

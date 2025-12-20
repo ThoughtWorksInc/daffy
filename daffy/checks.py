@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from daffy.narwhals_compat import (
-    series_fill_null,
-    series_filter_to_list,
-    series_is_in,
-    series_is_null,
-    series_str_match,
-)
+import narwhals as nw
 
 CheckViolation = tuple[str, str, int, list[Any]]
+
+
+def _nw_series(series: Any) -> nw.Series[Any]:
+    """Wrap native series in Narwhals."""
+    return nw.from_native(series, series_only=True)
 
 
 def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int = 5) -> tuple[int, list[Any]]:
@@ -21,6 +20,8 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
     Returns:
         Tuple of (fail_count, sample_failing_values)
     """
+    nws = _nw_series(series)
+
     check_masks = {
         "gt": lambda: ~(series > check_value),
         "ge": lambda: ~(series >= check_value),
@@ -29,21 +30,24 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         "between": lambda: ~((series >= check_value[0]) & (series <= check_value[1])),
         "eq": lambda: series != check_value,
         "ne": lambda: series == check_value,
-        "isin": lambda: ~series_is_in(series, check_value),
-        "notnull": lambda: series_is_null(series),
-        "str_regex": lambda: ~series_str_match(series, check_value),
+        "isin": lambda: nw.to_native(~nws.is_in(check_value)),
+        "notnull": lambda: nw.to_native(nws.is_null()),
+        "str_regex": lambda: nw.to_native(~nws.str.contains(f"^(?:{check_value})")),
     }
 
     if check_name not in check_masks:
         raise ValueError(f"Unknown check: {check_name}")
 
-    mask = series_fill_null(check_masks[check_name](), True)
+    mask = nw.to_native(_nw_series(check_masks[check_name]()).fill_null(True))
 
     fail_count = int(mask.sum())
     if fail_count == 0:
         return 0, []
 
-    return fail_count, series_filter_to_list(series, mask, max_samples)
+    # Get sample failing values
+    nw_mask = _nw_series(mask)
+    samples = nws.filter(nw_mask).head(max_samples).to_list()
+    return fail_count, samples
 
 
 def validate_checks(df: Any, column: str, checks: dict[str, Any], max_samples: int = 5) -> list[CheckViolation]:

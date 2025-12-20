@@ -62,30 +62,15 @@ def get_available_library_names() -> list[str]:
 
 
 def count_null_values(df: Any, column: str) -> int:
-    """Count null values in a DataFrame column.
+    """Count null values in a DataFrame column."""
+    import narwhals as nw
 
-    Args:
-        df: DataFrame (pandas or polars)
-        column: Column name to check
-
-    Returns:
-        Number of null values in the column
-    """
-    from daffy.narwhals_compat import count_nulls
-
-    return count_nulls(df, column)
+    return int(nw.from_native(df, eager_only=True)[column].is_null().sum())
 
 
 def count_duplicate_values(df: Any, column: str) -> int:
-    """Count duplicate values in a DataFrame column.
+    """Count duplicate values in a DataFrame column (excludes first occurrence)."""
+    import narwhals as nw
 
-    Args:
-        df: DataFrame (pandas or polars)
-        column: Column name to check
-
-    Returns:
-        Number of duplicate values in the column (excludes first occurrence)
-    """
-    from daffy.narwhals_compat import count_duplicates
-
-    return count_duplicates(df, column)
+    nw_df = nw.from_native(df, eager_only=True)
+    return len(nw_df) - nw_df[column].n_unique()

@@ -1,245 +1,27 @@
-"""Tests for narwhals compatibility layer."""
+"""Tests for narwhals compatibility utilities."""
+
+from typing import Any
 
 import pandas as pd
 import polars as pl
+import pytest
 
-from daffy.narwhals_compat import (
-    count_duplicates,
-    count_nulls,
-    get_columns,
-    is_pandas_backend,
-    is_supported_dataframe,
-    series_fill_null,
-    series_filter_to_list,
-    series_is_in,
-    series_is_null,
-    series_str_match,
-    wrap_dataframe,
-)
-
-
-class TestWrapDataframe:
-    def test_wrap_pandas(self) -> None:
-        df = pd.DataFrame({"A": [1, 2, 3]})
-        nw_df = wrap_dataframe(df)
-        assert nw_df.columns == ["A"]
-
-    def test_wrap_polars(self) -> None:
-        df = pl.DataFrame({"A": [1, 2, 3]})
-        nw_df = wrap_dataframe(df)
-        assert nw_df.columns == ["A"]
-
-
-class TestGetColumns:
-    def test_pandas(self) -> None:
-        df = pd.DataFrame({"A": [1], "B": [2], "C": [3]})
-        assert get_columns(df) == ["A", "B", "C"]
-
-    def test_polars(self) -> None:
-        df = pl.DataFrame({"A": [1], "B": [2], "C": [3]})
-        assert get_columns(df) == ["A", "B", "C"]
-
-
-class TestCountNulls:
-    def test_pandas_no_nulls(self) -> None:
-        df = pd.DataFrame({"A": [1, 2, 3]})
-        assert count_nulls(df, "A") == 0
-
-    def test_pandas_with_nulls(self) -> None:
-        df = pd.DataFrame({"A": [1, None, 3, None]})
-        assert count_nulls(df, "A") == 2
-
-    def test_polars_no_nulls(self) -> None:
-        df = pl.DataFrame({"A": [1, 2, 3]})
-        assert count_nulls(df, "A") == 0
-
-    def test_polars_with_nulls(self) -> None:
-        df = pl.DataFrame({"A": [1, None, 3, None]})
-        assert count_nulls(df, "A") == 2
-
-
-class TestCountDuplicates:
-    def test_pandas_no_duplicates(self) -> None:
-        df = pd.DataFrame({"A": [1, 2, 3]})
-        assert count_duplicates(df, "A") == 0
-
-    def test_pandas_with_duplicates(self) -> None:
-        df = pd.DataFrame({"A": [1, 1, 2, 2, 2, 3]})
-        # 1 appears 2 times (1 dup), 2 appears 3 times (2 dups), 3 appears once (0 dups)
-        assert count_duplicates(df, "A") == 3
-
-    def test_polars_no_duplicates(self) -> None:
-        df = pl.DataFrame({"A": [1, 2, 3]})
-        assert count_duplicates(df, "A") == 0
-
-    def test_polars_with_duplicates(self) -> None:
-        df = pl.DataFrame({"A": [1, 1, 2, 2, 2, 3]})
-        assert count_duplicates(df, "A") == 3
-
-
-class TestBackendDetection:
-    def test_is_pandas_backend_true(self) -> None:
-        df = pd.DataFrame({"A": [1, 2, 3]})
-        assert is_pandas_backend(df) is True
-
-    def test_is_pandas_backend_false(self) -> None:
-        df = pl.DataFrame({"A": [1, 2, 3]})
-        assert is_pandas_backend(df) is False
+from daffy.narwhals_compat import is_pandas_backend, is_supported_dataframe
 
 
 class TestIsSupportedDataframe:
-    def test_pandas_dataframe(self) -> None:
-        df = pd.DataFrame({"A": [1, 2, 3]})
+    @pytest.mark.parametrize("df", [pd.DataFrame({"A": [1, 2, 3]}), pl.DataFrame({"A": [1, 2, 3]})])
+    def test_dataframes_supported(self, df: Any) -> None:
         assert is_supported_dataframe(df) is True
 
-    def test_polars_dataframe(self) -> None:
-        df = pl.DataFrame({"A": [1, 2, 3]})
-        assert is_supported_dataframe(df) is True
-
-    def test_list_not_supported(self) -> None:
-        assert is_supported_dataframe([1, 2, 3]) is False
-
-    def test_dict_not_supported(self) -> None:
-        assert is_supported_dataframe({"A": [1, 2, 3]}) is False
-
-    def test_string_not_supported(self) -> None:
-        assert is_supported_dataframe("not a dataframe") is False
-
-    def test_none_not_supported(self) -> None:
-        assert is_supported_dataframe(None) is False
+    @pytest.mark.parametrize("obj", [[1, 2, 3], {"A": [1, 2, 3]}, "not a dataframe", None, 42])
+    def test_non_dataframes_not_supported(self, obj: Any) -> None:
+        assert is_supported_dataframe(obj) is False
 
 
-class TestSeriesIsIn:
-    def test_pandas_all_in(self) -> None:
-        series = pd.Series([1, 2, 3])
-        result = series_is_in(series, [1, 2, 3, 4])
-        assert result.tolist() == [True, True, True]
+class TestIsPandasBackend:
+    def test_pandas_returns_true(self) -> None:
+        assert is_pandas_backend(pd.DataFrame({"A": [1]})) is True
 
-    def test_pandas_some_in(self) -> None:
-        series = pd.Series([1, 2, 3])
-        result = series_is_in(series, [1, 3])
-        assert result.tolist() == [True, False, True]
-
-    def test_polars_all_in(self) -> None:
-        series = pl.Series([1, 2, 3])
-        result = series_is_in(series, [1, 2, 3, 4])
-        assert result.to_list() == [True, True, True]
-
-    def test_polars_some_in(self) -> None:
-        series = pl.Series([1, 2, 3])
-        result = series_is_in(series, [1, 3])
-        assert result.to_list() == [True, False, True]
-
-
-class TestSeriesIsNull:
-    def test_pandas_no_nulls(self) -> None:
-        series = pd.Series([1, 2, 3])
-        result = series_is_null(series)
-        assert result.tolist() == [False, False, False]
-
-    def test_pandas_with_nulls(self) -> None:
-        series = pd.Series([1, None, 3])
-        result = series_is_null(series)
-        assert result.tolist() == [False, True, False]
-
-    def test_polars_no_nulls(self) -> None:
-        series = pl.Series([1, 2, 3])
-        result = series_is_null(series)
-        assert result.to_list() == [False, False, False]
-
-    def test_polars_with_nulls(self) -> None:
-        series = pl.Series([1, None, 3])
-        result = series_is_null(series)
-        assert result.to_list() == [False, True, False]
-
-
-class TestSeriesFillNull:
-    def test_pandas_no_nulls(self) -> None:
-        series = pd.Series([1, 2, 3])
-        result = series_fill_null(series, 0)
-        assert result.tolist() == [1, 2, 3]
-
-    def test_pandas_with_nulls(self) -> None:
-        series = pd.Series([1.0, None, 3.0])
-        result = series_fill_null(series, 99.0)
-        assert result.tolist() == [1.0, 99.0, 3.0]
-
-    def test_polars_no_nulls(self) -> None:
-        series = pl.Series([1, 2, 3])
-        result = series_fill_null(series, 0)
-        assert result.to_list() == [1, 2, 3]
-
-    def test_polars_with_nulls(self) -> None:
-        series = pl.Series([1, None, 3])
-        result = series_fill_null(series, 99)
-        assert result.to_list() == [1, 99, 3]
-
-
-class TestSeriesStrMatch:
-    def test_pandas_all_match(self) -> None:
-        series = pd.Series(["abc", "abd", "abe"])
-        result = series_str_match(series, "ab.")
-        assert result.tolist() == [True, True, True]
-
-    def test_pandas_partial_match(self) -> None:
-        series = pd.Series(["abc", "xyz", "abd"])
-        result = series_str_match(series, "ab.")
-        assert result.tolist() == [True, False, True]
-
-    def test_pandas_no_match(self) -> None:
-        series = pd.Series(["xyz", "123"])
-        result = series_str_match(series, "ab.")
-        assert result.tolist() == [False, False]
-
-    def test_polars_all_match(self) -> None:
-        series = pl.Series(["abc", "abd", "abe"])
-        result = series_str_match(series, "ab.")
-        assert result.to_list() == [True, True, True]
-
-    def test_polars_partial_match(self) -> None:
-        series = pl.Series(["abc", "xyz", "abd"])
-        result = series_str_match(series, "ab.")
-        assert result.to_list() == [True, False, True]
-
-    def test_polars_no_match(self) -> None:
-        series = pl.Series(["xyz", "123"])
-        result = series_str_match(series, "ab.")
-        assert result.to_list() == [False, False]
-
-
-class TestSeriesFilterToList:
-    def test_pandas_filter_all(self) -> None:
-        series = pd.Series([1, 2, 3, 4, 5])
-        mask = pd.Series([True, True, True, True, True])
-        result = series_filter_to_list(series, mask, 10)
-        assert result == [1, 2, 3, 4, 5]
-
-    def test_pandas_filter_some(self) -> None:
-        series = pd.Series([1, 2, 3, 4, 5])
-        mask = pd.Series([True, False, True, False, True])
-        result = series_filter_to_list(series, mask, 10)
-        assert result == [1, 3, 5]
-
-    def test_pandas_filter_with_limit(self) -> None:
-        series = pd.Series([1, 2, 3, 4, 5])
-        mask = pd.Series([True, True, True, True, True])
-        result = series_filter_to_list(series, mask, 2)
-        assert result == [1, 2]
-
-    def test_polars_filter_all(self) -> None:
-        series = pl.Series([1, 2, 3, 4, 5])
-        mask = pl.Series([True, True, True, True, True])
-        result = series_filter_to_list(series, mask, 10)
-        assert result == [1, 2, 3, 4, 5]
-
-    def test_polars_filter_some(self) -> None:
-        series = pl.Series([1, 2, 3, 4, 5])
-        mask = pl.Series([True, False, True, False, True])
-        result = series_filter_to_list(series, mask, 10)
-        assert result == [1, 3, 5]
-
-    def test_polars_filter_with_limit(self) -> None:
-        series = pl.Series([1, 2, 3, 4, 5])
-        mask = pl.Series([True, True, True, True, True])
-        result = series_filter_to_list(series, mask, 2)
-        assert result == [1, 2]
+    def test_polars_returns_false(self) -> None:
+        assert is_pandas_backend(pl.DataFrame({"A": [1]})) is False

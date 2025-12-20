@@ -7,8 +7,10 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
+import narwhals as nw
+
 from daffy.dataframe_types import DataFrameType, get_available_library_names
-from daffy.narwhals_compat import get_columns, get_dtypes, is_supported_dataframe
+from daffy.narwhals_compat import is_supported_dataframe
 
 
 def assert_is_dataframe(obj: Any, context: str) -> None:
@@ -100,9 +102,10 @@ def get_parameter_name(func: Callable[..., Any], name: str | None = None, *args:
 
 
 def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
-    result = f"columns: {get_columns(df)}"
+    nw_df = nw.from_native(df, eager_only=True)
+    result = f"columns: {nw_df.columns}"
     if include_dtypes:
-        result += f" with dtypes {get_dtypes(df)}"
+        result += f" with dtypes {list(nw_df.schema.values())}"
     return result
 
 
