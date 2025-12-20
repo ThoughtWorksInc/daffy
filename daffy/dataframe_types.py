@@ -28,8 +28,6 @@ except ImportError:  # pragma: no cover
 # Build DataFrame type dynamically based on what's available
 if TYPE_CHECKING:
     # For static type checking, assume both are available
-    from typing import TypeGuard
-
     from pandas import DataFrame as PandasDataFrame
     from polars import DataFrame as PolarsDataFrame
 
@@ -80,14 +78,6 @@ def get_available_library_names() -> list[str]:
     return available_libs
 
 
-def is_pandas_dataframe(df: Any) -> TypeGuard[PandasDataFrame]:
-    return HAS_PANDAS and pd is not None and isinstance(df, pd.DataFrame)
-
-
-def is_polars_dataframe(df: Any) -> TypeGuard[PolarsDataFrame]:
-    return HAS_POLARS and pl is not None and isinstance(df, pl.DataFrame)
-
-
 def count_null_values(df: Any, column: str) -> int:
     """Count null values in a DataFrame column.
 
@@ -98,11 +88,9 @@ def count_null_values(df: Any, column: str) -> int:
     Returns:
         Number of null values in the column
     """
-    if is_pandas_dataframe(df):
-        return int(df[column].isnull().sum())
-    elif is_polars_dataframe(df):
-        return int(df[column].is_null().sum())
-    return 0
+    from daffy.narwhals_compat import count_nulls
+
+    return count_nulls(df, column)
 
 
 def count_duplicate_values(df: Any, column: str) -> int:
@@ -115,12 +103,9 @@ def count_duplicate_values(df: Any, column: str) -> int:
     Returns:
         Number of duplicate values in the column (excludes first occurrence)
     """
-    if is_pandas_dataframe(df):
-        return int(df[column].duplicated().sum())
-    elif is_polars_dataframe(df):
-        # polars is_duplicated() marks ALL occurrences, use n_rows - n_unique instead
-        return len(df) - df[column].n_unique()
-    return 0
+    from daffy.narwhals_compat import count_duplicates
+
+    return count_duplicates(df, column)
 
 
 # Cache the types tuple at module level for efficiency
