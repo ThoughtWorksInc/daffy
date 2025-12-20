@@ -10,7 +10,8 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Any
 
-from daffy.dataframe_types import get_dataframe_types, is_pandas_dataframe, is_polars_dataframe, pd
+from daffy.dataframe_types import get_dataframe_types, pd
+from daffy.narwhals_compat import is_pandas_backend, is_polars_backend, iter_rows
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
 
 _PYDANTIC_ROOT_FIELD = "__root__"
@@ -33,7 +34,7 @@ def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
     This requires converting numeric columns to object dtype to preserve None values.
     Only copies the DataFrame if there are actually columns that need conversion.
     """
-    if convert_nans and is_pandas_dataframe(df) and pd is not None:
+    if convert_nans and is_pandas_backend(df) and pd is not None:
         # Find columns that need NaN-to-None conversion
         cols_needing_conversion = [
             col
@@ -115,7 +116,7 @@ def _validate_optimized(
     total_errors = 0
 
     # Use fast conversion for pandas DataFrames
-    if is_pandas_dataframe(df):
+    if is_pandas_backend(df):
         # Fast NumPy-based conversion (~2x faster than to_dict("records"))
         # Note: When we have None values (from NaN conversion), to_numpy() converts them back to NaN
         # because NumPy doesn't support None in numeric arrays. So we use itertuples instead
@@ -136,9 +137,9 @@ def _validate_optimized(
                     # Stop scanning after collecting max_errors
                     break
 
-    elif is_polars_dataframe(df):
-        # Polars: use iter_rows which is already optimized
-        for idx, row in enumerate(df.iter_rows(named=True)):  # type: ignore[attr-defined]
+    elif is_polars_backend(df):
+        # Use Narwhals iter_rows for unified iteration
+        for idx, row in enumerate(iter_rows(df, named=True)):
             # For polars, still need to handle NaN conversion if not done
             if convert_nans:
                 row = _convert_nan_to_none(row)
