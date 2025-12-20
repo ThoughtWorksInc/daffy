@@ -57,13 +57,13 @@ class TestPandasValidation:
         assert "age" in message
 
     def test_nan_handling(self) -> None:
-        """Test NaN values are converted to None and fail validation properly."""
+        """Test NaN values fail validation when they violate constraints."""
 
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob"],
                 "age": [25, 30],
-                "price": [10.5, np.nan],  # NaN should convert to None and fail
+                "price": [10.5, np.nan],  # NaN fails gt=0 constraint
             }
         )
 
@@ -73,21 +73,6 @@ class TestPandasValidation:
         message = str(exc_info.value)
         assert "Row 1:" in message
         assert "price" in message
-
-    def test_nan_handling_disabled(self) -> None:
-        """Test that NaN conversion can be disabled."""
-
-        df = pd.DataFrame(
-            {
-                "name": ["Alice", "Bob"],
-                "age": [25, 30],
-                "price": [10.5, np.nan],
-            }
-        )
-
-        # With convert_nans=False, should still fail but differently
-        with pytest.raises(AssertionError):
-            validate_dataframe_rows(df, SimpleValidator, convert_nans=False)
 
     def test_non_integer_index(self) -> None:
         """Test validation works with non-integer DataFrame index (uses row number)."""

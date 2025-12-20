@@ -6,12 +6,10 @@ from typing import TYPE_CHECKING, Any, Union
 
 # Lazy imports - only import what's available
 try:
-    import pandas as pd
     from pandas import DataFrame as PandasDataFrame
 
     HAS_PANDAS = True
 except ImportError:  # pragma: no cover
-    pd = None  # type: ignore
     PandasDataFrame = None  # type: ignore
     HAS_PANDAS = False
 

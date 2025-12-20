@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING, Any
 
 import narwhals as nw
 
-from daffy.dataframe_types import pd
-from daffy.narwhals_compat import is_pandas_backend, is_supported_dataframe
+from daffy.narwhals_compat import is_supported_dataframe
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
 
 _PYDANTIC_ROOT_FIELD = "__root__"
@@ -28,56 +27,19 @@ else:
     PydanticValidationError = None  # type: ignore[assignment, misc]
 
 
-def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
-    """Prepare DataFrame for validation by handling NaN values.
-
-    For pandas DataFrames with NaN conversion enabled, converts NaN to None.
-    This requires converting numeric columns to object dtype to preserve None values.
-    Only copies the DataFrame if there are actually columns that need conversion.
-    """
-    if convert_nans and is_pandas_backend(df) and pd is not None:
-        # Find columns that need NaN-to-None conversion
-        cols_needing_conversion = [
-            col
-            for col in df.columns
-            if (pd.api.types.is_float_dtype(df[col]) or pd.api.types.is_integer_dtype(df[col])) and df[col].isna().any()
-        ]
-
-        if not cols_needing_conversion:
-            return df
-
-        # Only copy if we actually need to modify something
-        df = df.copy()
-
-        # Convert float/numeric columns with NaN to object dtype and replace NaN with None
-        # This is necessary because pandas float64 columns convert None back to NaN
-        for col in cols_needing_conversion:
-            mask = pd.isna(df[col])
-            df[col] = df[col].astype("object")
-            df.loc[mask, col] = None
-
-        return df
-    return df
-
-
 def validate_dataframe_rows(
     df: DataFrameType,
     row_validator: type[BaseModel],
     max_errors: int = 5,
-    convert_nans: bool = True,
     early_termination: bool = True,
 ) -> None:
     """
     Validate DataFrame rows against a Pydantic model.
 
-    This function validates all rows in a DataFrame against a Pydantic model
-    using optimized row-by-row validation with fast DataFrame conversion.
-
     Args:
         df: DataFrame to validate (pandas or polars)
         row_validator: Pydantic BaseModel class for validation
         max_errors: Maximum number of errors to collect before stopping
-        convert_nans: Whether to convert NaN to None for Pydantic
         early_termination: Stop scanning after max_errors reached (faster for large datasets)
 
     Raises:
@@ -93,11 +55,7 @@ def validate_dataframe_rows(
     if len(df) == 0:
         return
 
-    # Prepare DataFrame with vectorized NaN conversion if needed
-    df_prepared = _prepare_dataframe_for_validation(df, convert_nans)
-
-    # Use optimized row-by-row validation
-    _validate_optimized(df_prepared, row_validator, max_errors, early_termination)
+    _validate_optimized(df, row_validator, max_errors, early_termination)
 
 
 def _validate_optimized(

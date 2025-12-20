@@ -17,7 +17,7 @@ else:
     PandasDataFrame = None
     PolarsDataFrame = None
 
-from daffy.config import get_row_validation_config, get_strict
+from daffy.config import get_row_validation_max_errors, get_strict
 from daffy.dataframe_types import DataFrameType
 from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
@@ -46,24 +46,9 @@ def _validate_rows_with_context(
     param_name: str | None,
     is_return_value: bool,
 ) -> None:
-    """Validate DataFrame rows with Pydantic model and add context to errors.
-
-    Args:
-        df: DataFrame to validate
-        row_validator: Pydantic model class for row validation
-        func_name: Name of the decorated function
-        param_name: Name of the parameter being validated (None for return values)
-        is_return_value: True if validating a return value
-    """
-    config = get_row_validation_config()
-
+    """Validate DataFrame rows with Pydantic model and add context to errors."""
     try:
-        validate_dataframe_rows(
-            df,
-            row_validator,
-            max_errors=config["max_errors"],
-            convert_nans=config["convert_nans"],
-        )
+        validate_dataframe_rows(df, row_validator, max_errors=get_row_validation_max_errors())
     except AssertionError as e:
         context = format_param_context(param_name, func_name, is_return_value)
         raise AssertionError(f"{str(e)}{context}") from e

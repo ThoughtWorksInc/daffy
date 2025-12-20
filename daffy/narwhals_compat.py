@@ -14,8 +14,3 @@ def is_supported_dataframe(obj: Any) -> bool:
         return True
     except TypeError:
         return False
-
-
-def is_pandas_backend(df: Any) -> bool:
-    """Check if DataFrame is pandas-backed (needed for NaN handling)."""
-    return nw.from_native(df, eager_only=True).implementation.is_pandas()
