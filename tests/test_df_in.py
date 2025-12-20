@@ -358,6 +358,14 @@ def test_check_columns_handles_invalid_column_key_in_dict() -> None:
     validate_dataframe(df, columns, False)
 
 
+def test_check_columns_handles_invalid_column_key_with_constraints() -> None:
+    """Test that invalid column types with constraints are skipped silently."""
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    columns: Any = {"A": {"nullable": False}, 123: {"nullable": False}}
+
+    validate_dataframe(df, columns, False)
+
+
 def test_get_parameter_name_returns_none_when_no_params() -> None:
     def func_with_no_params() -> None:
         pass

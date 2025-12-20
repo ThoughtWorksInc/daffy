@@ -298,3 +298,19 @@ class TestErrorMessages:
         df = pd.DataFrame({"x": [-5, 1, 2]})
         with pytest.raises(AssertionError, match="-5"):
             process(df)
+
+    def test_multiple_column_check_violations(self) -> None:
+        """Test error message format when multiple columns fail checks."""
+
+        @df_in(
+            columns={
+                "a": {"checks": {"gt": 0}},
+                "b": {"checks": {"gt": 0}},
+            }
+        )
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [-1], "b": [-2]})
+        with pytest.raises(AssertionError, match="Check violations"):
+            process(df)
