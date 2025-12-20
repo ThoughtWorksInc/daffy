@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.0
+
+### Major Refactoring
+
+- **Migrated to Narwhals** - Major internal refactoring to use [Narwhals](https://narwhals-dev.github.io/narwhals/) as a unified DataFrame abstraction layer
+  - Narwhals is a lightweight compatibility layer used by Plotly, Altair, Bokeh, and Marimo
+  - Enables future support for cuDF, Modin, and PyArrow DataFrames
+  - All existing functionality for pandas and polars remains unchanged
+  - Public API (`df_in`, `df_out`, `df_log`) is fully backwards compatible
+
+### Changed
+
+- `df_log` with `include_dtypes=True` now shows unified Narwhals dtype representation (e.g., `[String, Int64]`) for both pandas and polars DataFrames
+  - Previously pandas showed `['object', 'int64']` while polars showed `[String, Int64]`
+  - This provides consistent logging output across all DataFrame libraries
+
+### Dependencies
+
+- Added `narwhals>=2.14.0` as a required dependency
+
+### Internal
+
+- Created new `narwhals_compat.py` module centralizing all Narwhals operations
+- Removed library-specific branching from `dataframe_types.py`, `checks.py`, `utils.py`, `row_validation.py`, and `validation.py`
+- Unified column access, null detection, duplicate detection, and row iteration across all DataFrame backends
+
 ## 1.4.0
 
 ### New Features
