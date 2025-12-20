@@ -41,18 +41,19 @@ def test_log_df_with_dtypes(basic_pandas_df: pd.DataFrame, mocker: MockerFixture
     mock_log = mocker.patch("daffy.decorators.logging.log")
     test_fn(basic_pandas_df)
 
+    # Narwhals provides unified dtype representation across pandas/polars
     mock_log.assert_has_calls(
         [
             call(
                 logging.DEBUG,
                 (
                     "Function test_fn parameters contained a DataFrame: "
-                    "columns: ['Brand', 'Price'] with dtypes ['object', 'int64']"
+                    "columns: ['Brand', 'Price'] with dtypes [String, Int64]"
                 ),
             ),
             call(
                 logging.DEBUG,
-                "Function test_fn returned a DataFrame: columns: ['Brand', 'Price'] with dtypes ['object', 'int64']",
+                "Function test_fn returned a DataFrame: columns: ['Brand', 'Price'] with dtypes [String, Int64]",
             ),
         ]
     )

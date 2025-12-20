@@ -1,6 +1,6 @@
 [project]
 name = "daffy"
-version = "1.4.0"
+version = "2.0.0"
 description = "Function decorators for Pandas and Polars DataFrame validation - columns, data types, and row-level validation with Pydantic"
 authors = [
  { name="Janne Sinivirta", email="janne.sinivirta@gmail.com" },
@@ -31,6 +31,7 @@ classifiers = [
 
 dependencies = [
     "tomli>=2.0.0",
+    "narwhals>=2.14.0",
 ]
 
 [project.urls]

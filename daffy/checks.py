@@ -4,46 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+import narwhals as nw
+
 CheckViolation = tuple[str, str, int, list[Any]]
 
 
-def _get_failing_values(series: Any, mask: Any, max_samples: int) -> list[Any]:
-    """Extract sample failing values from a series based on a boolean mask."""
-    try:
-        failing = series[mask]
-        if hasattr(failing, "to_list"):
-            return failing.head(max_samples).to_list()
-        return list(failing.head(max_samples))
-    except (AttributeError, IndexError, KeyError, TypeError):
-        return []
-
-
-def _series_isin(series: Any, values: Any) -> Any:
-    """Check if series values are in the given set (pandas/polars compatible)."""
-    if hasattr(series, "is_in"):
-        return series.is_in(values)
-    return series.isin(values)
-
-
-def _series_is_null(series: Any) -> Any:
-    """Get null mask for a series (pandas/polars compatible)."""
-    if hasattr(series, "is_null"):
-        return series.is_null()
-    return series.isna()
-
-
-def _series_str_match(series: Any, pattern: str) -> Any:
-    """Check if string series matches regex pattern (pandas/polars compatible)."""
-    if hasattr(series, "str") and hasattr(series.str, "match"):
-        return series.str.match(pattern, na=False)
-    return series.str.contains(f"^(?:{pattern})$")
-
-
-def _fill_null_mask(mask: Any) -> Any:
-    """Fill null values in a mask with True (pandas/polars compatible)."""
-    if hasattr(mask, "fill_null"):
-        return mask.fill_null(True)
-    return mask.fillna(True)
+def _nw_series(series: Any) -> nw.Series[Any]:
+    """Wrap native series in Narwhals."""
+    return nw.from_native(series, series_only=True)
 
 
 def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int = 5) -> tuple[int, list[Any]]:
@@ -52,6 +20,8 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
     Returns:
         Tuple of (fail_count, sample_failing_values)
     """
+    nws = _nw_series(series)
+
     check_masks = {
         "gt": lambda: ~(series > check_value),
         "ge": lambda: ~(series >= check_value),
@@ -60,21 +30,24 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         "between": lambda: ~((series >= check_value[0]) & (series <= check_value[1])),
         "eq": lambda: series != check_value,
         "ne": lambda: series == check_value,
-        "isin": lambda: ~_series_isin(series, check_value),
-        "notnull": lambda: _series_is_null(series),
-        "str_regex": lambda: ~_series_str_match(series, check_value),
+        "isin": lambda: nw.to_native(~nws.is_in(check_value)),
+        "notnull": lambda: nw.to_native(nws.is_null()),
+        "str_regex": lambda: nw.to_native(~nws.str.contains(f"^(?:{check_value})")),
     }
 
     if check_name not in check_masks:
         raise ValueError(f"Unknown check: {check_name}")
 
-    mask = _fill_null_mask(check_masks[check_name]())
+    mask = nw.to_native(_nw_series(check_masks[check_name]()).fill_null(True))
 
     fail_count = int(mask.sum())
     if fail_count == 0:
         return 0, []
 
-    return fail_count, _get_failing_values(series, mask, max_samples)
+    # Get sample failing values
+    nw_mask = _nw_series(mask)
+    samples = nws.filter(nw_mask).head(max_samples).to_list()
+    return fail_count, samples
 
 
 def validate_checks(df: Any, column: str, checks: dict[str, Any], max_samples: int = 5) -> list[CheckViolation]:

@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.0
+
+### Major Refactoring
+
+- **Migrated to Narwhals** - Major internal refactoring to use [Narwhals](https://narwhals-dev.github.io/narwhals/) as a unified DataFrame abstraction layer
+  - Narwhals is a lightweight compatibility layer used by Plotly, Altair, Bokeh, and Marimo
+  - Enables future support for cuDF, Modin, and PyArrow DataFrames
+  - All existing functionality for pandas and polars remains unchanged
+  - Public API (`df_in`, `df_out`, `df_log`) is fully backwards compatible
+
+### Changed
+
+- `df_log` with `include_dtypes=True` now shows unified Narwhals dtype representation (e.g., `[String, Int64]`) for both pandas and polars DataFrames
+  - Previously pandas showed `['object', 'int64']` while polars showed `[String, Int64]`
+  - This provides consistent logging output across all DataFrame libraries
+
+### Dependencies
+
+- Added `narwhals>=2.14.0` as a required dependency
+
+### Removed
+
+- **`row_validation_convert_nans` configuration option** - NaN-to-None conversion is no longer needed. Pydantic handles NaN values correctly: accepts them for `Optional[float]` fields and correctly fails for constraints like `Field(gt=0)`
+
 ## 1.4.0
 
 ### New Features

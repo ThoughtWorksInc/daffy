@@ -7,13 +7,10 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from daffy.dataframe_types import (
-    DataFrameType,
-    get_available_library_names,
-    get_dataframe_types,
-    is_pandas_dataframe,
-    is_polars_dataframe,
-)
+import narwhals as nw
+
+from daffy.dataframe_types import DataFrameType, get_available_library_names
+from daffy.narwhals_compat import is_supported_dataframe
 
 
 def assert_is_dataframe(obj: Any, context: str) -> None:
@@ -26,7 +23,7 @@ def assert_is_dataframe(obj: Any, context: str) -> None:
     Raises:
         AssertionError: If obj is not a DataFrame
     """
-    if not isinstance(obj, get_dataframe_types()):
+    if not is_supported_dataframe(obj):
         libs_str = " or ".join(get_available_library_names())
         raise AssertionError(f"Wrong {context}. Expected {libs_str} DataFrame, got {type(obj).__name__} instead.")
 
@@ -105,23 +102,20 @@ def get_parameter_name(func: Callable[..., Any], name: str | None = None, *args:
 
 
 def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
-    result = f"columns: {list(df.columns)}"
+    nw_df = nw.from_native(df, eager_only=True)
+    result = f"columns: {nw_df.columns}"
     if include_dtypes:
-        if is_pandas_dataframe(df):
-            readable_dtypes = [dtype.name for dtype in df.dtypes]
-            result += f" with dtypes {readable_dtypes}"
-        elif is_polars_dataframe(df):
-            result += f" with dtypes {df.dtypes}"
+        result += f" with dtypes {list(nw_df.schema.values())}"
     return result
 
 
 def log_dataframe_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
-    if isinstance(df, get_dataframe_types()):
+    if is_supported_dataframe(df):
         logging.log(
             level, f"Function {func_name} parameters contained a DataFrame: {describe_dataframe(df, include_dtypes)}"
         )
 
 
 def log_dataframe_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
-    if isinstance(df, get_dataframe_types()):
+    if is_supported_dataframe(df):
         logging.log(level, f"Function {func_name} returned a DataFrame: {describe_dataframe(df, include_dtypes)}")

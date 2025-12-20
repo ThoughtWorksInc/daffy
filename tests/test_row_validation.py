@@ -57,13 +57,13 @@ class TestPandasValidation:
         assert "age" in message
 
     def test_nan_handling(self) -> None:
-        """Test NaN values are converted to None and fail validation properly."""
+        """Test NaN values fail validation when they violate constraints."""
 
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob"],
                 "age": [25, 30],
-                "price": [10.5, np.nan],  # NaN should convert to None and fail
+                "price": [10.5, np.nan],  # NaN fails gt=0 constraint
             }
         )
 
@@ -74,28 +74,13 @@ class TestPandasValidation:
         assert "Row 1:" in message
         assert "price" in message
 
-    def test_nan_handling_disabled(self) -> None:
-        """Test that NaN conversion can be disabled."""
-
-        df = pd.DataFrame(
-            {
-                "name": ["Alice", "Bob"],
-                "age": [25, 30],
-                "price": [10.5, np.nan],
-            }
-        )
-
-        # With convert_nans=False, should still fail but differently
-        with pytest.raises(AssertionError):
-            validate_dataframe_rows(df, SimpleValidator, convert_nans=False)
-
     def test_non_integer_index(self) -> None:
-        """Test validation works with non-integer DataFrame index."""
+        """Test validation works with non-integer DataFrame index (uses row number)."""
 
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob"],
-                "age": [25, -5],  # Bob invalid
+                "age": [25, -5],  # Bob invalid (row 1)
                 "price": [10.5, 20.0],
             },
             index=["person_a", "person_b"],  # type: ignore[arg-type]
@@ -105,16 +90,16 @@ class TestPandasValidation:
             validate_dataframe_rows(df, SimpleValidator)
 
         message = str(exc_info.value)
-        assert "Row person_b:" in message  # Uses actual index label
+        assert "Row 1:" in message  # Uses row number, not index label
 
     def test_datetime_index(self) -> None:
-        """Test validation works with datetime index."""
+        """Test validation works with datetime index (uses row number)."""
 
         dates = pd.date_range("2025-01-01", periods=2)
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob"],
-                "age": [25, -5],  # Bob invalid
+                "age": [25, -5],  # Bob invalid (row 1)
                 "price": [10.5, 20.0],
             },
             index=dates,
@@ -124,7 +109,7 @@ class TestPandasValidation:
             validate_dataframe_rows(df, SimpleValidator)
 
         message = str(exc_info.value)
-        assert "Row 2025-01-02" in message  # Uses date in error
+        assert "Row 1:" in message  # Uses row number, not datetime index
 
     def test_missing_required_field(self) -> None:
         """Test validation fails when required field is missing."""

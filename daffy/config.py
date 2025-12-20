@@ -9,13 +9,11 @@ import tomli
 # Configuration keys
 _KEY_STRICT = "strict"
 _KEY_ROW_VALIDATION_MAX_ERRORS = "row_validation_max_errors"
-_KEY_ROW_VALIDATION_CONVERT_NANS = "row_validation_convert_nans"
 _KEY_CHECKS_MAX_SAMPLES = "checks_max_samples"
 
 # Default values
 _DEFAULT_STRICT = False
 _DEFAULT_MAX_ERRORS = 5
-_DEFAULT_CONVERT_NANS = True
 _DEFAULT_CHECKS_MAX_SAMPLES = 5
 
 
@@ -29,7 +27,6 @@ def load_config() -> dict[str, Any]:
     default_config = {
         _KEY_STRICT: _DEFAULT_STRICT,
         _KEY_ROW_VALIDATION_MAX_ERRORS: _DEFAULT_MAX_ERRORS,
-        _KEY_ROW_VALIDATION_CONVERT_NANS: _DEFAULT_CONVERT_NANS,
         _KEY_CHECKS_MAX_SAMPLES: _DEFAULT_CHECKS_MAX_SAMPLES,
     }
 
@@ -50,8 +47,6 @@ def load_config() -> dict[str, Any]:
             default_config[_KEY_STRICT] = bool(daffy_config[_KEY_STRICT])
         if _KEY_ROW_VALIDATION_MAX_ERRORS in daffy_config:
             default_config[_KEY_ROW_VALIDATION_MAX_ERRORS] = int(daffy_config[_KEY_ROW_VALIDATION_MAX_ERRORS])
-        if _KEY_ROW_VALIDATION_CONVERT_NANS in daffy_config:
-            default_config[_KEY_ROW_VALIDATION_CONVERT_NANS] = bool(daffy_config[_KEY_ROW_VALIDATION_CONVERT_NANS])
         if _KEY_CHECKS_MAX_SAMPLES in daffy_config:
             default_config[_KEY_CHECKS_MAX_SAMPLES] = int(daffy_config[_KEY_CHECKS_MAX_SAMPLES])
 
@@ -92,13 +87,9 @@ def get_strict(strict_param: Optional[bool] = None) -> bool:
     return bool(get_config()[_KEY_STRICT])
 
 
-def get_row_validation_config() -> dict[str, Any]:
-    """Get all row validation configuration options."""
-    config = get_config()
-    return {
-        "max_errors": config[_KEY_ROW_VALIDATION_MAX_ERRORS],
-        "convert_nans": config[_KEY_ROW_VALIDATION_CONVERT_NANS],
-    }
+def get_row_validation_max_errors() -> int:
+    """Get max_errors setting for row validation."""
+    return int(get_config()[_KEY_ROW_VALIDATION_MAX_ERRORS])
 
 
 def get_checks_max_samples(max_samples: Optional[int] = None) -> int:

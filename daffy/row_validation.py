@@ -7,10 +7,11 @@ and validation strategies.
 
 from __future__ import annotations
 
-import math
 from typing import TYPE_CHECKING, Any
 
-from daffy.dataframe_types import get_dataframe_types, is_pandas_dataframe, is_polars_dataframe, pd
+import narwhals as nw
+
+from daffy.narwhals_compat import is_supported_dataframe
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
 
 _PYDANTIC_ROOT_FIELD = "__root__"
@@ -26,61 +27,19 @@ else:
     PydanticValidationError = None  # type: ignore[assignment, misc]
 
 
-def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
-    """Prepare DataFrame for validation by handling NaN values.
-
-    For pandas DataFrames with NaN conversion enabled, converts NaN to None.
-    This requires converting numeric columns to object dtype to preserve None values.
-    Only copies the DataFrame if there are actually columns that need conversion.
-    """
-    if convert_nans and is_pandas_dataframe(df) and pd is not None:
-        # Find columns that need NaN-to-None conversion
-        cols_needing_conversion = [
-            col
-            for col in df.columns
-            if (pd.api.types.is_float_dtype(df[col]) or pd.api.types.is_integer_dtype(df[col])) and df[col].isna().any()
-        ]
-
-        if not cols_needing_conversion:
-            return df
-
-        # Only copy if we actually need to modify something
-        df = df.copy()
-
-        # Convert float/numeric columns with NaN to object dtype and replace NaN with None
-        # This is necessary because pandas float64 columns convert None back to NaN
-        for col in cols_needing_conversion:
-            mask = pd.isna(df[col])
-            df[col] = df[col].astype("object")
-            df.loc[mask, col] = None
-
-        return df
-    return df
-
-
-def _convert_nan_to_none(row_dict: dict[str, Any]) -> dict[str, Any]:
-    """Convert NaN values to None for Pydantic compatibility."""
-    return {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row_dict.items()}
-
-
 def validate_dataframe_rows(
     df: DataFrameType,
     row_validator: type[BaseModel],
     max_errors: int = 5,
-    convert_nans: bool = True,
     early_termination: bool = True,
 ) -> None:
     """
     Validate DataFrame rows against a Pydantic model.
 
-    This function validates all rows in a DataFrame against a Pydantic model
-    using optimized row-by-row validation with fast DataFrame conversion.
-
     Args:
         df: DataFrame to validate (pandas or polars)
         row_validator: Pydantic BaseModel class for validation
         max_errors: Maximum number of errors to collect before stopping
-        convert_nans: Whether to convert NaN to None for Pydantic
         early_termination: Stop scanning after max_errors reached (faster for large datasets)
 
     Raises:
@@ -90,70 +49,35 @@ def validate_dataframe_rows(
     """
     require_pydantic()
 
-    if not isinstance(df, get_dataframe_types()):
+    if not is_supported_dataframe(df):
         raise TypeError(f"Expected DataFrame, got {type(df)}")
 
     if len(df) == 0:
         return
 
-    # Prepare DataFrame with vectorized NaN conversion if needed
-    df_prepared = _prepare_dataframe_for_validation(df, convert_nans)
-
-    # Use optimized row-by-row validation
-    _validate_optimized(df_prepared, row_validator, max_errors, convert_nans, early_termination)
+    _validate_optimized(df, row_validator, max_errors, early_termination)
 
 
 def _validate_optimized(
     df: DataFrameType,
     row_validator: type[BaseModel],
     max_errors: int,
-    convert_nans: bool,
     early_termination: bool,
 ) -> None:
-    """Optimized row-by-row validation with fast DataFrame conversion."""
+    """Optimized row-by-row validation using Narwhals for unified iteration."""
     failed_rows: list[tuple[Any, PydanticValidationError]] = []
     total_errors = 0
 
-    # Use fast conversion for pandas DataFrames
-    if is_pandas_dataframe(df):
-        # Fast NumPy-based conversion (~2x faster than to_dict("records"))
-        # Note: When we have None values (from NaN conversion), to_numpy() converts them back to NaN
-        # because NumPy doesn't support None in numeric arrays. So we use itertuples instead
-        # which preserves None values.
-        columns = df.columns.tolist()  # type: ignore[attr-defined]
-
-        for row_idx, row_values in enumerate(df.itertuples(index=False, name=None)):  # type: ignore[attr-defined]
-            row_dict = dict(zip(columns, row_values))
-            idx_label = df.index[row_idx]  # type: ignore[attr-defined]
-
-            try:
-                row_validator.model_validate(row_dict)
-            except PydanticValidationError as e:  # type: ignore[misc]
-                total_errors += 1
-                if len(failed_rows) < max_errors:
-                    failed_rows.append((idx_label, e))
-                elif early_termination:
-                    # Stop scanning after collecting max_errors
-                    break
-
-    elif is_polars_dataframe(df):
-        # Polars: use iter_rows which is already optimized
-        for idx, row in enumerate(df.iter_rows(named=True)):  # type: ignore[attr-defined]
-            # For polars, still need to handle NaN conversion if not done
-            if convert_nans:
-                row = _convert_nan_to_none(row)
-
-            try:
-                row_validator.model_validate(row)
-            except PydanticValidationError as e:  # type: ignore[misc]
-                total_errors += 1
-                if len(failed_rows) < max_errors:
-                    failed_rows.append((idx, e))
-                elif early_termination:
-                    # Stop scanning after collecting max_errors
-                    break
-    else:
-        raise TypeError(f"Unknown DataFrame type: {type(df)}")
+    # Unified iteration using Narwhals - works for pandas, polars, and future backends
+    for idx, row in enumerate(nw.from_native(df, eager_only=True).iter_rows(named=True)):
+        try:
+            row_validator.model_validate(row)
+        except PydanticValidationError as e:  # type: ignore[misc]
+            total_errors += 1
+            if len(failed_rows) < max_errors:
+                failed_rows.append((idx, e))
+            elif early_termination:
+                break
 
     if failed_rows:
         _raise_validation_error(df, failed_rows, total_errors, early_termination)

@@ -486,7 +486,6 @@ Row validation behavior can be configured in `pyproject.toml`:
 ```toml
 [tool.daffy]
 row_validation_max_errors = 5  # Show up to 5 failed rows (default: 5)
-row_validation_convert_nans = true  # Convert NaN to None (default: true)
 ```
 
 ### Performance Optimization
