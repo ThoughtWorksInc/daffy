@@ -26,12 +26,6 @@ All notable changes to this project will be documented in this file.
 
 - **`row_validation_convert_nans` configuration option** - NaN-to-None conversion is no longer needed. Pydantic handles NaN values correctly: accepts them for `Optional[float]` fields and correctly fails for constraints like `Field(gt=0)`
 
-### Internal
-
-- Created new `narwhals_compat.py` module for DataFrame type detection
-- Removed library-specific branching from `dataframe_types.py`, `checks.py`, `utils.py`, `row_validation.py`, and `validation.py`
-- Unified column access, null detection, duplicate detection, and row iteration across all DataFrame backends
-
 ## 1.4.0
 
 ### New Features
