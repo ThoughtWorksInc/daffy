@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from daffy.dataframe_types import get_dataframe_types, pd
-from daffy.narwhals_compat import is_pandas_backend, iter_rows
+from daffy.dataframe_types import pd
+from daffy.narwhals_compat import is_pandas_backend, is_supported_dataframe, iter_rows
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
 
 _PYDANTIC_ROOT_FIELD = "__root__"
@@ -85,7 +85,7 @@ def validate_dataframe_rows(
     """
     require_pydantic()
 
-    if not isinstance(df, get_dataframe_types()):
+    if not is_supported_dataframe(df):
         raise TypeError(f"Expected DataFrame, got {type(df)}")
 
     if len(df) == 0:

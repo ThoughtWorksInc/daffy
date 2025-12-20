@@ -8,6 +8,7 @@ from daffy.narwhals_compat import (
     count_nulls,
     get_columns,
     is_pandas_backend,
+    is_supported_dataframe,
     series_fill_null,
     series_filter_to_list,
     series_is_in,
@@ -84,6 +85,28 @@ class TestBackendDetection:
     def test_is_pandas_backend_false(self) -> None:
         df = pl.DataFrame({"A": [1, 2, 3]})
         assert is_pandas_backend(df) is False
+
+
+class TestIsSupportedDataframe:
+    def test_pandas_dataframe(self) -> None:
+        df = pd.DataFrame({"A": [1, 2, 3]})
+        assert is_supported_dataframe(df) is True
+
+    def test_polars_dataframe(self) -> None:
+        df = pl.DataFrame({"A": [1, 2, 3]})
+        assert is_supported_dataframe(df) is True
+
+    def test_list_not_supported(self) -> None:
+        assert is_supported_dataframe([1, 2, 3]) is False
+
+    def test_dict_not_supported(self) -> None:
+        assert is_supported_dataframe({"A": [1, 2, 3]}) is False
+
+    def test_string_not_supported(self) -> None:
+        assert is_supported_dataframe("not a dataframe") is False
+
+    def test_none_not_supported(self) -> None:
+        assert is_supported_dataframe(None) is False
 
 
 class TestSeriesIsIn:

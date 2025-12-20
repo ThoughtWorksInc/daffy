@@ -24,6 +24,25 @@ def wrap_dataframe(df: Any) -> nw.DataFrame[Any]:
     return nw.from_native(df, eager_only=True)
 
 
+def is_supported_dataframe(obj: Any) -> bool:
+    """Check if object is a supported eager DataFrame type.
+
+    Uses Narwhals to check if the object can be wrapped as a DataFrame.
+    Supports pandas, polars, and other Narwhals-compatible backends.
+
+    Args:
+        obj: Object to check
+
+    Returns:
+        True if object is a supported DataFrame type
+    """
+    try:
+        nw.from_native(obj, eager_only=True)
+        return True
+    except TypeError:
+        return False
+
+
 def get_columns(df: Any) -> list[str]:
     """Get column names from any supported DataFrame.
 
