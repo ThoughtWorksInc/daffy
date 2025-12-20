@@ -28,10 +28,12 @@ python scripts/benchmark_row_validation.py --size 10000
 ## What Gets Benchmarked
 
 ### Libraries Compared
-- **Daffy (pandas)**: Our batch validation with pandas DataFrames
-- **Daffy (polars)**: Our batch validation with polars DataFrames
+- **Daffy (pandas)**: Batch validation with Pandas DataFrames
+- **Daffy (polars)**: Batch validation with Polars DataFrames
 - **Pandantic**: Competing library for DataFrame validation with Pydantic
 - **Pydantic (baseline)**: Raw row-by-row validation (only for ≤10k rows)
+
+*Note: Daffy also supports Modin and PyArrow with the same validation features, but they are not benchmarked here.*
 
 ### Scenarios
 - **Simple**: 3 fields (name, age, price) with basic constraints
