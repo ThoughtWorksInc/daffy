@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from daffy.narwhals_compat import series_fill_null, series_is_in, series_is_null
+
 CheckViolation = tuple[str, str, int, list[Any]]
 
 
@@ -19,17 +21,13 @@ def _get_failing_values(series: Any, mask: Any, max_samples: int) -> list[Any]:
 
 
 def _series_isin(series: Any, values: Any) -> Any:
-    """Check if series values are in the given set (pandas/polars compatible)."""
-    if hasattr(series, "is_in"):
-        return series.is_in(values)
-    return series.isin(values)
+    """Check if series values are in the given set."""
+    return series_is_in(series, values)
 
 
 def _series_is_null(series: Any) -> Any:
-    """Get null mask for a series (pandas/polars compatible)."""
-    if hasattr(series, "is_null"):
-        return series.is_null()
-    return series.isna()
+    """Get null mask for a series."""
+    return series_is_null(series)
 
 
 def _series_str_match(series: Any, pattern: str) -> Any:
@@ -40,10 +38,8 @@ def _series_str_match(series: Any, pattern: str) -> Any:
 
 
 def _fill_null_mask(mask: Any) -> Any:
-    """Fill null values in a mask with True (pandas/polars compatible)."""
-    if hasattr(mask, "fill_null"):
-        return mask.fill_null(True)
-    return mask.fillna(True)
+    """Fill null values in a mask with True."""
+    return series_fill_null(mask, True)
 
 
 def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int = 5) -> tuple[int, list[Any]]:
