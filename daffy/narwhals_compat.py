@@ -75,18 +75,6 @@ def is_pandas_backend(df: Any) -> bool:
     return wrap_dataframe(df).implementation.is_pandas()
 
 
-def is_polars_backend(df: Any) -> bool:
-    """Check if the DataFrame is backed by polars.
-
-    Args:
-        df: Native DataFrame or Narwhals DataFrame
-
-    Returns:
-        True if the DataFrame is polars-backed
-    """
-    return wrap_dataframe(df).implementation.is_polars()
-
-
 def wrap_series(series: Any) -> nw.Series[Any]:
     """Wrap a native Series in Narwhals.
 

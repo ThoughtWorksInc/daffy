@@ -7,11 +7,10 @@ and validation strategies.
 
 from __future__ import annotations
 
-import math
 from typing import TYPE_CHECKING, Any
 
 from daffy.dataframe_types import get_dataframe_types, pd
-from daffy.narwhals_compat import is_pandas_backend, is_polars_backend, iter_rows
+from daffy.narwhals_compat import is_pandas_backend, iter_rows
 from daffy.pydantic_types import HAS_PYDANTIC, require_pydantic
 
 _PYDANTIC_ROOT_FIELD = "__root__"
@@ -59,11 +58,6 @@ def _prepare_dataframe_for_validation(df: Any, convert_nans: bool) -> Any:
     return df
 
 
-def _convert_nan_to_none(row_dict: dict[str, Any]) -> dict[str, Any]:
-    """Convert NaN values to None for Pydantic compatibility."""
-    return {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row_dict.items()}
-
-
 def validate_dataframe_rows(
     df: DataFrameType,
     row_validator: type[BaseModel],
@@ -101,60 +95,29 @@ def validate_dataframe_rows(
     df_prepared = _prepare_dataframe_for_validation(df, convert_nans)
 
     # Use optimized row-by-row validation
-    _validate_optimized(df_prepared, row_validator, max_errors, convert_nans, early_termination)
+    _validate_optimized(df_prepared, row_validator, max_errors, early_termination)
 
 
 def _validate_optimized(
     df: DataFrameType,
     row_validator: type[BaseModel],
     max_errors: int,
-    convert_nans: bool,
     early_termination: bool,
 ) -> None:
-    """Optimized row-by-row validation with fast DataFrame conversion."""
+    """Optimized row-by-row validation using Narwhals for unified iteration."""
     failed_rows: list[tuple[Any, PydanticValidationError]] = []
     total_errors = 0
 
-    # Use fast conversion for pandas DataFrames
-    if is_pandas_backend(df):
-        # Fast NumPy-based conversion (~2x faster than to_dict("records"))
-        # Note: When we have None values (from NaN conversion), to_numpy() converts them back to NaN
-        # because NumPy doesn't support None in numeric arrays. So we use itertuples instead
-        # which preserves None values.
-        columns = df.columns.tolist()  # type: ignore[attr-defined]
-
-        for row_idx, row_values in enumerate(df.itertuples(index=False, name=None)):  # type: ignore[attr-defined]
-            row_dict = dict(zip(columns, row_values))
-            idx_label = df.index[row_idx]  # type: ignore[attr-defined]
-
-            try:
-                row_validator.model_validate(row_dict)
-            except PydanticValidationError as e:  # type: ignore[misc]
-                total_errors += 1
-                if len(failed_rows) < max_errors:
-                    failed_rows.append((idx_label, e))
-                elif early_termination:
-                    # Stop scanning after collecting max_errors
-                    break
-
-    elif is_polars_backend(df):
-        # Use Narwhals iter_rows for unified iteration
-        for idx, row in enumerate(iter_rows(df, named=True)):
-            # For polars, still need to handle NaN conversion if not done
-            if convert_nans:
-                row = _convert_nan_to_none(row)
-
-            try:
-                row_validator.model_validate(row)
-            except PydanticValidationError as e:  # type: ignore[misc]
-                total_errors += 1
-                if len(failed_rows) < max_errors:
-                    failed_rows.append((idx, e))
-                elif early_termination:
-                    # Stop scanning after collecting max_errors
-                    break
-    else:
-        raise TypeError(f"Unknown DataFrame type: {type(df)}")
+    # Unified iteration using Narwhals - works for pandas, polars, and future backends
+    for idx, row in enumerate(iter_rows(df, named=True)):
+        try:
+            row_validator.model_validate(row)
+        except PydanticValidationError as e:  # type: ignore[misc]
+            total_errors += 1
+            if len(failed_rows) < max_errors:
+                failed_rows.append((idx, e))
+            elif early_termination:
+                break
 
     if failed_rows:
         _raise_validation_error(df, failed_rows, total_errors, early_termination)

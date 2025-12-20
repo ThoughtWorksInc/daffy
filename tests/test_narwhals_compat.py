@@ -8,7 +8,6 @@ from daffy.narwhals_compat import (
     count_nulls,
     get_columns,
     is_pandas_backend,
-    is_polars_backend,
     series_fill_null,
     series_is_in,
     series_is_null,
@@ -83,14 +82,6 @@ class TestBackendDetection:
     def test_is_pandas_backend_false(self) -> None:
         df = pl.DataFrame({"A": [1, 2, 3]})
         assert is_pandas_backend(df) is False
-
-    def test_is_polars_backend_true(self) -> None:
-        df = pl.DataFrame({"A": [1, 2, 3]})
-        assert is_polars_backend(df) is True
-
-    def test_is_polars_backend_false(self) -> None:
-        df = pd.DataFrame({"A": [1, 2, 3]})
-        assert is_polars_backend(df) is False
 
 
 class TestSeriesIsIn:
