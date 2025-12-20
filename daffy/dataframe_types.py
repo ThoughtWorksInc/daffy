@@ -37,9 +37,7 @@ else:
         _available_types.append(PolarsDataFrame)
 
     if not _available_types:
-        raise ImportError(
-            "No DataFrame library found. Install a supported library: pip install pandas"
-        )
+        raise ImportError("No DataFrame library found. Install a supported library: pip install pandas")
 
     DataFrameType = Union[tuple(_available_types)]
 
