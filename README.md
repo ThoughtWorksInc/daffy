@@ -1,6 +1,7 @@
 # Daffy - DataFrame Validator
 
 [![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/daffy.svg)](https://anaconda.org/conda-forge/daffy)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
 ![CI](https://github.com/vertti/daffy/actions/workflows/main.yml/badge.svg)
 [![codecov](https://codecov.io/gh/vertti/daffy/graph/badge.svg?token=00OL75TW4W)](https://codecov.io/gh/vertti/daffy)
@@ -70,6 +71,12 @@ Different tools serve different needs. Here's how Daffy compares:
 
 ```sh
 pip install daffy
+```
+
+or with conda:
+
+```sh
+conda install -c conda-forge daffy
 ```
 
 Daffy works with whatever DataFrame library you already have installed: Pandas, Polars, Modin, or PyArrow. No additional dependencies required.
