@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices"],
+  "constraints": {
+    "python": ">=3.9"
+  },
+  "ignoreDeps": ["tomli", "narwhals"],
+  "packageRules": [
+    {
+      "groupName": "dev-dependencies",
+      "matchManagers": ["pep621"],
+      "matchDepNames": [
+        "ruff",
+        "pyrefly",
+        "deadcode",
+        "coverage",
+        "pytest-cov",
+        "pre-commit",
+        "pydocstyle"
+      ]
+    },
+    {
+      "groupName": "test-dependencies",
+      "matchManagers": ["pep621"],
+      "matchDepNames": [
+        "pytest",
+        "pytest-mock",
+        "pandas",
+        "polars",
+        "pydantic",
+        "modin",
+        "pyarrow"
+      ]
+    },
+    {
+      "groupName": "github-actions",
+      "matchManagers": ["github-actions"]
+    }
+  ]
+}
