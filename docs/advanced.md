@@ -206,8 +206,13 @@ def process_data(df):
 | `ne` | value | Not equal to | `{"ne": "deleted"}` |
 | `between` | (lo, hi) | Value in range (inclusive) | `{"between": (0, 100)}` |
 | `isin` | list | Value in set | `{"isin": ["a", "b", "c"]}` |
+| `notin` | list | Value not in set | `{"notin": ["x", "y"]}` |
 | `notnull` | True | No null values | `{"notnull": True}` |
 | `str_regex` | pattern | String matches regex | `{"str_regex": r"^\d+$"}` |
+| `str_startswith` | string | String starts with prefix | `{"str_startswith": "pre_"}` |
+| `str_endswith` | string | String ends with suffix | `{"str_endswith": ".csv"}` |
+| `str_contains` | string | String contains substring | `{"str_contains": "@"}` |
+| `str_length` | (min, max) | String length in range | `{"str_length": (1, 100)}` |
 
 ### Multiple Checks
 

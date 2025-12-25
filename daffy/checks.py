@@ -31,8 +31,15 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         "eq": lambda: series != check_value,
         "ne": lambda: series == check_value,
         "isin": lambda: nw.to_native(~nws.is_in(check_value)),
+        "notin": lambda: nw.to_native(nws.is_in(check_value)),
         "notnull": lambda: nw.to_native(nws.is_null()),
         "str_regex": lambda: nw.to_native(~nws.str.contains(f"^(?:{check_value})")),
+        "str_startswith": lambda: nw.to_native(~nws.str.starts_with(check_value)),
+        "str_endswith": lambda: nw.to_native(~nws.str.ends_with(check_value)),
+        "str_contains": lambda: nw.to_native(~nws.str.contains(check_value, literal=True)),
+        "str_length": lambda: nw.to_native(
+            ~((nws.str.len_chars() >= check_value[0]) & (nws.str.len_chars() <= check_value[1]))
+        ),
     }
 
     if check_name not in check_masks:
