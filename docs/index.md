@@ -89,7 +89,7 @@ Most DataFrame validation tools are schema-first (define schemas separately) or 
 
 - :material-book-open-variant: **[Usage Guide](usage.md)**
 
-    Comprehensive reference for all features
+    Core validation features for everyday use
 
 - :material-chef-hat: **[Recipes & Patterns](recipes.md)**
 
