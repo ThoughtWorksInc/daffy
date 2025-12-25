@@ -6,25 +6,10 @@ Daffy catches missing columns, wrong data types, and invalid values at runtime �
 
 Also supports Modin and PyArrow DataFrames.
 
-<div class="grid cards" markdown>
-
-- :material-lightning-bolt: **Lightweight**
-
-    Column & dtype validation with minimal overhead
-
-- :material-check-all: **Value Constraints**
-
-    Nullability, uniqueness, range checks
-
-- :material-shield-check: **Row Validation**
-
-    Deep validation with Pydantic models
-
-- :material-swap-horizontal: **Multi-Backend**
-
-    Works with pandas, Polars, Modin, PyArrow
-
-</div>
+- **Lightweight** — Column & dtype validation with minimal overhead
+- **Value Constraints** — Nullability, uniqueness, range checks
+- **Row Validation** — Deep validation with Pydantic models
+- **Multi-Backend** — Works with pandas, Polars, Modin, PyArrow
 
 ## Quick Example
 
@@ -42,17 +27,11 @@ If a column is missing, has wrong dtype, or violates a constraint — **Daffy fa
 
 ## Installation
 
-=== "pip"
-
-    ```bash
-    pip install daffy
-    ```
-
-=== "conda"
-
-    ```bash
-    conda install -c conda-forge daffy
-    ```
+```bash
+pip install daffy
+# or
+conda install -c conda-forge daffy
+```
 
 Works with whatever DataFrame library you already have installed. Python 3.9–3.14.
 
@@ -60,31 +39,14 @@ Works with whatever DataFrame library you already have installed. Python 3.9–3
 
 Most DataFrame validation tools are schema-first (define schemas separately) or pipeline-wide (run suites over datasets). **Daffy is decorator-first:** validate inputs and outputs where transformations happen.
 
-| | |
-|---|---|
-| **Non-intrusive** | Just add decorators — no refactoring, no custom DataFrame types, no schema files |
-| **Easy to adopt** | Add in 30 seconds, remove just as fast if needed |
-| **In-process** | No external stores, orchestrators, or infrastructure |
-| **Pay for what you use** | Column validation is essentially free; opt into row validation when needed |
+- **Non-intrusive** — Just add decorators — no refactoring, no custom DataFrame types, no schema files
+- **Easy to adopt** — Add in 30 seconds, remove just as fast if needed
+- **In-process** — No external stores, orchestrators, or infrastructure
+- **Pay for what you use** — Column validation is essentially free; opt into row validation when needed
 
 ## Next Steps
 
-<div class="grid cards" markdown>
-
-- :material-rocket-launch: **[Getting Started](getting-started.md)**
-
-    Quick introduction to Daffy's core features
-
-- :material-book-open-variant: **[Usage Guide](usage.md)**
-
-    Comprehensive reference for all features
-
-- :material-chef-hat: **[Recipes & Patterns](recipes.md)**
-
-    Real-world examples and best practices
-
-- :material-api: **[API Reference](api.md)**
-
-    Decorator signatures and parameters
-
-</div>
+- **[Getting Started](getting-started.md)** — Quick introduction to Daffy's core features
+- **[Usage Guide](usage.md)** — Comprehensive reference for all features
+- **[Recipes & Patterns](recipes.md)** — Real-world examples and best practices
+- **[API Reference](api.md)** — Decorator signatures and parameters
