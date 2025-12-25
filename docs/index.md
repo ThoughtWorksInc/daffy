@@ -60,10 +60,24 @@ Works with whatever DataFrame library you already have installed. Python 3.9–3
 
 Most DataFrame validation tools are schema-first (define schemas separately) or pipeline-wide (run suites over datasets). **Daffy is decorator-first:** validate inputs and outputs where transformations happen.
 
-- **Non-intrusive** — Just add decorators — no refactoring, no custom DataFrame types, no schema files
-- **Easy to adopt** — Add in 30 seconds, remove just as fast if needed
-- **In-process** — No external stores, orchestrators, or infrastructure
-- **Pay for what you use** — Column validation is essentially free; opt into row validation when needed
+<table>
+<tr>
+<td>✓</td>
+<td><strong>Non-intrusive</strong> — Just add decorators — no refactoring, no custom DataFrame types, no schema files</td>
+</tr>
+<tr>
+<td>✓</td>
+<td><strong>Easy to adopt</strong> — Add in 30 seconds, remove just as fast if needed</td>
+</tr>
+<tr>
+<td>✓</td>
+<td><strong>In-process</strong> — No external stores, orchestrators, or infrastructure</td>
+</tr>
+<tr>
+<td>✓</td>
+<td><strong>Pay for what you use</strong> — Column validation is essentially free; opt into row validation when needed</td>
+</tr>
+</table>
 
 ## Next Steps
 
