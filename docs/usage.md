@@ -1,4 +1,6 @@
-# DAFFY Usage Guide
+# Usage Guide
+
+Complete reference for all Daffy validation features.
 
 ## Basic Usage
 
