@@ -1,15 +1,43 @@
-# Daffy - DataFrame Validator
+# Daffy — DataFrame Validation with Decorators
 
 [![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/daffy)
-![CI](https://github.com/vertti/daffy/actions/workflows/main.yml/badge.svg)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/daffy.svg)](https://anaconda.org/conda-forge/daffy)
+[![Python](https://img.shields.io/pypi/pyversions/daffy)](https://pypi.org/project/daffy/)
+[![CI](https://github.com/vertti/daffy/actions/workflows/main.yml/badge.svg)](https://github.com/vertti/daffy/actions)
 [![codecov](https://codecov.io/gh/vertti/daffy/graph/badge.svg?token=00OL75TW4W)](https://codecov.io/gh/vertti/daffy)
 
-## Description
+**Runtime validation for pandas, Polars, Modin, and PyArrow DataFrames — just add decorators.**
 
-Working with DataFrames often means passing them through multiple transformation functions, making it easy to lose track of their structure over time. Daffy adds runtime validation and documentation to your DataFrame operations through simple decorators. By declaring the expected columns and types in your function definitions, you can:
+Daffy validates DataFrame columns, types, and values at function boundaries. Think of it as **type hints for DataFrames**: declare what you expect, catch mismatches early, keep documentation in sync with code.
+
+- ✅ **Column & dtype validation** — lightweight, minimal overhead
+- ✅ **Value constraints** — nullability, uniqueness, range checks
+- ✅ **Row validation with Pydantic** — when you need deeper checks
+- ✅ **Works with pandas, Polars, Modin, PyArrow** — no lock-in
+
+---
+
+## Installation
+
+```bash
+pip install daffy
+```
+
+or with conda:
+
+```bash
+conda install -c conda-forge daffy
+```
+
+Works with whatever DataFrame library you already have installed. Python 3.9–3.14.
+
+---
+
+## Quickstart
 
 ```python
+from daffy import df_in, df_out
+
 @df_in(columns=["price", "bedrooms", "location"])
 @df_out(columns=["price_per_room", "price_category"])
 def analyze_housing(houses_df):
@@ -17,83 +45,51 @@ def analyze_housing(houses_df):
     return analyzed_df
 ```
 
-Like type hints for DataFrames, Daffy helps you catch structural mismatches early and keeps your data pipeline documentation synchronized with the code. Column validation is lightweight and fast. For deeper validation, Daffy also supports row-level validation using Pydantic models. Compatible with Pandas, Polars, Modin, and PyArrow.
+If a column is missing, has wrong dtype, or violates a constraint — **Daffy fails fast** with a clear error message at the function boundary.
 
-## Key Features
+---
 
-**Column Validation** (lightweight, minimal overhead):
-- Validate DataFrame columns at function entry and exit points
-- Support regex patterns for matching column names (e.g., `"r/column_\d+/"`)
-- Check data types of columns
-- Validate columns contain no null values (`nullable=False`)
-- Validate columns contain only unique values (`unique=True`)
-- Vectorized value checks: `gt`, `ge`, `lt`, `le`, `between`, `eq`, `ne`, `isin`, `notnull`, `str_regex`
-- Control strictness of validation (allow or disallow extra columns)
+## Why Daffy?
 
-**Row Validation** (optional, requires Pydantic >= 2.4.0):
-- Validate row data using Pydantic models
-- Batch validation for optimal performance
-- Informative error messages showing which rows failed and why
+Most DataFrame validation tools are schema-first (define schemas separately) or pipeline-wide (run suites over datasets). **Daffy is decorator-first:** validate inputs and outputs where transformations happen.
 
-**General**:
-- Works with Pandas, Polars, Modin, and PyArrow DataFrames
-- Project-wide configuration via pyproject.toml
-- Integrated logging for DataFrame structure inspection
-- Enhanced type annotations for improved IDE and type checker support
+| | |
+|---|---|
+| **Non-intrusive** | Just add decorators — no refactoring, no custom DataFrame types, no schema files |
+| **Easy to adopt** | Add in 30 seconds, remove just as fast if needed |
+| **In-process** | No external stores, orchestrators, or infrastructure |
+| **Pay for what you use** | Column validation is essentially free; opt into row validation when needed |
 
-## When to Use Daffy
+---
 
-Different tools serve different needs. Here's how Daffy compares:
+## Examples
 
-| Use Case | Daffy | Pandera | Great Expectations |
-|----------|-------|---------|-------------------|
-| Function boundary guardrails | ✅ Primary focus | ⚠️ Possible via decorators | ❌ Not designed for this |
-| Quick column/type checks | ✅ Lightweight | ⚠️ Requires schema definitions | ⚠️ Requires Data Context setup |
-| Complex statistical checks | ⚠️ Limited | ✅ Many built-in | ✅ Extensive |
-| Pipeline/warehouse-wide QA | ❌ Not designed for this | ⚠️ Some support | ✅ Primary focus |
-
-## Philosophy
-
-- **Non-intrusive**: Just add decorators - no refactoring, no custom DataFrame types, no schema files
-- **Easy to adopt and remove**: Add Daffy in 30 seconds, remove it just as fast if needed
-- **Stay in-process**: No external stores, orchestrators, or infrastructure
-- **Minimal overhead**: Column validation is essentially free; pay for row validation only when you need it
-
-## Documentation
-
-- [Usage Guide](https://github.com/vertti/daffy/blob/master/docs/usage.md) - Detailed usage instructions
-- [Recipes & Patterns](https://github.com/vertti/daffy/blob/master/docs/recipes.md) - Common usage patterns
-- [Development Guide](https://github.com/vertti/daffy/blob/master/docs/development.md) - Guide for contributing to Daffy
-- [Changelog](https://github.com/vertti/daffy/blob/master/CHANGELOG.md) - Version history and release notes
-
-## Installation
-
-```sh
-pip install daffy
-```
-
-Daffy works with whatever DataFrame library you already have installed: Pandas, Polars, Modin, or PyArrow. No additional dependencies required.
-
-**Python version support:** 3.9 - 3.14
-
-## Quick Start
-
-### Column Validation
+### Column validation
 
 ```python
 from daffy import df_in, df_out
 
-@df_in(columns=["Brand", "Price"])  # Validate input DataFrame columns
-@df_out(columns=["Brand", "Price", "Discount"])  # Validate output DataFrame columns
-def apply_discount(cars_df):
-    cars_df = cars_df.copy()
-    cars_df["Discount"] = cars_df["Price"] * 0.1
-    return cars_df
+@df_in(columns=["Brand", "Price"])
+@df_out(columns=["Brand", "Price", "Discount"])
+def apply_discount(df):
+    df = df.copy()
+    df["Discount"] = df["Price"] * 0.1
+    return df
 ```
 
-### Value Checks
+### Regex column matching
 
-Validate column values with vectorized checks (fast, no row iteration):
+Match dynamic column names with regex patterns:
+
+```python
+@df_in(columns=["id", "r/feature_\\d+/"])
+def process_features(df):
+    return df
+```
+
+### Value constraints
+
+Vectorized checks with zero row iteration overhead:
 
 ```python
 @df_in(columns={
@@ -101,13 +97,27 @@ Validate column values with vectorized checks (fast, no row iteration):
     "status": {"checks": {"isin": ["active", "pending", "closed"]}},
     "email": {"checks": {"str_regex": r"^[^@]+@[^@]+\.[^@]+$"}},
 })
-def process_orders(orders_df):
-    return orders_df
+def process_orders(df):
+    return df
 ```
 
-### Row Validation
+Available checks: `gt`, `ge`, `lt`, `le`, `between`, `eq`, `ne`, `isin`, `notnull`, `str_regex`
 
-For validating actual data values (requires `pip install 'pydantic>=2.4.0'`):
+### Nullability and uniqueness
+
+```python
+@df_in(
+    columns=["user_id", "email", "age"],
+    nullable={"email": False},  # email cannot be null
+    unique=["user_id"],         # user_id must be unique
+)
+def clean_users(df):
+    return df
+```
+
+### Row validation with Pydantic
+
+For complex, cross-field validation (requires `pydantic>=2.4.0`):
 
 ```python
 from pydantic import BaseModel, Field
@@ -115,29 +125,66 @@ from daffy import df_in
 
 class Product(BaseModel):
     name: str
-    price: float = Field(gt=0)  # Price must be positive
-    stock: int = Field(ge=0)    # Stock must be non-negative
+    price: float = Field(gt=0)
+    stock: int = Field(ge=0)
 
 @df_in(row_validator=Product)
 def process_inventory(df):
-    # Process inventory data with validated rows
     return df
 ```
 
+---
+
 ## Performance
 
-**Column validation** is essentially free - it only checks column names and types, adding negligible overhead to your functions.
+**Column validation** adds negligible overhead — it only checks column names and types.
 
-**Row validation** validates actual data values and is naturally more expensive, but has been optimized to be performant:
-- **Simple validation**: ~770K rows/sec (100K rows in 130ms)
-- **Complex validation**: ~165K rows/sec (32 columns, missing values, cross-field validation)
+**Row validation** validates actual values and is naturally more expensive, but optimized:
 
-*Benchmarked on MacBook Pro M1 Pro. Performance depends on:*
-- **Model complexity**: Number of fields, validators, and custom validation logic
-- **Data characteristics**: DataFrame size, missing values, data types
-- **Hardware**: CPU speed, available memory
+| Scenario | Throughput |
+|----------|------------|
+| Simple validation | ~770K rows/sec |
+| Complex validation (32 columns, cross-field) | ~165K rows/sec |
+
+*Benchmarked on MacBook Pro M1 Pro*
+
+---
+
+## Daffy vs Alternatives
+
+| Use Case | Daffy | Pandera | Great Expectations |
+|----------|:-----:|:-------:|:------------------:|
+| Function boundary guardrails | ✅ Primary focus | ⚠️ Possible | ❌ Not designed for |
+| Quick column/type checks | ✅ Lightweight | ⚠️ Requires schemas | ⚠️ Requires setup |
+| Complex statistical checks | ⚠️ Limited | ✅ Extensive | ✅ Extensive |
+| Pipeline/warehouse QA | ❌ Not designed for | ⚠️ Some support | ✅ Primary focus |
+| Multi-backend support | ✅ | ⚠️ Varies | ✅ |
+
+---
+
+## Configuration
+
+Configure Daffy project-wide via `pyproject.toml`:
+
+```toml
+[tool.daffy]
+strict = true
+```
+
+---
+
+## Documentation
+
+- [Usage Guide](https://github.com/vertti/daffy/blob/master/docs/usage.md) — detailed instructions
+- [Recipes & Patterns](https://github.com/vertti/daffy/blob/master/docs/recipes.md) — common patterns
+- [Changelog](https://github.com/vertti/daffy/blob/master/CHANGELOG.md) — version history
+
+---
+
+## Contributing
+
+Issues and pull requests welcome on [GitHub](https://github.com/vertti/daffy).
 
 ## License
 
 MIT
-
