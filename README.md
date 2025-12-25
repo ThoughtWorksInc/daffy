@@ -1,4 +1,4 @@
-# Daffy — DataFrame Validation with Decorators
+# Daffy — Validate pandas & Polars DataFrames with Python Decorators
 
 [![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/daffy.svg)](https://anaconda.org/conda-forge/daffy)
@@ -7,9 +7,9 @@
 [![CI](https://github.com/vertti/daffy/actions/workflows/main.yml/badge.svg)](https://github.com/vertti/daffy/actions)
 [![codecov](https://codecov.io/gh/vertti/daffy/graph/badge.svg?token=00OL75TW4W)](https://codecov.io/gh/vertti/daffy)
 
-**Runtime validation for pandas, Polars, Modin, and PyArrow DataFrames — just add decorators.**
+**Validate your pandas and Polars DataFrames at runtime with simple Python decorators.** Daffy catches missing columns, wrong data types, and invalid values before they cause downstream errors in your data pipeline.
 
-Daffy validates DataFrame columns, types, and values at function boundaries. Think of it as **type hints for DataFrames**: declare what you expect, catch mismatches early, keep documentation in sync with code.
+Also supports Modin and PyArrow DataFrames.
 
 - ✅ **Column & dtype validation** — lightweight, minimal overhead
 - ✅ **Value constraints** — nullability, uniqueness, range checks

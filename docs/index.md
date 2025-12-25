@@ -1,8 +1,10 @@
 # Daffy
 
-**DataFrame validation with decorators for pandas, Polars, Modin, and PyArrow.**
+**Validate pandas and Polars DataFrames with Python decorators.**
 
-Daffy validates DataFrame columns, types, and values at function boundaries. Think of it as **type hints for DataFrames**: declare what you expect, catch mismatches early, keep documentation in sync with code.
+Daffy catches missing columns, wrong data types, and invalid values at runtime — before they cause errors downstream in your data pipeline. Just add decorators to your functions.
+
+Also supports Modin and PyArrow DataFrames.
 
 <div class="grid cards" markdown>
 

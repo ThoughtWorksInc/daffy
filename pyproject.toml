@@ -8,7 +8,7 @@ authors = [
 license = "MIT"
 requires-python = ">=3.9"
 readme = "README.md"
-keywords = ["pandas", "polars", "modin", "pyarrow", "narwhals", "pydantic", "dataframe", "decorator", "validation", "schema", "data-validation", "typing", "data-quality", "column-validation", "dataframe-schema", "row-validation", "runtime-validation", "data-pipeline"]
+keywords = ["pandas", "polars", "modin", "pyarrow", "narwhals", "pydantic", "dataframe", "decorator", "validation", "schema", "data-validation", "typing", "data-quality", "column-validation", "dataframe-schema", "row-validation", "runtime-validation", "data-pipeline", "pandas-validation", "polars-validation", "validate-dataframe", "dataframe-validator"]
 classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Python Modules",

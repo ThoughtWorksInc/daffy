@@ -1,5 +1,5 @@
 site_name: Daffy
-site_description: DataFrame validation with decorators for pandas, Polars, Modin, and PyArrow
+site_description: Validate pandas and Polars DataFrames with Python decorators. Column validation, type checking, and Pydantic row validation for data pipelines.
 site_url: https://daffy.readthedocs.io
 repo_url: https://github.com/vertti/daffy
 repo_name: vertti/daffy
