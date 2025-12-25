@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.0.2
+
+### Documentation
+
+- Released MkDocs documentation at [daffy.readthedocs.io](https://daffy.readthedocs.io)
+- Added missing `attr_list`, `md_in_html`, and `pymdownx.emoji` markdown extensions
+- Improved SEO: updated README title/intro, added PyPI keywords, added GitHub topics
+
 ## 2.0.1
 
 ### Documentation
