@@ -4,12 +4,18 @@ We welcome contributions! This guide will help you get set up for development.
 
 ## Development Setup
 
-Clone the repository and install dependencies with [uv](https://github.com/astral-sh/uv):
+Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/vertti/daffy.git
 cd daffy
-uv sync --group test --group dev
+```
+
+The repo includes a `mise.toml` that sets up [uv](https://github.com/astral-sh/uv). If you don't use [mise](https://mise.jdx.dev/), install uv manually first.
+
+```bash
+mise install    # skip if you installed uv manually
+uv sync --group test --group dev  # installs Python, creates venv, installs all deps
 ```
 
 ## Code Quality
