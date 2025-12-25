@@ -95,6 +95,6 @@ The project requires **95% minimum test coverage**, enforced in CI.
 6. **Update CHANGELOG.md** with your changes
 7. **Submit a pull request**
 
-## Optional Dependencies
+## Testing Different Environments
 
-Daffy supports pandas-only, Polars-only, or both. See `TESTING_OPTIONAL_DEPS.md` for testing optional dependency scenarios.
+Daffy is tested across different dependency combinations (pandas-only, Polars-only, both, neither) to ensure it works in various project environments. See `TESTING_OPTIONAL_DEPS.md` for how to run these isolation tests.
