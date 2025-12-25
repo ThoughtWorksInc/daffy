@@ -151,3 +151,4 @@ cython_debug/
 
 # Development planning files
 *_PLAN*.md
+site/

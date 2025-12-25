@@ -1,4 +1,4 @@
-# Daffy Recipes & Patterns
+# Recipes & Patterns
 
 Practical examples showing Daffy in common scenarios. Examples use Pandas, but Polars, Modin, and PyArrow work identically.
 

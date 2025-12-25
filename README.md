@@ -3,6 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/daffy)](https://pypi.org/project/daffy/)
 [![conda-forge](https://img.shields.io/conda/vn/conda-forge/daffy.svg)](https://anaconda.org/conda-forge/daffy)
 [![Python](https://img.shields.io/pypi/pyversions/daffy)](https://pypi.org/project/daffy/)
+[![Docs](https://readthedocs.org/projects/daffy/badge/?version=latest)](https://daffy.readthedocs.io)
 [![CI](https://github.com/vertti/daffy/actions/workflows/main.yml/badge.svg)](https://github.com/vertti/daffy/actions)
 [![codecov](https://codecov.io/gh/vertti/daffy/graph/badge.svg?token=00OL75TW4W)](https://codecov.io/gh/vertti/daffy)
 
@@ -175,8 +176,11 @@ strict = true
 
 ## Documentation
 
-- [Usage Guide](https://github.com/vertti/daffy/blob/master/docs/usage.md) — detailed instructions
-- [Recipes & Patterns](https://github.com/vertti/daffy/blob/master/docs/recipes.md) — common patterns
+Full documentation available at **[daffy.readthedocs.io](https://daffy.readthedocs.io)**
+
+- [Getting Started](https://daffy.readthedocs.io/getting-started/) — quick introduction
+- [Usage Guide](https://daffy.readthedocs.io/usage/) — comprehensive reference
+- [API Reference](https://daffy.readthedocs.io/api/) — decorator signatures
 - [Changelog](https://github.com/vertti/daffy/blob/master/CHANGELOG.md) — version history
 
 ---
