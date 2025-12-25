@@ -63,6 +63,7 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Usage Guide: usage.md
+  - Advanced Validation: advanced.md
   - Recipes & Patterns: recipes.md
   - API Reference: api.md
   - Contributing: contributing.md
