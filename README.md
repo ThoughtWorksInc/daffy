@@ -136,21 +136,6 @@ def process_inventory(df):
 
 ---
 
-## Performance
-
-**Column validation** adds negligible overhead — it only checks column names and types.
-
-**Row validation** validates actual values and is naturally more expensive, but optimized:
-
-| Scenario | Throughput |
-|----------|------------|
-| Simple validation | ~770K rows/sec |
-| Complex validation (32 columns, cross-field) | ~165K rows/sec |
-
-*Benchmarked on MacBook Pro M1 Pro*
-
----
-
 ## Daffy vs Alternatives
 
 | Use Case | Daffy | Pandera | Great Expectations |
