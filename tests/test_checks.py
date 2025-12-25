@@ -132,6 +132,30 @@ class TestIsinCheck:
         assert samples == [99]
 
 
+class TestNotinCheck:
+    def test_notin_passes(self) -> None:
+        series = pd.Series(["a", "b", "c"])
+        fail_count, samples = apply_check(series, "notin", ["x", "y", "z"])
+        assert fail_count == 0
+
+    def test_notin_fails(self) -> None:
+        series = pd.Series(["a", "b", "x"])
+        fail_count, samples = apply_check(series, "notin", ["x", "y", "z"])
+        assert fail_count == 1
+        assert samples == ["x"]
+
+    def test_notin_with_numbers(self) -> None:
+        series = pd.Series([1, 2, 3])
+        fail_count, samples = apply_check(series, "notin", [3, 4, 5])
+        assert fail_count == 1
+        assert samples == [3]
+
+    def test_notin_all_forbidden(self) -> None:
+        series = pd.Series(["x", "y", "z"])
+        fail_count, samples = apply_check(series, "notin", ["x", "y", "z"])
+        assert fail_count == 3
+
+
 class TestNotnullCheck:
     def test_notnull_passes(self) -> None:
         series = pd.Series([1, 2, 3])
@@ -162,6 +186,93 @@ class TestStrRegexCheck:
         fail_count, samples = apply_check(series, "str_regex", r"^[^@]+@[^@]+\.[^@]+$")
         assert fail_count == 1
         assert samples == ["invalid"]
+
+
+class TestStrStartswithCheck:
+    def test_str_startswith_passes(self) -> None:
+        series = pd.Series(["hello", "hi", "hey"])
+        fail_count, samples = apply_check(series, "str_startswith", "h")
+        assert fail_count == 0
+
+    def test_str_startswith_fails(self) -> None:
+        series = pd.Series(["hello", "world"])
+        fail_count, samples = apply_check(series, "str_startswith", "h")
+        assert fail_count == 1
+        assert samples == ["world"]
+
+    def test_str_startswith_prefix(self) -> None:
+        series = pd.Series(["pre_name", "pre_value", "other"])
+        fail_count, samples = apply_check(series, "str_startswith", "pre_")
+        assert fail_count == 1
+        assert samples == ["other"]
+
+
+class TestStrEndswithCheck:
+    def test_str_endswith_passes(self) -> None:
+        series = pd.Series(["test.py", "main.py"])
+        fail_count, samples = apply_check(series, "str_endswith", ".py")
+        assert fail_count == 0
+
+    def test_str_endswith_fails(self) -> None:
+        series = pd.Series(["test.py", "readme.md"])
+        fail_count, samples = apply_check(series, "str_endswith", ".py")
+        assert fail_count == 1
+        assert samples == ["readme.md"]
+
+
+class TestStrContainsCheck:
+    def test_str_contains_passes(self) -> None:
+        series = pd.Series(["hello world", "world peace"])
+        fail_count, samples = apply_check(series, "str_contains", "world")
+        assert fail_count == 0
+
+    def test_str_contains_fails(self) -> None:
+        series = pd.Series(["hello", "goodbye"])
+        fail_count, samples = apply_check(series, "str_contains", "world")
+        assert fail_count == 2
+
+    def test_str_contains_literal_not_regex(self) -> None:
+        # Ensure . is treated as literal, not regex wildcard
+        series = pd.Series(["a.b", "axb"])
+        fail_count, samples = apply_check(series, "str_contains", ".")
+        assert fail_count == 1
+        assert samples == ["axb"]
+
+    def test_str_contains_at_symbol(self) -> None:
+        series = pd.Series(["user@example.com", "no-at-here"])
+        fail_count, samples = apply_check(series, "str_contains", "@")
+        assert fail_count == 1
+        assert samples == ["no-at-here"]
+
+
+class TestStrLengthCheck:
+    def test_str_length_passes(self) -> None:
+        series = pd.Series(["ab", "abc", "abcd"])
+        fail_count, samples = apply_check(series, "str_length", (2, 4))
+        assert fail_count == 0
+
+    def test_str_length_fails_too_short(self) -> None:
+        series = pd.Series(["a", "abc"])
+        fail_count, samples = apply_check(series, "str_length", (2, 4))
+        assert fail_count == 1
+        assert samples == ["a"]
+
+    def test_str_length_fails_too_long(self) -> None:
+        series = pd.Series(["abc", "abcdef"])
+        fail_count, samples = apply_check(series, "str_length", (2, 4))
+        assert fail_count == 1
+        assert samples == ["abcdef"]
+
+    def test_str_length_inclusive(self) -> None:
+        series = pd.Series(["ab", "abcd"])
+        fail_count, samples = apply_check(series, "str_length", (2, 4))
+        assert fail_count == 0
+
+    def test_str_length_exact(self) -> None:
+        # Can use same min/max for exact length
+        series = pd.Series(["abc", "ab", "abcd"])
+        fail_count, samples = apply_check(series, "str_length", (3, 3))
+        assert fail_count == 2
 
 
 class TestMaxSamples:

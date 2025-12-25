@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.1.0
+
+### New Features
+
+- Added new value checks: `notin`, `str_startswith`, `str_endswith`, `str_contains`, `str_length`
+
 ## 2.0.2
 
 ### Documentation
