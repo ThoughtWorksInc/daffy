@@ -1,16 +1,17 @@
 """Tests for unique column validation."""
 
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 import polars as pl
 import pytest
 
 from daffy import df_in, df_out
+from tests.utils import DataFrameFactory
 
 
 class TestUniqueBasic:
-    def test_unique_true_rejects_duplicates(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_unique_true_rejects_duplicates(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"user_id": {"unique": True}})
         def f(df: Any) -> Any:
             return df
@@ -19,7 +20,7 @@ class TestUniqueBasic:
         with pytest.raises(AssertionError, match="duplicate value"):
             f(df)
 
-    def test_unique_true_passes_when_all_unique(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_unique_true_passes_when_all_unique(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"user_id": {"unique": True}})
         def f(df: Any) -> Any:
             return df
@@ -28,7 +29,7 @@ class TestUniqueBasic:
         result = f(df)
         assert len(result) == 4
 
-    def test_unique_false_allows_duplicates(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_unique_false_allows_duplicates(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"user_id": {"unique": False}})
         def f(df: Any) -> Any:
             return df
@@ -95,7 +96,7 @@ class TestUniqueWithDtype:
 
 
 class TestUniqueWithNullable:
-    def test_unique_and_nullable_false(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_unique_and_nullable_false(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"user_id": {"unique": True, "nullable": False}})
         def f(df: Any) -> Any:
             return df
@@ -114,7 +115,7 @@ class TestUniqueWithNullable:
 
 
 class TestUniqueWithRegex:
-    def test_regex_unique_applies_to_all_matched(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_regex_unique_applies_to_all_matched(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"r/ID_\\d+/": {"unique": True}})
         def f(df: Any) -> Any:
             return df
@@ -129,7 +130,7 @@ class TestUniqueWithRegex:
 
 
 class TestUniqueWithDfOut:
-    def test_df_out_unique_rejects_duplicates(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_df_out_unique_rejects_duplicates(self, make_df: DataFrameFactory) -> None:
         @df_out(columns={"id": {"unique": True}})
         def f() -> Any:
             return make_df({"id": [1, 2, 2, 3]})
@@ -137,7 +138,7 @@ class TestUniqueWithDfOut:
         with pytest.raises(AssertionError, match="duplicate value"):
             f()
 
-    def test_df_out_unique_passes_when_valid(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_df_out_unique_passes_when_valid(self, make_df: DataFrameFactory) -> None:
         @df_out(columns={"id": {"unique": True}})
         def f() -> Any:
             return make_df({"id": [1, 2, 3, 4]})
@@ -147,7 +148,7 @@ class TestUniqueWithDfOut:
 
 
 class TestUniqueBackwardsCompatibility:
-    def test_list_format_still_works(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_list_format_still_works(self, make_df: DataFrameFactory) -> None:
         @df_in(columns=["user_id", "name"])
         def f(df: Any) -> Any:
             return df

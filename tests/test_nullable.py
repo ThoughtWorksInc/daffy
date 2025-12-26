@@ -1,16 +1,17 @@
 """Tests for nullable column validation."""
 
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 import polars as pl
 import pytest
 
 from daffy import df_in, df_out
+from tests.utils import DataFrameFactory
 
 
 class TestNullableBasic:
-    def test_nullable_false_rejects_nulls(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_nullable_false_rejects_nulls(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"price": {"nullable": False}})
         def f(df: Any) -> Any:
             return df
@@ -19,7 +20,7 @@ class TestNullableBasic:
         with pytest.raises(AssertionError, match="null value"):
             f(df)
 
-    def test_nullable_false_passes_without_nulls(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_nullable_false_passes_without_nulls(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"price": {"nullable": False}})
         def f(df: Any) -> Any:
             return df
@@ -68,7 +69,7 @@ class TestNullableWithDtype:
 
 
 class TestNullableDefault:
-    def test_nullable_true_explicit_allows_nulls(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_nullable_true_explicit_allows_nulls(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"price": {"nullable": True}})
         def f(df: Any) -> Any:
             return df
@@ -99,7 +100,7 @@ class TestNullableDefaultWithDtype:
 
 
 class TestNullableWithRegex:
-    def test_regex_pattern_nullable_false(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_regex_pattern_nullable_false(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"r/Price_\\d+/": {"nullable": False}})
         def f(df: Any) -> Any:
             return df
@@ -108,7 +109,7 @@ class TestNullableWithRegex:
         with pytest.raises(AssertionError, match="Price_1"):
             f(df)
 
-    def test_regex_pattern_nullable_passes(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_regex_pattern_nullable_passes(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"r/Price_\\d+/": {"nullable": False}})
         def f(df: Any) -> Any:
             return df
@@ -139,7 +140,7 @@ class TestNullableWithRegexPandasSpecific:
 
 
 class TestNullableDfOut:
-    def test_df_out_nullable_false_rejects_nulls(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_df_out_nullable_false_rejects_nulls(self, make_df: DataFrameFactory) -> None:
         @df_out(columns={"price": {"nullable": False}})
         def f() -> Any:
             return make_df({"price": [1.0, None, 3.0]})
@@ -147,7 +148,7 @@ class TestNullableDfOut:
         with pytest.raises(AssertionError, match="return value"):
             f()
 
-    def test_df_out_nullable_passes(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_df_out_nullable_passes(self, make_df: DataFrameFactory) -> None:
         @df_out(columns={"price": {"nullable": False}})
         def f() -> Any:
             return make_df({"price": [1.0, 2.0, 3.0]})
@@ -167,7 +168,7 @@ class TestNullableDfOutPandasSpecific:
 
 
 class TestBackwardsCompatibility:
-    def test_list_columns_spec(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_list_columns_spec(self, make_df: DataFrameFactory) -> None:
         @df_in(columns=["price", "qty"])
         def f(df: Any) -> Any:
             return df

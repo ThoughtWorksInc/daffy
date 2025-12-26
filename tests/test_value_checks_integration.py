@@ -1,12 +1,12 @@
 """Integration tests for value checks with df_in/df_out decorators."""
 
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 import pytest
 
 from daffy import df_in, df_out
-from tests.utils import to_list
+from tests.utils import DataFrameFactory, to_list
 
 
 class TestDfInWithChecks:
@@ -113,7 +113,7 @@ class TestDfOutWithChecks:
 
 
 class TestChecksWithAllBackends:
-    def test_gt_check_passes(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_gt_check_passes(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"price": {"checks": {"gt": 0}}})
         def process(df: Any) -> Any:
             return df
@@ -122,7 +122,7 @@ class TestChecksWithAllBackends:
         result = process(df)
         assert to_list(result["price"]) == [1, 2, 3]
 
-    def test_gt_check_fails(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_gt_check_fails(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"price": {"checks": {"gt": 0}}})
         def process(df: Any) -> Any:
             return df
@@ -131,7 +131,7 @@ class TestChecksWithAllBackends:
         with pytest.raises(AssertionError, match="gt"):
             process(df)
 
-    def test_between_check(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_between_check(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"score": {"checks": {"between": (0, 100)}}})
         def process(df: Any) -> Any:
             return df
@@ -140,7 +140,7 @@ class TestChecksWithAllBackends:
         result = process(df)
         assert to_list(result["score"]) == [0, 50, 100]
 
-    def test_isin_check(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_isin_check(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"status": {"checks": {"isin": ["a", "b", "c"]}}})
         def process(df: Any) -> Any:
             return df
@@ -149,7 +149,7 @@ class TestChecksWithAllBackends:
         result = process(df)
         assert to_list(result["status"]) == ["a", "b", "c"]
 
-    def test_notnull_check_passes(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_notnull_check_passes(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"value": {"checks": {"notnull": True}}})
         def process(df: Any) -> Any:
             return df
@@ -158,7 +158,7 @@ class TestChecksWithAllBackends:
         result = process(df)
         assert to_list(result["value"]) == [1, 2, 3]
 
-    def test_notnull_check_fails(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_notnull_check_fails(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"value": {"checks": {"notnull": True}}})
         def process(df: Any) -> Any:
             return df
@@ -167,7 +167,7 @@ class TestChecksWithAllBackends:
         with pytest.raises(AssertionError, match="notnull"):
             process(df)
 
-    def test_eq_check(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_eq_check(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"flag": {"checks": {"eq": "yes"}}})
         def process(df: Any) -> Any:
             return df
@@ -176,7 +176,7 @@ class TestChecksWithAllBackends:
         result = process(df)
         assert to_list(result["flag"]) == ["yes", "yes", "yes"]
 
-    def test_ne_check(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_ne_check(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"flag": {"checks": {"ne": "deleted"}}})
         def process(df: Any) -> Any:
             return df
@@ -185,7 +185,7 @@ class TestChecksWithAllBackends:
         result = process(df)
         assert to_list(result["flag"]) == ["active", "pending", "closed"]
 
-    def test_str_regex_check(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_str_regex_check(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"code": {"checks": {"str_regex": r"^[A-Z]{2}\d{3}$"}}})
         def process(df: Any) -> Any:
             return df
@@ -196,7 +196,7 @@ class TestChecksWithAllBackends:
 
 
 class TestChecksWithRegexPatterns:
-    def test_regex_pattern_check_passes(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_regex_pattern_check_passes(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"r/price_\\d+/": {"checks": {"gt": 0}}})
         def process(df: Any) -> Any:
             return df
@@ -205,7 +205,7 @@ class TestChecksWithRegexPatterns:
         result = process(df)
         assert to_list(result["price_1"]) == [1, 2, 3]
 
-    def test_regex_pattern_check_fails(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_regex_pattern_check_fails(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"r/score_\\d+/": {"checks": {"gt": 0}}})
         def process(df: Any) -> Any:
             return df
@@ -214,7 +214,7 @@ class TestChecksWithRegexPatterns:
         with pytest.raises(AssertionError, match="gt"):
             process(df)
 
-    def test_regex_pattern_multiple_columns_checked(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_regex_pattern_multiple_columns_checked(self, make_df: DataFrameFactory) -> None:
         @df_in(columns={"r/val_\\d+/": {"checks": {"between": (0, 100)}}})
         def process(df: Any) -> Any:
             return df
@@ -225,7 +225,7 @@ class TestChecksWithRegexPatterns:
 
 
 class TestChecksWithOptionalColumns:
-    def test_checks_skipped_for_missing_optional_column(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_checks_skipped_for_missing_optional_column(self, make_df: DataFrameFactory) -> None:
         @df_in(
             columns={
                 "required_col": {"checks": {"gt": 0}},
@@ -239,7 +239,7 @@ class TestChecksWithOptionalColumns:
         result = process(df)
         assert to_list(result["required_col"]) == [1, 2, 3]
 
-    def test_checks_run_for_present_optional_column(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_checks_run_for_present_optional_column(self, make_df: DataFrameFactory) -> None:
         @df_in(
             columns={
                 "required_col": {"checks": {"gt": 0}},
@@ -253,7 +253,7 @@ class TestChecksWithOptionalColumns:
         with pytest.raises(AssertionError, match="gt"):
             process(df)
 
-    def test_optional_column_with_passing_checks(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_optional_column_with_passing_checks(self, make_df: DataFrameFactory) -> None:
         @df_in(
             columns={
                 "required_col": {},

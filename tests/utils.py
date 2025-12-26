@@ -1,6 +1,8 @@
 """Test utilities for cross-backend assertions."""
 
-from typing import Any
+from typing import Any, Callable
+
+DataFrameFactory = Callable[[dict[str, Any]], Any]
 
 
 def to_list(column: Any) -> list[Any]:

@@ -1,17 +1,17 @@
 """Tests for optional columns (required=False) feature."""
 
-from typing import Any, Callable
+from typing import Any
 
 import pandas as pd
 import polars as pl
 import pytest
 
 from daffy import df_in, df_out
-from tests.utils import get_column_names
+from tests.utils import DataFrameFactory, get_column_names
 
 
 class TestOptionalColumnsBasic:
-    def test_optional_column_missing_ok(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_optional_column_missing_ok(self, make_df: DataFrameFactory) -> None:
         """Optional column that is missing should not raise an error."""
 
         @df_in(columns={"A": {"required": True}, "B": {"required": False}})
@@ -23,7 +23,7 @@ class TestOptionalColumnsBasic:
 
         assert get_column_names(result) == ["A"]
 
-    def test_optional_column_present_validated(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_optional_column_present_validated(self, make_df: DataFrameFactory) -> None:
         """Optional column that is present should be validated normally."""
 
         @df_in(columns={"A": {"required": True}, "B": {"required": False}})
@@ -35,7 +35,7 @@ class TestOptionalColumnsBasic:
 
         assert get_column_names(result) == ["A", "B"]
 
-    def test_optional_column_nullable_violation(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_optional_column_nullable_violation(self, make_df: DataFrameFactory) -> None:
         """Optional column with null values when nullable=False should raise an error."""
 
         @df_in(columns={"A": {"required": True}, "B": {"nullable": False, "required": False}})
@@ -47,7 +47,7 @@ class TestOptionalColumnsBasic:
         with pytest.raises(AssertionError, match="null value"):
             process(df)
 
-    def test_optional_column_unique_violation(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_optional_column_unique_violation(self, make_df: DataFrameFactory) -> None:
         """Optional column with duplicate values when unique=True should raise an error."""
 
         @df_in(columns={"A": {"required": True}, "B": {"unique": True, "required": False}})
@@ -59,7 +59,7 @@ class TestOptionalColumnsBasic:
         with pytest.raises(AssertionError, match="duplicate value"):
             process(df)
 
-    def test_required_default_true(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_required_default_true(self, make_df: DataFrameFactory) -> None:
         """Column without required key should be required by default."""
 
         @df_in(columns={"A": {"required": True}, "B": {}})
@@ -71,7 +71,7 @@ class TestOptionalColumnsBasic:
         with pytest.raises(AssertionError, match="Missing columns"):
             process(df)
 
-    def test_multiple_optional_columns(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_multiple_optional_columns(self, make_df: DataFrameFactory) -> None:
         """Multiple optional columns can be missing."""
 
         @df_in(
@@ -89,7 +89,7 @@ class TestOptionalColumnsBasic:
 
         assert get_column_names(result) == ["A"]
 
-    def test_df_out_optional_column_missing_ok(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_df_out_optional_column_missing_ok(self, make_df: DataFrameFactory) -> None:
         """Optional column in df_out that is missing should not raise an error."""
 
         @df_out(columns={"A": {"required": True}, "B": {"required": False}})
@@ -181,7 +181,7 @@ class TestOptionalColumnsWithDtype:
 class TestBackwardsCompatibility:
     """Test that existing usage without required key still works."""
 
-    def test_list_columns_unchanged(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_list_columns_unchanged(self, make_df: DataFrameFactory) -> None:
         """List-based columns still work as before."""
 
         @df_in(columns=["A", "B"])
@@ -193,7 +193,7 @@ class TestBackwardsCompatibility:
         result = process(df)
         assert get_column_names(result) == ["A", "B"]
 
-    def test_list_columns_missing_error(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_list_columns_missing_error(self, make_df: DataFrameFactory) -> None:
         """List-based columns still require all columns."""
 
         @df_in(columns=["A", "B"])
@@ -205,7 +205,7 @@ class TestBackwardsCompatibility:
         with pytest.raises(AssertionError, match="Missing columns"):
             process(df)
 
-    def test_rich_spec_columns_present(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_rich_spec_columns_present(self, make_df: DataFrameFactory) -> None:
         """Rich specs with only required key work correctly."""
 
         @df_in(columns={"A": {"required": True}, "B": {"required": True}})
@@ -216,7 +216,7 @@ class TestBackwardsCompatibility:
         result = process(df)
         assert get_column_names(result) == ["A", "B"]
 
-    def test_rich_spec_missing_required_column(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_rich_spec_missing_required_column(self, make_df: DataFrameFactory) -> None:
         """Rich specs with required=True raise error on missing columns."""
 
         @df_in(columns={"A": {"required": True}, "B": {"required": True}})
@@ -228,7 +228,7 @@ class TestBackwardsCompatibility:
         with pytest.raises(AssertionError, match="Missing columns"):
             process(df)
 
-    def test_rich_spec_without_required_defaults_true(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+    def test_rich_spec_without_required_defaults_true(self, make_df: DataFrameFactory) -> None:
         """Rich specs without required key default to required=True."""
 
         @df_in(columns={"A": {}, "B": {"nullable": True}})
