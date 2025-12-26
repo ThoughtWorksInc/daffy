@@ -69,7 +69,11 @@ def get_parameter(func: Callable[..., Any], name: str | None = None, *args: Any,
         ValueError: If the named parameter cannot be found in args or kwargs
     """
     if not name:
-        return args[0] if args else next(iter(kwargs.values()), None)
+        if args:
+            return args[0]
+        if kwargs:
+            return next(iter(kwargs.values()))
+        raise ValueError("No arguments provided to function - cannot extract DataFrame parameter")
 
     if name in kwargs:
         return kwargs[name]
