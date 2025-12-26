@@ -123,6 +123,13 @@ def _find_column_violations(
     return violations
 
 
+def _raise_or_collect(msg: str, lazy: bool, errors: list[str]) -> None:
+    """Raise immediately or collect error for lazy mode."""
+    if not lazy:
+        raise AssertionError(msg)
+    errors.append(msg)
+
+
 def validate_dataframe(
     df: DataFrameType,
     columns: ColumnsList | ColumnsDict,
@@ -203,33 +210,38 @@ def validate_dataframe(
 
     if all_missing_columns:
         msg = f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}"
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
+        _raise_or_collect(msg, lazy, errors)
 
     if all_dtype_mismatches:
         msg = ", ".join(
             f"Column {col}{param_info} has wrong dtype. Was {was}, expected {expected}"
             for col, was, expected in all_dtype_mismatches
         )
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
+        _raise_or_collect(msg, lazy, errors)
 
     if all_nullable_violations:
         msg = _format_violation_error(all_nullable_violations, param_info, "null", "nullable=False")
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
+        _raise_or_collect(msg, lazy, errors)
 
     if all_uniqueness_violations:
         msg = _format_violation_error(all_uniqueness_violations, param_info, "duplicate", "unique=True")
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
+        _raise_or_collect(msg, lazy, errors)
 
     if composite_unique:
+        # Validate that all referenced columns exist
         for col_combo in composite_unique:
+            missing_cols = [c for c in col_combo if c not in df_columns]
+            if missing_cols:
+                col_desc = " + ".join(f"'{c}'" for c in col_combo)
+                msg = (
+                    f"composite_unique references missing columns {missing_cols} "
+                    f"in combination [{col_desc}]{param_info}"
+                )
+                if not lazy:
+                    raise AssertionError(msg)
+                errors.append(msg)
+                continue  # Skip duplicate check for this combo since columns don't exist
+
             dup_count = count_duplicate_rows(df, col_combo)
             if dup_count > 0:
                 col_desc = " + ".join(f"'{c}'" for c in col_combo)
@@ -250,9 +262,7 @@ def validate_dataframe(
             for col, check, count, samples in all_check_violations:
                 violation_lines.append(f"Column '{col}' failed {check}: {count} values. Examples: {samples}")
             msg = f"Check violations{param_info}:\n  " + "\n  ".join(violation_lines)
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
+        _raise_or_collect(msg, lazy, errors)
 
     if strict:
         explicit_columns = {col for col in columns if isinstance(col, str)}
@@ -260,9 +270,7 @@ def validate_dataframe(
         extra_columns = set(df_columns) - allowed_columns
         if extra_columns:
             msg = f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}"
-            if not lazy:
-                raise AssertionError(msg)
-            errors.append(msg)
+            _raise_or_collect(msg, lazy, errors)
 
     # In lazy mode, raise all collected errors at once
     if lazy and errors:

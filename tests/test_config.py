@@ -134,3 +134,69 @@ checks_max_samples = 10
 
             config = load_config()
             assert config["checks_max_samples"] == 10
+
+
+def test_config_strict_string_raises_error() -> None:
+    """Test that non-boolean strict config raises TypeError."""
+    import pytest
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+strict = "false"
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import load_config
+
+            clear_config_cache()
+
+            with pytest.raises(TypeError) as exc_info:
+                load_config()
+            assert "strict" in str(exc_info.value)
+            assert "boolean" in str(exc_info.value)
+
+
+def test_config_max_samples_string_raises_error() -> None:
+    """Test that non-integer max_samples config raises TypeError."""
+    import pytest
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+checks_max_samples = "five"
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import load_config
+
+            clear_config_cache()
+
+            with pytest.raises(TypeError) as exc_info:
+                load_config()
+            assert "checks_max_samples" in str(exc_info.value)
+            assert "integer" in str(exc_info.value)
+
+
+def test_config_max_samples_zero_raises_error() -> None:
+    """Test that max_samples < 1 raises ValueError."""
+    import pytest
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+checks_max_samples = 0
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import load_config
+
+            clear_config_cache()
+
+            with pytest.raises(ValueError) as exc_info:
+                load_config()
+            assert "checks_max_samples" in str(exc_info.value)
+            assert ">= 1" in str(exc_info.value)

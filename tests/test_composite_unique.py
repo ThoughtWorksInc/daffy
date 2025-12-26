@@ -170,3 +170,101 @@ class TestCompositeUniqueWithLazy:
         error = str(exc_info.value)
         assert "Missing columns" in error
         assert "composite_unique" in error
+
+
+class TestCompositeUniqueMissingColumns:
+    def test_missing_column_in_composite_unique(self) -> None:
+        @df_in(composite_unique=[["a", "nonexistent"]])
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, 2]})
+        with pytest.raises(AssertionError) as exc_info:
+            process(df)
+        error = str(exc_info.value)
+        assert "composite_unique" in error
+        assert "missing columns" in error
+        assert "nonexistent" in error
+
+    def test_all_columns_missing_in_composite_unique(self) -> None:
+        @df_in(composite_unique=[["x", "y"]])
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, 2]})
+        with pytest.raises(AssertionError) as exc_info:
+            process(df)
+        error = str(exc_info.value)
+        assert "composite_unique" in error
+        assert "x" in error
+        assert "y" in error
+
+    def test_missing_column_with_lazy(self) -> None:
+        @df_in(composite_unique=[["a", "missing"]], lazy=True)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, 2]})
+        with pytest.raises(AssertionError) as exc_info:
+            process(df)
+        error = str(exc_info.value)
+        assert "composite_unique" in error
+        assert "missing" in error
+
+    def test_df_out_missing_column(self) -> None:
+        @df_out(composite_unique=[["a", "nonexistent"]])
+        def create() -> pd.DataFrame:
+            return pd.DataFrame({"a": [1, 2]})
+
+        with pytest.raises(AssertionError) as exc_info:
+            create()
+        error = str(exc_info.value)
+        assert "composite_unique" in error
+        assert "missing" in error
+
+
+class TestCompositeUniqueParameterValidation:
+    def test_invalid_composite_unique_type(self) -> None:
+        with pytest.raises(TypeError) as exc_info:
+
+            @df_in(composite_unique="invalid")  # type: ignore[arg-type]
+            def process(df: pd.DataFrame) -> pd.DataFrame:
+                return df
+
+        assert "must be a list" in str(exc_info.value)
+
+    def test_invalid_combo_type(self) -> None:
+        with pytest.raises(TypeError) as exc_info:
+
+            @df_in(composite_unique=["a", "b"])  # type: ignore[arg-type]
+            def process(df: pd.DataFrame) -> pd.DataFrame:
+                return df
+
+        assert "must be a list" in str(exc_info.value)
+
+    def test_combo_too_short(self) -> None:
+        with pytest.raises(ValueError) as exc_info:
+
+            @df_in(composite_unique=[["a"]])
+            def process(df: pd.DataFrame) -> pd.DataFrame:
+                return df
+
+        assert "at least 2 columns" in str(exc_info.value)
+
+    def test_column_not_string(self) -> None:
+        with pytest.raises(TypeError) as exc_info:
+
+            @df_in(composite_unique=[["a", 123]])  # type: ignore[arg-type]
+            def process(df: pd.DataFrame) -> pd.DataFrame:
+                return df
+
+        assert "must be a string" in str(exc_info.value)
+
+    def test_df_out_invalid_composite_unique(self) -> None:
+        with pytest.raises(TypeError) as exc_info:
+
+            @df_out(composite_unique=123)  # type: ignore[arg-type]
+            def create() -> pd.DataFrame:
+                return pd.DataFrame()
+
+        assert "must be a list" in str(exc_info.value)

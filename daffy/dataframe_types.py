@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Union
 
+import narwhals as nw
+
 # Lazy imports - only import what's available
 try:
     from pandas import DataFrame as PandasDataFrame
@@ -59,23 +61,17 @@ def get_available_library_names() -> list[str]:
 
 def count_null_values(df: Any, column: str) -> int:
     """Count null values in a DataFrame column."""
-    import narwhals as nw
-
     return int(nw.from_native(df, eager_only=True)[column].is_null().sum())
 
 
 def count_duplicate_values(df: Any, column: str) -> int:
     """Count duplicate values in a DataFrame column (excludes first occurrence)."""
-    import narwhals as nw
-
     nw_df = nw.from_native(df, eager_only=True)
     return len(nw_df) - nw_df[column].n_unique()
 
 
 def count_duplicate_rows(df: Any, columns: list[str]) -> int:
     """Count rows with duplicate values across a column combination (excludes first occurrence)."""
-    import narwhals as nw
-
     nw_df = nw.from_native(df, eager_only=True)
     total = len(nw_df)
     unique = nw_df.select(columns).unique().shape[0]

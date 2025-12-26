@@ -69,6 +69,7 @@ def get_parameter(func: Callable[..., Any], name: str | None = None, *args: Any,
         ValueError: If the named parameter cannot be found in args or kwargs
     """
     if not name:
+        # Return first arg/kwarg or None - let downstream code handle validation
         return args[0] if args else next(iter(kwargs.values()), None)
 
     if name in kwargs:

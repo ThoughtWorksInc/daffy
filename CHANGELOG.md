@@ -22,6 +22,13 @@ All notable changes to this project will be documented in this file.
 
 - Fixed value checks (`gt`, `lt`, `ge`, `le`, `between`, `eq`, `ne`, etc.) not working with PyArrow tables
 
+### Internal Improvements
+
+- Config validation: pyproject.toml settings now validated for correct types (prevents silent bugs like `strict = "false"` being treated as truthy)
+- Regex pattern caching: compiled patterns are now cached, improving performance when validating many DataFrames with the same column patterns
+- Empty regex patterns (`r//`) now raise a clear error instead of matching everything
+- Improved error handling for custom check functions
+
 ## 2.1.0
 
 ### New Features

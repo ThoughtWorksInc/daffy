@@ -133,3 +133,53 @@ class TestCustomCheckWithDecorator:
         with pytest.raises(AssertionError) as exc_info:
             process(df)
         assert "my_custom_validation" in str(exc_info.value)
+
+
+class TestCustomCheckErrorHandling:
+    def test_callable_raises_exception(self) -> None:
+        series = pd.Series([1, 2, 3])
+
+        def bad_check(s: pd.Series) -> pd.Series:  # type: ignore[type-arg]
+            raise RuntimeError("Something went wrong")
+
+        with pytest.raises(ValueError) as exc_info:
+            apply_check(series, "bad_check", bad_check)
+        assert "bad_check" in str(exc_info.value)
+        assert "raised an error" in str(exc_info.value)
+        assert "Something went wrong" in str(exc_info.value)
+
+    def test_callable_returns_wrong_type(self) -> None:
+        series = pd.Series([1, 2, 3])
+
+        with pytest.raises(TypeError) as exc_info:
+            apply_check(series, "wrong_type", lambda s: [True, True, True])
+        assert "wrong_type" in str(exc_info.value)
+        assert "Series-like object" in str(exc_info.value)
+        assert "list" in str(exc_info.value)
+
+    def test_callable_returns_scalar(self) -> None:
+        series = pd.Series([1, 2, 3])
+
+        with pytest.raises(TypeError) as exc_info:
+            apply_check(series, "scalar_check", lambda s: True)
+        assert "scalar_check" in str(exc_info.value)
+        assert "Series-like object" in str(exc_info.value)
+
+    def test_callable_with_attribute_error(self) -> None:
+        series = pd.Series([1, 2, 3])
+
+        with pytest.raises(ValueError) as exc_info:
+            apply_check(series, "attr_error", lambda s: s.nonexistent_method())
+        assert "attr_error" in str(exc_info.value)
+        assert "raised an error" in str(exc_info.value)
+
+    def test_decorator_with_failing_callable(self) -> None:
+        @df_in(columns={"value": {"checks": {"bad": lambda s: s.nonexistent()}}})
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"value": [1, 2, 3]})
+        with pytest.raises(ValueError) as exc_info:
+            process(df)
+        assert "bad" in str(exc_info.value)
+        assert "raised an error" in str(exc_info.value)
