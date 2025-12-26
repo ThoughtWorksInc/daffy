@@ -8,11 +8,13 @@ import tomli
 
 # Configuration keys
 _KEY_STRICT = "strict"
+_KEY_LAZY = "lazy"
 _KEY_ROW_VALIDATION_MAX_ERRORS = "row_validation_max_errors"
 _KEY_CHECKS_MAX_SAMPLES = "checks_max_samples"
 
 # Default values
 _DEFAULT_STRICT = False
+_DEFAULT_LAZY = False
 _DEFAULT_MAX_ERRORS = 5
 _DEFAULT_CHECKS_MAX_SAMPLES = 5
 
@@ -26,6 +28,7 @@ def load_config() -> dict[str, Any]:
     """
     default_config = {
         _KEY_STRICT: _DEFAULT_STRICT,
+        _KEY_LAZY: _DEFAULT_LAZY,
         _KEY_ROW_VALIDATION_MAX_ERRORS: _DEFAULT_MAX_ERRORS,
         _KEY_CHECKS_MAX_SAMPLES: _DEFAULT_CHECKS_MAX_SAMPLES,
     }
@@ -45,6 +48,8 @@ def load_config() -> dict[str, Any]:
         # Update default config with values from pyproject.toml
         if _KEY_STRICT in daffy_config:
             default_config[_KEY_STRICT] = bool(daffy_config[_KEY_STRICT])
+        if _KEY_LAZY in daffy_config:
+            default_config[_KEY_LAZY] = bool(daffy_config[_KEY_LAZY])
         if _KEY_ROW_VALIDATION_MAX_ERRORS in daffy_config:
             default_config[_KEY_ROW_VALIDATION_MAX_ERRORS] = int(daffy_config[_KEY_ROW_VALIDATION_MAX_ERRORS])
         if _KEY_CHECKS_MAX_SAMPLES in daffy_config:
@@ -85,6 +90,23 @@ def get_strict(strict_param: Optional[bool] = None) -> bool:
     if strict_param is not None:
         return strict_param
     return bool(get_config()[_KEY_STRICT])
+
+
+def get_lazy(lazy_param: Optional[bool] = None) -> bool:
+    """
+    Get the lazy mode setting, with explicit parameter taking precedence over configuration.
+
+    When lazy=True, validation collects all errors before raising instead of stopping at the first.
+
+    Args:
+        lazy_param: Explicitly provided lazy parameter value, or None to use config
+
+    Returns:
+        bool: The effective lazy mode setting
+    """
+    if lazy_param is not None:
+        return lazy_param
+    return bool(get_config()[_KEY_LAZY])
 
 
 def get_row_validation_max_errors() -> int:
