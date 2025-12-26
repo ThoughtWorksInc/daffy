@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from functools import lru_cache
+from types import MappingProxyType
 from typing import Any
 
 import tomli
@@ -19,6 +20,34 @@ _DEFAULT_STRICT = False
 _DEFAULT_LAZY = False
 _DEFAULT_MAX_ERRORS = 5
 _DEFAULT_CHECKS_MAX_SAMPLES = 5
+
+
+def _validate_bool_config(daffy_config: dict[str, Any], key: str) -> bool | None:
+    """Validate and extract a boolean config value.
+
+    Returns None if key not present. Raises TypeError if value is not a boolean.
+    """
+    if key not in daffy_config:
+        return None
+    value = daffy_config[key]
+    if not isinstance(value, bool):
+        raise TypeError(f"Config '{key}' must be a boolean, got {type(value).__name__}: {value!r}")
+    return value
+
+
+def _validate_int_config(daffy_config: dict[str, Any], key: str, min_value: int = 1) -> int | None:
+    """Validate and extract an integer config value.
+
+    Returns None if key not present. Raises TypeError/ValueError if invalid.
+    """
+    if key not in daffy_config:
+        return None
+    value = daffy_config[key]
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"Config '{key}' must be an integer, got {type(value).__name__}: {value!r}")
+    if value < min_value:
+        raise ValueError(f"Config '{key}' must be >= {min_value}, got {value}")
+    return value
 
 
 def load_config() -> dict[str, Any]:
@@ -47,15 +76,22 @@ def load_config() -> dict[str, Any]:
         # Extract daffy configuration if it exists
         daffy_config = pyproject.get("tool", {}).get("daffy", {})
 
-        # Update default config with values from pyproject.toml
-        if _KEY_STRICT in daffy_config:
-            default_config[_KEY_STRICT] = bool(daffy_config[_KEY_STRICT])
-        if _KEY_LAZY in daffy_config:
-            default_config[_KEY_LAZY] = bool(daffy_config[_KEY_LAZY])
-        if _KEY_ROW_VALIDATION_MAX_ERRORS in daffy_config:
-            default_config[_KEY_ROW_VALIDATION_MAX_ERRORS] = int(daffy_config[_KEY_ROW_VALIDATION_MAX_ERRORS])
-        if _KEY_CHECKS_MAX_SAMPLES in daffy_config:
-            default_config[_KEY_CHECKS_MAX_SAMPLES] = int(daffy_config[_KEY_CHECKS_MAX_SAMPLES])
+        # Update default config with validated values from pyproject.toml
+        strict = _validate_bool_config(daffy_config, _KEY_STRICT)
+        if strict is not None:
+            default_config[_KEY_STRICT] = strict
+
+        lazy = _validate_bool_config(daffy_config, _KEY_LAZY)
+        if lazy is not None:
+            default_config[_KEY_LAZY] = lazy
+
+        max_errors = _validate_int_config(daffy_config, _KEY_ROW_VALIDATION_MAX_ERRORS)
+        if max_errors is not None:
+            default_config[_KEY_ROW_VALIDATION_MAX_ERRORS] = max_errors
+
+        max_samples = _validate_int_config(daffy_config, _KEY_CHECKS_MAX_SAMPLES)
+        if max_samples is not None:
+            default_config[_KEY_CHECKS_MAX_SAMPLES] = max_samples
 
         return default_config
     except (FileNotFoundError, tomli.TOMLDecodeError):
@@ -69,9 +105,12 @@ def find_config_file() -> str | None:
 
 
 @lru_cache(maxsize=1)
-def get_config() -> dict[str, Any]:
-    """Get the daffy configuration, cached after first load."""
-    return load_config()
+def get_config() -> MappingProxyType[str, Any]:
+    """Get the daffy configuration, cached after first load.
+
+    Returns an immutable view of the configuration to prevent accidental modification.
+    """
+    return MappingProxyType(load_config())
 
 
 def clear_config_cache() -> None:
