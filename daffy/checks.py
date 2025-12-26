@@ -17,10 +17,28 @@ def _nw_series(series: Any) -> nw.Series[Any]:
 def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int = 5) -> tuple[int, list[Any]]:
     """Apply a single check to a series.
 
+    Check value can be:
+    - A value for built-in checks (e.g., {"gt": 0})
+    - A callable for custom checks (e.g., {"no_outliers": lambda s: s < s.mean() * 10})
+      The callable receives a Narwhals Series and should return a boolean Series (True = valid)
+
     Returns:
         Tuple of (fail_count, sample_failing_values)
     """
     nws = _nw_series(series)
+
+    # Handle custom callable checks
+    if callable(check_value):
+        result = check_value(nws)
+        mask = nw.to_native(_nw_series(result).fill_null(True))
+        # Invert: result is True for valid, we need True for invalid
+        mask = ~mask
+        fail_count = int(mask.sum())
+        if fail_count == 0:
+            return 0, []
+        nw_mask = _nw_series(mask)
+        samples = nws.filter(nw_mask).head(max_samples).to_list()
+        return fail_count, samples
 
     check_masks = {
         "gt": lambda: ~(series > check_value),

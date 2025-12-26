@@ -269,6 +269,43 @@ def process_data(df):
     ...
 ```
 
+### Custom Check Functions
+
+For validation logic not covered by built-in checks, you can use custom functions. The function receives a [Narwhals Series](https://narwhals-dev.github.io/narwhals/) and should return a boolean Series where `True` means valid:
+
+```python
+@df_in(columns={
+    "price": {"checks": {
+        "gt": 0,  # built-in check
+        "no_outliers": lambda s: s < s.mean() * 10  # custom check
+    }}
+})
+def process_data(df):
+    ...
+```
+
+The dictionary key becomes the check name in error messages:
+
+```
+AssertionError: Column 'price' failed check 'no_outliers': 3 values failed. Examples: [50000, 99999]
+```
+
+Custom checks can use any Narwhals Series operations:
+
+```python
+@df_in(columns={
+    "email": {"checks": {
+        "has_at": lambda s: s.str.contains("@"),
+        "reasonable_length": lambda s: (s.str.len_chars() >= 5) & (s.str.len_chars() <= 254)
+    }},
+    "score": {"checks": {
+        "within_3_std": lambda s: (s - s.mean()).abs() <= s.std() * 3
+    }}
+})
+def process_data(df):
+    ...
+```
+
 ### Error Messages
 
 When checks fail, you get informative error messages:

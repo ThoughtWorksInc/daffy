@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.2.0
+
+### New Features
+
+- Custom check functions: use lambdas for validation logic not covered by built-in checks
+  - The function receives a Narwhals Series and returns a boolean Series (True = valid)
+  - Example: `{"price": {"checks": {"no_outliers": lambda s: s < s.mean() * 10}}}`
+  - The dictionary key becomes the check name in error messages
+
 ## 2.1.0
 
 ### New Features
