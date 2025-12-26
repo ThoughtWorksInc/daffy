@@ -9,25 +9,31 @@ from daffy.dataframe_types import count_duplicate_rows
 
 class TestCountDuplicateRows:
     def test_no_duplicates(self) -> None:
-        df = pd.DataFrame({
-            "first": ["A", "A", "B"],
-            "last": ["X", "Y", "X"],
-        })
+        df = pd.DataFrame(
+            {
+                "first": ["A", "A", "B"],
+                "last": ["X", "Y", "X"],
+            }
+        )
         assert count_duplicate_rows(df, ["first", "last"]) == 0
 
     def test_with_duplicates(self) -> None:
-        df = pd.DataFrame({
-            "first": ["A", "A", "A"],
-            "last": ["X", "X", "Y"],
-        })
+        df = pd.DataFrame(
+            {
+                "first": ["A", "A", "A"],
+                "last": ["X", "X", "Y"],
+            }
+        )
         # Row 0 and 1 are duplicates (A, X)
         assert count_duplicate_rows(df, ["first", "last"]) == 1
 
     def test_all_duplicates(self) -> None:
-        df = pd.DataFrame({
-            "a": [1, 1, 1],
-            "b": [2, 2, 2],
-        })
+        df = pd.DataFrame(
+            {
+                "a": [1, 1, 1],
+                "b": [2, 2, 2],
+            }
+        )
         # All rows are duplicates, 2 extra after first
         assert count_duplicate_rows(df, ["a", "b"]) == 2
 
@@ -46,10 +52,12 @@ class TestCompositeUniqueDecorators:
         def process(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
-        df = pd.DataFrame({
-            "first": ["A", "A", "B"],
-            "last": ["X", "Y", "X"],
-        })
+        df = pd.DataFrame(
+            {
+                "first": ["A", "A", "B"],
+                "last": ["X", "Y", "X"],
+            }
+        )
         result = process(df)
         assert len(result) == 3
 
@@ -58,10 +66,12 @@ class TestCompositeUniqueDecorators:
         def process(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
-        df = pd.DataFrame({
-            "first": ["A", "A", "B"],
-            "last": ["X", "X", "X"],  # A+X appears twice
-        })
+        df = pd.DataFrame(
+            {
+                "first": ["A", "A", "B"],
+                "last": ["X", "X", "X"],  # A+X appears twice
+            }
+        )
         with pytest.raises(AssertionError) as exc_info:
             process(df)
         assert "composite_unique" in str(exc_info.value)
@@ -90,12 +100,14 @@ class TestCompositeUniqueDecorators:
             return df
 
         # First constraint passes, second fails
-        df = pd.DataFrame({
-            "a": [1, 2],
-            "b": [3, 4],
-            "c": [1, 1],
-            "d": [2, 2],
-        })
+        df = pd.DataFrame(
+            {
+                "a": [1, 2],
+                "b": [3, 4],
+                "c": [1, 1],
+                "d": [2, 2],
+            }
+        )
         with pytest.raises(AssertionError) as exc_info:
             process(df)
         assert "'c' + 'd'" in str(exc_info.value)
@@ -126,10 +138,12 @@ class TestCompositeUniqueDecorators:
         def process(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
-        df = pd.DataFrame({
-            "a": [1, 1, 1, 2],
-            "b": [2, 2, 2, 3],
-        })  # 2 duplicate rows
+        df = pd.DataFrame(
+            {
+                "a": [1, 1, 1, 2],
+                "b": [2, 2, 2, 3],
+            }
+        )  # 2 duplicate rows
         with pytest.raises(AssertionError) as exc_info:
             process(df)
         assert "2 duplicate combinations" in str(exc_info.value)
@@ -145,10 +159,12 @@ class TestCompositeUniqueWithLazy:
         def process(df: pd.DataFrame) -> pd.DataFrame:
             return df
 
-        df = pd.DataFrame({
-            "a": [1, 1],
-            "b": [2, 2],
-        })
+        df = pd.DataFrame(
+            {
+                "a": [1, 1],
+                "b": [2, 2],
+            }
+        )
         with pytest.raises(AssertionError) as exc_info:
             process(df)
         error = str(exc_info.value)

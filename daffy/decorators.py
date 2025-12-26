@@ -91,7 +91,13 @@ def df_out(
             assert_is_dataframe(result, "return type")
             if columns or composite_unique:
                 validate_dataframe(
-                    result, columns or [], get_strict(strict), None, func.__name__, True, get_lazy(lazy),
+                    result,
+                    columns or [],
+                    get_strict(strict),
+                    None,
+                    func.__name__,
+                    True,
+                    get_lazy(lazy),
                     composite_unique,
                 )
 
@@ -145,7 +151,13 @@ def df_in(
             assert_is_dataframe(df, "parameter type")
             if columns or composite_unique:
                 validate_dataframe(
-                    df, columns or [], get_strict(strict), param_name, func.__name__, False, get_lazy(lazy),
+                    df,
+                    columns or [],
+                    get_strict(strict),
+                    param_name,
+                    func.__name__,
+                    False,
+                    get_lazy(lazy),
                     composite_unique,
                 )
 
