@@ -1,5 +1,7 @@
 """Tests for lazy validation mode."""
 
+from typing import Any
+
 import pandas as pd
 import pytest
 
@@ -22,7 +24,7 @@ class TestLazyValidationDirect:
 
     def test_lazy_true_collects_all_errors(self) -> None:
         df = pd.DataFrame({"a": [1, None], "b": ["x", "y"]})
-        columns = {
+        columns: Any = {
             "a": {"dtype": "float64", "nullable": False},
             "b": {"dtype": "int64"},  # Wrong dtype
             "c": "object",  # Missing column
@@ -37,7 +39,7 @@ class TestLazyValidationDirect:
 
     def test_lazy_true_multiple_errors_separated_by_newlines(self) -> None:
         df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
-        columns = {
+        columns: Any = {
             "a": {"dtype": "str"},  # Wrong dtype
             "c": "int64",  # Missing column
         }
@@ -49,13 +51,13 @@ class TestLazyValidationDirect:
 
     def test_lazy_true_no_errors_passes(self) -> None:
         df = pd.DataFrame({"a": [1, 2], "b": [3.0, 4.0]})
-        columns = {"a": "int64", "b": "float64"}
+        columns: Any = {"a": "int64", "b": "float64"}
         # Should not raise
         validate_dataframe(df, columns, strict=False, lazy=True)
 
     def test_lazy_true_strict_mode_extra_columns(self) -> None:
         df = pd.DataFrame({"a": [1, 2], "b": [3, 4], "extra": [5, 6]})
-        columns = {"a": {"dtype": "str"}}  # Wrong dtype + extra column
+        columns: Any = {"a": {"dtype": "str"}}  # Wrong dtype + extra column
         with pytest.raises(AssertionError) as exc_info:
             validate_dataframe(df, columns, strict=True, lazy=True)
         error = str(exc_info.value)
@@ -64,7 +66,7 @@ class TestLazyValidationDirect:
 
     def test_lazy_includes_check_violations(self) -> None:
         df = pd.DataFrame({"price": [-1, 0, 5]})
-        columns = {
+        columns: Any = {
             "price": {"checks": {"gt": 0}},
             "missing": "int64",  # Missing column
         }
@@ -150,7 +152,7 @@ class TestLazyValidationErrorMessages:
 
     def test_single_error_same_as_non_lazy(self) -> None:
         df = pd.DataFrame({"a": [1, 2]})
-        columns = {"missing": "int64"}
+        columns: Any = {"missing": "int64"}
 
         # Lazy mode with single error
         with pytest.raises(AssertionError) as lazy_exc:
@@ -165,7 +167,7 @@ class TestLazyValidationErrorMessages:
 
     def test_multiple_errors_readable_format(self) -> None:
         df = pd.DataFrame({"a": [1, None], "b": [1, 1]})
-        columns = {
+        columns: Any = {
             "a": {"nullable": False},
             "b": {"unique": True},
             "c": "int64",
