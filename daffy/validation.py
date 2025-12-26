@@ -9,7 +9,7 @@ import narwhals as nw
 
 from daffy.checks import CheckViolation, validate_checks
 from daffy.config import get_checks_max_samples, get_lazy
-from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
+from daffy.dataframe_types import DataFrameType, count_duplicate_rows, count_duplicate_values, count_null_values
 from daffy.patterns import (
     RegexColumnDef,
     compile_regex_pattern,
@@ -131,6 +131,7 @@ def validate_dataframe(
     func_name: str | None = None,
     is_return_value: bool = False,
     lazy: bool | None = None,
+    composite_unique: list[list[str]] | None = None,
 ) -> None:
     """Validate DataFrame columns and optionally data types.
 
@@ -142,6 +143,7 @@ def validate_dataframe(
         func_name: Function name for error context
         is_return_value: True if validating a return value
         lazy: If True, collect all errors before raising. If None, use config value.
+        composite_unique: List of column name lists that must be unique together
 
     Raises:
         AssertionError: If validation fails (missing columns, dtype mismatch, or extra columns in strict mode)
@@ -225,6 +227,19 @@ def validate_dataframe(
         if not lazy:
             raise AssertionError(msg)
         errors.append(msg)
+
+    if composite_unique:
+        for col_combo in composite_unique:
+            dup_count = count_duplicate_rows(df, col_combo)
+            if dup_count > 0:
+                col_desc = " + ".join(f"'{c}'" for c in col_combo)
+                msg = (
+                    f"Columns {col_desc}{param_info} contain {dup_count} duplicate combinations "
+                    "but composite_unique is set"
+                )
+                if not lazy:
+                    raise AssertionError(msg)
+                errors.append(msg)
 
     if all_check_violations:
         if len(all_check_violations) == 1:

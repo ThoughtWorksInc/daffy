@@ -14,6 +14,9 @@ All notable changes to this project will be documented in this file.
   - Use `@df_in(columns=..., lazy=True)` or `@df_out(columns=..., lazy=True)`
   - Configurable via `[tool.daffy] lazy = true` in pyproject.toml
   - Useful for debugging DataFrames with multiple issues
+- Composite uniqueness: validate that column combinations are unique
+  - Use `composite_unique=[["col1", "col2"]]` to ensure column combinations are unique
+  - Works alongside single-column `unique=True` validation
 
 ## 2.1.0
 

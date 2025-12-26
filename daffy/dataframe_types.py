@@ -70,3 +70,13 @@ def count_duplicate_values(df: Any, column: str) -> int:
 
     nw_df = nw.from_native(df, eager_only=True)
     return len(nw_df) - nw_df[column].n_unique()
+
+
+def count_duplicate_rows(df: Any, columns: list[str]) -> int:
+    """Count rows with duplicate values across a column combination (excludes first occurrence)."""
+    import narwhals as nw
+
+    nw_df = nw.from_native(df, eager_only=True)
+    total = len(nw_df)
+    unique = nw_df.select(columns).unique().shape[0]
+    return total - unique
