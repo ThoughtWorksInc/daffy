@@ -1,6 +1,6 @@
 """Tests for unique column validation."""
 
-from typing import Any
+from typing import Any, Callable
 
 import pandas as pd
 import polars as pl
@@ -9,32 +9,31 @@ import pytest
 from daffy import df_in, df_out
 
 
-@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestUniqueBasic:
-    def test_unique_true_rejects_duplicates(self, df_lib: Any) -> None:
+    def test_unique_true_rejects_duplicates(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_in(columns={"user_id": {"unique": True}})
         def f(df: Any) -> Any:
             return df
 
-        df = df_lib.DataFrame({"user_id": [1, 2, 2, 3]})
+        df = make_df({"user_id": [1, 2, 2, 3]})
         with pytest.raises(AssertionError, match="duplicate value"):
             f(df)
 
-    def test_unique_true_passes_when_all_unique(self, df_lib: Any) -> None:
+    def test_unique_true_passes_when_all_unique(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_in(columns={"user_id": {"unique": True}})
         def f(df: Any) -> Any:
             return df
 
-        df = df_lib.DataFrame({"user_id": [1, 2, 3, 4]})
+        df = make_df({"user_id": [1, 2, 3, 4]})
         result = f(df)
         assert len(result) == 4
 
-    def test_unique_false_allows_duplicates(self, df_lib: Any) -> None:
+    def test_unique_false_allows_duplicates(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_in(columns={"user_id": {"unique": False}})
         def f(df: Any) -> Any:
             return df
 
-        df = df_lib.DataFrame({"user_id": [1, 2, 2, 3]})
+        df = make_df({"user_id": [1, 2, 2, 3]})
         result = f(df)
         assert len(result) == 4
 
@@ -95,69 +94,65 @@ class TestUniqueWithDtype:
         assert len(result) == 4
 
 
-@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestUniqueWithNullable:
-    def test_unique_and_nullable_false(self, df_lib: Any) -> None:
+    def test_unique_and_nullable_false(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_in(columns={"user_id": {"unique": True, "nullable": False}})
         def f(df: Any) -> Any:
             return df
 
-        df_nulls = df_lib.DataFrame({"user_id": [1.0, None, 3.0]})
+        df_nulls = make_df({"user_id": [1.0, None, 3.0]})
         with pytest.raises(AssertionError, match="null value"):
             f(df_nulls)
 
-        df_dups = df_lib.DataFrame({"user_id": [1, 2, 2, 3]})
+        df_dups = make_df({"user_id": [1, 2, 2, 3]})
         with pytest.raises(AssertionError, match="duplicate value"):
             f(df_dups)
 
-        df_valid = df_lib.DataFrame({"user_id": [1, 2, 3, 4]})
+        df_valid = make_df({"user_id": [1, 2, 3, 4]})
         result = f(df_valid)
         assert len(result) == 4
 
 
-@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestUniqueWithRegex:
-    def test_regex_unique_applies_to_all_matched(self, df_lib: Any) -> None:
+    def test_regex_unique_applies_to_all_matched(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_in(columns={"r/ID_\\d+/": {"unique": True}})
         def f(df: Any) -> Any:
             return df
 
-        df_dups = df_lib.DataFrame({"ID_1": [1, 1, 3], "ID_2": [1, 2, 3]})
+        df_dups = make_df({"ID_1": [1, 1, 3], "ID_2": [1, 2, 3]})
         with pytest.raises(AssertionError, match="duplicate value"):
             f(df_dups)
 
-        df_valid = df_lib.DataFrame({"ID_1": [1, 2, 3], "ID_2": [4, 5, 6]})
+        df_valid = make_df({"ID_1": [1, 2, 3], "ID_2": [4, 5, 6]})
         result = f(df_valid)
         assert len(result) == 3
 
 
-@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestUniqueWithDfOut:
-    def test_df_out_unique_rejects_duplicates(self, df_lib: Any) -> None:
+    def test_df_out_unique_rejects_duplicates(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_out(columns={"id": {"unique": True}})
         def f() -> Any:
-            return df_lib.DataFrame({"id": [1, 2, 2, 3]})
+            return make_df({"id": [1, 2, 2, 3]})
 
         with pytest.raises(AssertionError, match="duplicate value"):
             f()
 
-    def test_df_out_unique_passes_when_valid(self, df_lib: Any) -> None:
+    def test_df_out_unique_passes_when_valid(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_out(columns={"id": {"unique": True}})
         def f() -> Any:
-            return df_lib.DataFrame({"id": [1, 2, 3, 4]})
+            return make_df({"id": [1, 2, 3, 4]})
 
         result = f()
         assert len(result) == 4
 
 
-@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestUniqueBackwardsCompatibility:
-    def test_list_format_still_works(self, df_lib: Any) -> None:
+    def test_list_format_still_works(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
         @df_in(columns=["user_id", "name"])
         def f(df: Any) -> Any:
             return df
 
-        df = df_lib.DataFrame({"user_id": [1, 1, 2], "name": ["a", "b", "c"]})
+        df = make_df({"user_id": [1, 1, 2], "name": ["a", "b", "c"]})
         result = f(df)
         assert len(result) == 3
 

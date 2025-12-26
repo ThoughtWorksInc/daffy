@@ -1,26 +1,23 @@
 """Tests for null value detection utility."""
 
-from typing import Any
+from typing import Any, Callable
 
 import pandas as pd
-import polars as pl
-import pytest
 
 from daffy.dataframe_types import count_null_values
 
 
-@pytest.mark.parametrize("df_lib", [pd, pl], ids=["pandas", "polars"])
 class TestCountNullValues:
-    def test_detects_nulls(self, df_lib: Any) -> None:
-        df = df_lib.DataFrame({"a": [1.0, None, 3.0]})
+    def test_detects_nulls(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+        df = make_df({"a": [1.0, None, 3.0]})
         assert count_null_values(df, "a") == 1
 
-    def test_no_nulls(self, df_lib: Any) -> None:
-        df = df_lib.DataFrame({"a": [1.0, 2.0, 3.0]})
+    def test_no_nulls(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+        df = make_df({"a": [1.0, 2.0, 3.0]})
         assert count_null_values(df, "a") == 0
 
-    def test_multiple_nulls(self, df_lib: Any) -> None:
-        df = df_lib.DataFrame({"a": [None, None, None, 1.0]})
+    def test_multiple_nulls(self, make_df: Callable[[dict[str, Any]], Any]) -> None:
+        df = make_df({"a": [None, None, None, 1.0]})
         assert count_null_values(df, "a") == 3
 
 
