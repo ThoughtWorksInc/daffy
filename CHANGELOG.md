@@ -18,6 +18,10 @@ All notable changes to this project will be documented in this file.
   - Use `composite_unique=[["col1", "col2"]]` to ensure column combinations are unique
   - Works alongside single-column `unique=True` validation
 
+### Bug Fixes
+
+- Fixed value checks (`gt`, `lt`, `ge`, `le`, `between`, `eq`, `ne`, etc.) not working with PyArrow tables
+
 ## 2.1.0
 
 ### New Features
