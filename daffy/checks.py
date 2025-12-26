@@ -29,9 +29,21 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
 
     # Handle custom callable checks
     if callable(check_value):
-        result = check_value(nws)
+        try:
+            result = check_value(nws)
+        except Exception as e:
+            raise ValueError(f"Custom check '{check_name}' raised an error: {e}") from e
+
+        # Validate return type - must be Series-like with boolean values
+        try:
+            nw_result = _nw_series(result)
+        except Exception:
+            raise TypeError(
+                f"Custom check '{check_name}' must return a Series-like object, got {type(result).__name__}"
+            )
+
         # Invert: result is True for valid, we need True for invalid
-        nw_mask = (~_nw_series(result)).fill_null(True)
+        nw_mask = (~nw_result).fill_null(True)
         fail_count = int(nw_mask.sum())
         if fail_count == 0:
             return 0, []

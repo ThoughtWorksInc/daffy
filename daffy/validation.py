@@ -229,7 +229,20 @@ def validate_dataframe(
         errors.append(msg)
 
     if composite_unique:
+        # Validate that all referenced columns exist
         for col_combo in composite_unique:
+            missing_cols = [c for c in col_combo if c not in df_columns]
+            if missing_cols:
+                col_desc = " + ".join(f"'{c}'" for c in col_combo)
+                msg = (
+                    f"composite_unique references missing columns {missing_cols} "
+                    f"in combination [{col_desc}]{param_info}"
+                )
+                if not lazy:
+                    raise AssertionError(msg)
+                errors.append(msg)
+                continue  # Skip duplicate check for this combo since columns don't exist
+
             dup_count = count_duplicate_rows(df, col_combo)
             if dup_count > 0:
                 col_desc = " + ".join(f"'{c}'" for c in col_combo)

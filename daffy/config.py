@@ -1,8 +1,10 @@
 """Configuration handling for DAFFY."""
 
+from __future__ import annotations
+
 import os
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
 import tomli
 
@@ -60,7 +62,7 @@ def load_config() -> dict[str, Any]:
         return default_config
 
 
-def find_config_file() -> Optional[str]:
+def find_config_file() -> str | None:
     """Find pyproject.toml in the current working directory."""
     path = os.path.join(os.getcwd(), "pyproject.toml")
     return path if os.path.isfile(path) else None
@@ -77,7 +79,7 @@ def clear_config_cache() -> None:
     get_config.cache_clear()
 
 
-def get_strict(strict_param: Optional[bool] = None) -> bool:
+def get_strict(strict_param: bool | None = None) -> bool:
     """
     Get the strict mode setting, with explicit parameter taking precedence over configuration.
 
@@ -92,7 +94,7 @@ def get_strict(strict_param: Optional[bool] = None) -> bool:
     return bool(get_config()[_KEY_STRICT])
 
 
-def get_lazy(lazy_param: Optional[bool] = None) -> bool:
+def get_lazy(lazy_param: bool | None = None) -> bool:
     """
     Get the lazy mode setting, with explicit parameter taking precedence over configuration.
 
@@ -111,11 +113,19 @@ def get_lazy(lazy_param: Optional[bool] = None) -> bool:
 
 def get_row_validation_max_errors() -> int:
     """Get max_errors setting for row validation."""
-    return int(get_config()[_KEY_ROW_VALIDATION_MAX_ERRORS])
+    value = int(get_config()[_KEY_ROW_VALIDATION_MAX_ERRORS])
+    if value < 1:
+        raise ValueError(f"row_validation_max_errors must be >= 1, got {value}")
+    return value
 
 
-def get_checks_max_samples(max_samples: Optional[int] = None) -> int:
+def get_checks_max_samples(max_samples: int | None = None) -> int:
     """Get max_samples setting for value checks."""
     if max_samples is not None:
+        if max_samples < 1:
+            raise ValueError(f"checks_max_samples must be >= 1, got {max_samples}")
         return max_samples
-    return int(get_config()[_KEY_CHECKS_MAX_SAMPLES])
+    value = int(get_config()[_KEY_CHECKS_MAX_SAMPLES])
+    if value < 1:
+        raise ValueError(f"checks_max_samples must be >= 1, got {value}")
+    return value

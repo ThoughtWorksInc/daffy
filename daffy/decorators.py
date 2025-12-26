@@ -30,6 +30,25 @@ from daffy.utils import (
 )
 from daffy.validation import ColumnsDef, validate_dataframe
 
+
+def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None:
+    """Validate composite_unique parameter structure at decorator time."""
+    if composite_unique is None:
+        return
+
+    if not isinstance(composite_unique, list):
+        raise TypeError(f"composite_unique must be a list, got {type(composite_unique).__name__}")
+
+    for i, combo in enumerate(composite_unique):
+        if not isinstance(combo, list):
+            raise TypeError(f"composite_unique[{i}] must be a list, got {type(combo).__name__}")
+        if len(combo) < 2:
+            raise ValueError(f"composite_unique[{i}] must have at least 2 columns, got {len(combo)}")
+        for j, col in enumerate(combo):
+            if not isinstance(col, str):
+                raise TypeError(f"composite_unique[{i}][{j}] must be a string, got {type(col).__name__}")
+
+
 # Type variables for preserving return types
 T = TypeVar("T")  # Generic type var for df_log
 if TYPE_CHECKING:
@@ -83,6 +102,7 @@ def df_out(
     Returns:
         Callable: Decorated function with preserved DataFrame return type
     """
+    _validate_composite_unique(composite_unique)
 
     def wrapper_df_out(func: Callable[..., DF]) -> Callable[..., DF]:
         @wraps(func)
@@ -142,6 +162,7 @@ def df_in(
     Returns:
         Callable: Decorated function with preserved return type
     """
+    _validate_composite_unique(composite_unique)
 
     def wrapper_df_in(func: Callable[..., R]) -> Callable[..., R]:
         @wraps(func)
