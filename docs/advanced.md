@@ -134,6 +134,41 @@ If a column contains duplicate values when `unique=True`, an error is raised:
 AssertionError: Column 'user_id' in function 'process_users' parameter 'df' contains 5 duplicate values but unique=True
 ```
 
+## Composite Uniqueness
+
+For validating that combinations of columns are unique (like a composite primary key), use `composite_unique`:
+
+```python
+@df_in(composite_unique=[["first_name", "last_name"]])
+def process_users(df):
+    # The combination of first_name + last_name must be unique
+    ...
+```
+
+### Multiple Constraints
+
+You can specify multiple composite uniqueness constraints:
+
+```python
+@df_in(
+    columns={"email": {"unique": True}},  # Single column unique
+    composite_unique=[
+        ["first_name", "last_name"],      # Name combo must be unique
+        ["department", "employee_id"],     # Dept + ID must be unique
+    ]
+)
+def process_data(df):
+    ...
+```
+
+### Error Messages
+
+When composite uniqueness fails, you get an error like:
+
+```
+AssertionError: Columns 'first_name' + 'last_name' in function 'process_users' parameter 'df' contain 5 duplicate combinations but composite_unique is set
+```
+
 ## Optional Columns
 
 By default, all specified columns are required. You can mark columns as optional using `required=False`:
