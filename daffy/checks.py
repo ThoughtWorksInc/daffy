@@ -30,47 +30,41 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
     # Handle custom callable checks
     if callable(check_value):
         result = check_value(nws)
-        mask = nw.to_native(_nw_series(result).fill_null(True))
         # Invert: result is True for valid, we need True for invalid
-        mask = ~mask
-        fail_count = int(mask.sum())
+        nw_mask = (~_nw_series(result)).fill_null(True)
+        fail_count = int(nw_mask.sum())
         if fail_count == 0:
             return 0, []
-        nw_mask = _nw_series(mask)
         samples = nws.filter(nw_mask).head(max_samples).to_list()
         return fail_count, samples
 
+    # All check masks return Narwhals Series (True = failing)
     check_masks = {
-        "gt": lambda: ~(series > check_value),
-        "ge": lambda: ~(series >= check_value),
-        "lt": lambda: ~(series < check_value),
-        "le": lambda: ~(series <= check_value),
-        "between": lambda: ~((series >= check_value[0]) & (series <= check_value[1])),
-        "eq": lambda: series != check_value,
-        "ne": lambda: series == check_value,
-        "isin": lambda: nw.to_native(~nws.is_in(check_value)),
-        "notin": lambda: nw.to_native(nws.is_in(check_value)),
-        "notnull": lambda: nw.to_native(nws.is_null()),
-        "str_regex": lambda: nw.to_native(~nws.str.contains(f"^(?:{check_value})")),
-        "str_startswith": lambda: nw.to_native(~nws.str.starts_with(check_value)),
-        "str_endswith": lambda: nw.to_native(~nws.str.ends_with(check_value)),
-        "str_contains": lambda: nw.to_native(~nws.str.contains(check_value, literal=True)),
-        "str_length": lambda: nw.to_native(
-            ~((nws.str.len_chars() >= check_value[0]) & (nws.str.len_chars() <= check_value[1]))
-        ),
+        "gt": lambda: ~(nws > check_value),
+        "ge": lambda: ~(nws >= check_value),
+        "lt": lambda: ~(nws < check_value),
+        "le": lambda: ~(nws <= check_value),
+        "between": lambda: ~((nws >= check_value[0]) & (nws <= check_value[1])),
+        "eq": lambda: nws != check_value,
+        "ne": lambda: nws == check_value,
+        "isin": lambda: ~nws.is_in(check_value),
+        "notin": lambda: nws.is_in(check_value),
+        "notnull": lambda: nws.is_null(),
+        "str_regex": lambda: ~nws.str.contains(f"^(?:{check_value})"),
+        "str_startswith": lambda: ~nws.str.starts_with(check_value),
+        "str_endswith": lambda: ~nws.str.ends_with(check_value),
+        "str_contains": lambda: ~nws.str.contains(check_value, literal=True),
+        "str_length": lambda: ~((nws.str.len_chars() >= check_value[0]) & (nws.str.len_chars() <= check_value[1])),
     }
 
     if check_name not in check_masks:
         raise ValueError(f"Unknown check: {check_name}")
 
-    mask = nw.to_native(_nw_series(check_masks[check_name]()).fill_null(True))
-
-    fail_count = int(mask.sum())
+    nw_mask = check_masks[check_name]().fill_null(True)
+    fail_count = int(nw_mask.sum())
     if fail_count == 0:
         return 0, []
 
-    # Get sample failing values
-    nw_mask = _nw_series(mask)
     samples = nws.filter(nw_mask).head(max_samples).to_list()
     return fail_count, samples
 
