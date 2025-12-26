@@ -5,7 +5,7 @@
   "mode": "full",
   "prHourlyLimit": 10,
   "constraints": {
-    "python": ">=3.9"
+    "python": ">=3.10"
   },
   "ignoreDeps": ["tomli", "narwhals"],
   "packageRules": [
