@@ -1,11 +1,11 @@
-from typing import Any, Callable, Union
+from typing import Any, Callable, TypeAlias
 
 import pandas as pd
 import polars as pl
 import pyarrow as pa
 import pytest
 
-DataFrameType = Union[pd.DataFrame, pl.DataFrame]
+DataFrameType: TypeAlias = pd.DataFrame | pl.DataFrame
 
 
 def make_pandas_df(data: dict[str, Any]) -> pd.DataFrame:
