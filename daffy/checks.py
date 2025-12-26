@@ -54,13 +54,15 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
     if callable(check_value):
         try:
             result = check_value(nws)
-        except (ValueError, TypeError, AttributeError, KeyError, IndexError) as e:
+        except Exception as e:
+            # Catch any exception from user code (Exception excludes KeyboardInterrupt/SystemExit)
             raise ValueError(f"Custom check '{check_name}' raised an error: {e}") from e
 
         # Validate return type - must be Series-like with boolean values
         try:
             nw_result = _nw_series(result)
-        except (ValueError, TypeError):
+        except Exception:
+            # Any conversion failure means the return type is wrong
             raise TypeError(
                 f"Custom check '{check_name}' must return a Series-like object, got {type(result).__name__}"
             ) from None
