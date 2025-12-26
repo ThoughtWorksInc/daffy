@@ -91,3 +91,49 @@ def list_products(in_stock_only: bool = False):
 ```
 
 The `@df_out` decorator ensures the DataFrame has the expected structure before it's serialized. If someone accidentally modifies `get_products_df` to return different columns, the validation catches it immediately.
+
+## FastAPI POST with Input Validation
+
+Validate incoming data before processing:
+
+```python
+import pandas as pd
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from daffy import df_in, df_out
+
+app = FastAPI()
+
+
+class DataPayload(BaseModel):
+    data: list[dict]
+
+
+@df_in(columns={"value": {"dtype": "float64", "checks": {"gt": 0}}})
+@df_out(columns=["value", "result"])
+def transform(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform values - validates input and output."""
+    df = df.copy()
+    df["result"] = df["value"] * 2
+    return df
+
+
+@app.post("/process")
+def process_data(payload: DataPayload):
+    """Accept JSON data, validate, transform, and return."""
+    df = pd.DataFrame(payload.data)
+    try:
+        result = transform(df)
+        return {"data": result.to_dict(orient="records")}
+    except AssertionError as e:
+        # Daffy validation failed - return 422 with details
+        raise HTTPException(status_code=422, detail=str(e))
+```
+
+When validation fails, the API returns a 422 with the exact error:
+
+```json
+{
+  "detail": "Column 'value' failed check gt: 2 values. Examples: [-5, 0]"
+}
+```
