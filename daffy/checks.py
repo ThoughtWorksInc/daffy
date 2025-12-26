@@ -31,16 +31,16 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
     if callable(check_value):
         try:
             result = check_value(nws)
-        except Exception as e:
+        except (ValueError, TypeError, AttributeError, KeyError, IndexError) as e:
             raise ValueError(f"Custom check '{check_name}' raised an error: {e}") from e
 
         # Validate return type - must be Series-like with boolean values
         try:
             nw_result = _nw_series(result)
-        except Exception:
+        except (ValueError, TypeError):
             raise TypeError(
                 f"Custom check '{check_name}' must return a Series-like object, got {type(result).__name__}"
-            )
+            ) from None
 
         # Invert: result is True for valid, we need True for invalid
         nw_mask = (~nw_result).fill_null(True)
