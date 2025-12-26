@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
   - The function receives a Narwhals Series and returns a boolean Series (True = valid)
   - Example: `{"price": {"checks": {"no_outliers": lambda s: s < s.mean() * 10}}}`
   - The dictionary key becomes the check name in error messages
+- Lazy validation: collect all errors before raising with `lazy=True` parameter
+  - Use `@df_in(columns=..., lazy=True)` or `@df_out(columns=..., lazy=True)`
+  - Configurable via `[tool.daffy] lazy = true` in pyproject.toml
+  - Useful for debugging DataFrames with multiple issues
 
 ## 2.1.0
 

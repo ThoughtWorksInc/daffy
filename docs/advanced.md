@@ -427,6 +427,32 @@ def process_employees(df):
     return df
 ```
 
+## Lazy Validation
+
+By default, validation stops at the first error type. With `lazy=True`, all errors are collected and reported together:
+
+```python
+@df_in(columns={
+    "price": {"dtype": "float64", "nullable": False},
+    "quantity": {"dtype": "int64", "checks": {"gt": 0}},
+    "category": "object"
+}, lazy=True)
+def process_order(df):
+    ...
+```
+
+When multiple validations fail, the error message includes all issues:
+
+```
+Missing columns: ['category'] in function 'process_order' parameter 'df'. Got columns: ['price', 'quantity']
+
+Column 'price' contains 2 null values but nullable=False
+
+Column 'quantity' failed check gt: 1 values failed. Examples: [-5]
+```
+
+This is useful for debugging when a DataFrame has multiple issues.
+
 ## Configuration
 
 All configuration options can be set in `pyproject.toml`:
@@ -434,6 +460,7 @@ All configuration options can be set in `pyproject.toml`:
 ```toml
 [tool.daffy]
 strict = true                    # Enable strict mode by default
+lazy = true                      # Collect all errors before raising (default: false)
 row_validation_max_errors = 5    # Max failed rows to show (default: 5)
 checks_max_samples = 5           # Max sample values in check errors (default: 5)
 ```

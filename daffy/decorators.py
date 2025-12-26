@@ -17,7 +17,7 @@ else:
     PandasDataFrame = None
     PolarsDataFrame = None
 
-from daffy.config import get_row_validation_max_errors, get_strict
+from daffy.config import get_lazy, get_row_validation_max_errors, get_strict
 from daffy.dataframe_types import DataFrameType
 from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
@@ -57,6 +57,7 @@ def _validate_rows_with_context(
 def df_out(
     columns: ColumnsDef = None,
     strict: bool | None = None,
+    lazy: bool | None = None,
     row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
     """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
@@ -71,6 +72,8 @@ def df_out(
             Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
+        lazy (bool, optional): If True, collect all validation errors before raising.
+            If None, uses the value from [tool.daffy] lazy setting in pyproject.toml.
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
 
@@ -84,7 +87,7 @@ def df_out(
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
             if columns:
-                validate_dataframe(result, columns, get_strict(strict), None, func.__name__, True)
+                validate_dataframe(result, columns, get_strict(strict), None, func.__name__, True, get_lazy(lazy))
 
             if row_validator is not None:
                 _validate_rows_with_context(result, row_validator, func.__name__, None, True)
@@ -100,6 +103,7 @@ def df_in(
     name: str | None = None,
     columns: ColumnsDef = None,
     strict: bool | None = None,
+    lazy: bool | None = None,
     row_validator: "type[BaseModel] | None" = None,
 ) -> Callable[[Callable[..., R]], Callable[..., R]]:
     """Decorate a function parameter that is a DataFrame (Pandas, Polars, Modin, or PyArrow).
@@ -115,6 +119,8 @@ def df_in(
             Defaults to None.
         strict (bool, optional): If True, columns must match exactly with no extra columns.
             If None, uses the value from [tool.daffy] strict setting in pyproject.toml.
+        lazy (bool, optional): If True, collect all validation errors before raising.
+            If None, uses the value from [tool.daffy] lazy setting in pyproject.toml.
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
 
@@ -129,7 +135,7 @@ def df_in(
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
             if columns:
-                validate_dataframe(df, columns, get_strict(strict), param_name, func.__name__)
+                validate_dataframe(df, columns, get_strict(strict), param_name, func.__name__, False, get_lazy(lazy))
 
             if row_validator is not None:
                 _validate_rows_with_context(df, row_validator, func.__name__, param_name, False)

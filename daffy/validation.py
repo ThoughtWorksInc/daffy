@@ -8,7 +8,7 @@ from typing import Any, TypedDict, Union
 import narwhals as nw
 
 from daffy.checks import CheckViolation, validate_checks
-from daffy.config import get_checks_max_samples
+from daffy.config import get_checks_max_samples, get_lazy
 from daffy.dataframe_types import DataFrameType, count_duplicate_values, count_null_values
 from daffy.patterns import (
     RegexColumnDef,
@@ -130,6 +130,7 @@ def validate_dataframe(
     param_name: str | None = None,
     func_name: str | None = None,
     is_return_value: bool = False,
+    lazy: bool | None = None,
 ) -> None:
     """Validate DataFrame columns and optionally data types.
 
@@ -140,10 +141,12 @@ def validate_dataframe(
         param_name: Parameter name for error context
         func_name: Function name for error context
         is_return_value: True if validating a return value
+        lazy: If True, collect all errors before raising. If None, use config value.
 
     Raises:
         AssertionError: If validation fails (missing columns, dtype mismatch, or extra columns in strict mode)
     """
+    lazy = get_lazy(lazy)
     df_columns = nw.from_native(df, eager_only=True).columns
     all_missing_columns: list[str] = []
     all_dtype_mismatches: list[tuple[str, Any, Any]] = []
@@ -193,36 +196,59 @@ def validate_dataframe(
 
     param_info = format_param_context(param_name, func_name, is_return_value)
 
+    # Collect error messages
+    errors: list[str] = []
+
     if all_missing_columns:
-        raise AssertionError(f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}")
+        msg = f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}"
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if all_dtype_mismatches:
-        mismatch_descriptions = ", ".join(
+        msg = ", ".join(
             f"Column {col}{param_info} has wrong dtype. Was {was}, expected {expected}"
             for col, was, expected in all_dtype_mismatches
         )
-        raise AssertionError(mismatch_descriptions)
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if all_nullable_violations:
-        raise AssertionError(_format_violation_error(all_nullable_violations, param_info, "null", "nullable=False"))
+        msg = _format_violation_error(all_nullable_violations, param_info, "null", "nullable=False")
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if all_uniqueness_violations:
-        raise AssertionError(_format_violation_error(all_uniqueness_violations, param_info, "duplicate", "unique=True"))
+        msg = _format_violation_error(all_uniqueness_violations, param_info, "duplicate", "unique=True")
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if all_check_violations:
         if len(all_check_violations) == 1:
             col, check, count, samples = all_check_violations[0]
-            raise AssertionError(
-                f"Column '{col}'{param_info} failed check {check}: {count} values failed. Examples: {samples}"
-            )
-        violation_lines: list[str] = []
-        for col, check, count, samples in all_check_violations:
-            violation_lines.append(f"Column '{col}' failed {check}: {count} values. Examples: {samples}")
-        raise AssertionError(f"Check violations{param_info}:\n  " + "\n  ".join(violation_lines))
+            msg = f"Column '{col}'{param_info} failed check {check}: {count} values failed. Examples: {samples}"
+        else:
+            violation_lines: list[str] = []
+            for col, check, count, samples in all_check_violations:
+                violation_lines.append(f"Column '{col}' failed {check}: {count} values. Examples: {samples}")
+            msg = f"Check violations{param_info}:\n  " + "\n  ".join(violation_lines)
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if strict:
         explicit_columns = {col for col in columns if isinstance(col, str)}
         allowed_columns = explicit_columns.union(all_matched_by_regex)
         extra_columns = set(df_columns) - allowed_columns
         if extra_columns:
-            raise AssertionError(f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}")
+            msg = f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}"
+            if not lazy:
+                raise AssertionError(msg)
+            errors.append(msg)
+
+    # In lazy mode, raise all collected errors at once
+    if lazy and errors:
+        raise AssertionError("\n\n".join(errors))
