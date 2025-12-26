@@ -50,12 +50,12 @@ def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None
 
 
 # Type variables for preserving return types
-T = TypeVar("T")  # Generic type var for df_log
+LogReturnT = TypeVar("LogReturnT")  # Return type for df_log
 if TYPE_CHECKING:
-    DF = TypeVar("DF", bound=PandasDataFrame | PolarsDataFrame)
+    DataFrameT = TypeVar("DataFrameT", bound=PandasDataFrame | PolarsDataFrame)
 else:
-    DF = TypeVar("DF", bound=DataFrameType)
-R = TypeVar("R")  # Return type for df_in
+    DataFrameT = TypeVar("DataFrameT", bound=DataFrameType)
+InReturnT = TypeVar("InReturnT")  # Return type for df_in
 
 
 def _validate_rows_with_context(
@@ -79,7 +79,7 @@ def df_out(
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
-) -> Callable[[Callable[..., DF]], Callable[..., DF]]:
+) -> Callable[[Callable[..., DataFrameT]], Callable[..., DataFrameT]]:
     """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
     Document the return value of a function. The return value will be validated in runtime.
@@ -104,21 +104,21 @@ def df_out(
     """
     _validate_composite_unique(composite_unique)
 
-    def wrapper_df_out(func: Callable[..., DF]) -> Callable[..., DF]:
+    def wrapper_df_out(func: Callable[..., DataFrameT]) -> Callable[..., DataFrameT]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> DF:
+        def wrapper(*args: Any, **kwargs: Any) -> DataFrameT:
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
             if columns or composite_unique:
                 validate_dataframe(
-                    result,
-                    columns or [],
-                    get_strict(strict),
-                    None,
-                    func.__name__,
-                    True,
-                    get_lazy(lazy),
-                    composite_unique,
+                    df=result,
+                    columns=columns or [],
+                    strict=get_strict(strict),
+                    param_name=None,
+                    func_name=func.__name__,
+                    is_return_value=True,
+                    lazy=get_lazy(lazy),
+                    composite_unique=composite_unique,
                 )
 
             if row_validator is not None:
@@ -138,7 +138,7 @@ def df_in(
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
-) -> Callable[[Callable[..., R]], Callable[..., R]]:
+) -> Callable[[Callable[..., InReturnT]], Callable[..., InReturnT]]:
     """Decorate a function parameter that is a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
     Document the contents of an input parameter. The parameter will be validated in runtime.
@@ -164,22 +164,22 @@ def df_in(
     """
     _validate_composite_unique(composite_unique)
 
-    def wrapper_df_in(func: Callable[..., R]) -> Callable[..., R]:
+    def wrapper_df_in(func: Callable[..., InReturnT]) -> Callable[..., InReturnT]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> R:
+        def wrapper(*args: Any, **kwargs: Any) -> InReturnT:
             df = get_parameter(func, name, *args, **kwargs)
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
             if columns or composite_unique:
                 validate_dataframe(
-                    df,
-                    columns or [],
-                    get_strict(strict),
-                    param_name,
-                    func.__name__,
-                    False,
-                    get_lazy(lazy),
-                    composite_unique,
+                    df=df,
+                    columns=columns or [],
+                    strict=get_strict(strict),
+                    param_name=param_name,
+                    func_name=func.__name__,
+                    is_return_value=False,
+                    lazy=get_lazy(lazy),
+                    composite_unique=composite_unique,
                 )
 
             if row_validator is not None:
@@ -192,7 +192,9 @@ def df_in(
     return wrapper_df_in
 
 
-def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def df_log(
+    level: int = logging.DEBUG, include_dtypes: bool = False
+) -> Callable[[Callable[..., LogReturnT]], Callable[..., LogReturnT]]:
     """Decorate a function that consumes or produces a Pandas DataFrame or both.
 
     Logs the columns of the consumed and/or produced DataFrame.
@@ -205,9 +207,9 @@ def df_log(level: int = logging.DEBUG, include_dtypes: bool = False) -> Callable
         Callable: Decorated function with preserved return type.
     """
 
-    def wrapper_df_log(func: Callable[..., T]) -> Callable[..., T]:
+    def wrapper_df_log(func: Callable[..., LogReturnT]) -> Callable[..., LogReturnT]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> T:
+        def wrapper(*args: Any, **kwargs: Any) -> LogReturnT:
             log_dataframe_input(level, func.__name__, get_parameter(func, None, *args, **kwargs), include_dtypes)
             result = func(*args, **kwargs)
             log_dataframe_output(level, func.__name__, result, include_dtypes)
