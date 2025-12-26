@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Union
 
 import narwhals as nw
 
@@ -36,9 +36,9 @@ class ColumnConstraints(TypedDict, total=False):
     checks: dict[str, Any]
 
 
-ColumnsList = Sequence[str | RegexColumnDef]
-ColumnsDict = dict[str | RegexColumnDef, Any]
-ColumnsDef = ColumnsList | ColumnsDict | None
+ColumnsList = Sequence[Union[str, RegexColumnDef]]
+ColumnsDict = dict[Union[str, RegexColumnDef], Any]
+ColumnsDef = Union[ColumnsList, ColumnsDict, None]
 
 
 def _get_columns_to_check(column_spec: str | RegexColumnDef, df_columns: list[str]) -> list[str]:
