@@ -1,10 +1,33 @@
-"""Value check implementations for column validation."""
+"""Value check implementations for column validation.
+
+All check functions return a mask where True indicates a FAILING value.
+This convention allows consistent handling: count failures and sample them.
+"""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 import narwhals as nw
+
+# Built-in check names for type safety
+CheckName = Literal[
+    "gt",
+    "ge",
+    "lt",
+    "le",
+    "between",
+    "eq",
+    "ne",
+    "isin",
+    "notin",
+    "notnull",
+    "str_regex",
+    "str_startswith",
+    "str_endswith",
+    "str_contains",
+    "str_length",
+]
 
 CheckViolation = tuple[str, str, int, list[Any]]
 
@@ -42,7 +65,8 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
                 f"Custom check '{check_name}' must return a Series-like object, got {type(result).__name__}"
             ) from None
 
-        # Invert: result is True for valid, we need True for invalid
+        # Custom checks return True for VALID values, but we need True for INVALID.
+        # Invert the result and treat nulls as failures (fill_null(True)).
         nw_mask = (~nw_result).fill_null(True)
         fail_count = int(nw_mask.sum())
         if fail_count == 0:
@@ -50,7 +74,8 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         samples = nws.filter(nw_mask).head(max_samples).to_list()
         return fail_count, samples
 
-    # All check masks return Narwhals Series (True = failing)
+    # Built-in checks: each lambda returns a mask where True = FAILING value.
+    # The ~ operator inverts comparison results (e.g., ~(x > 0) means "not greater than 0").
     check_masks = {
         "gt": lambda: ~(nws > check_value),
         "ge": lambda: ~(nws >= check_value),
