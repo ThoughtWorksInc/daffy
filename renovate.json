@@ -14,7 +14,7 @@
       "matchDepNames": [
         "ruff",
         "pyrefly",
-        "deadcode",
+        "vulture",
         "coverage",
         "pytest-cov",
         "pre-commit",
