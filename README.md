@@ -54,12 +54,12 @@ If a column is missing, has wrong dtype, or violates a constraint — **Daffy fa
 
 Most DataFrame validation tools are schema-first (define schemas separately) or pipeline-wide (run suites over datasets). **Daffy is decorator-first:** validate inputs and outputs where transformations happen.
 
-| | |
-|---|---|
-| **Non-intrusive** | Just add decorators — no refactoring, no custom DataFrame types, no schema files |
-| **Easy to adopt** | Add in 30 seconds, remove just as fast if needed |
-| **In-process** | No external stores, orchestrators, or infrastructure |
-| **Pay for what you use** | Column validation is essentially free; opt into row validation when needed |
+|                          |                                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| **Non-intrusive**        | Just add decorators — no refactoring, no custom DataFrame types, no schema files |
+| **Easy to adopt**        | Add in 30 seconds, remove just as fast if needed                                 |
+| **In-process**           | No external stores, orchestrators, or infrastructure                             |
+| **Pay for what you use** | Column validation is essentially free; opt into row validation when needed       |
 
 ---
 
@@ -138,13 +138,13 @@ def process_inventory(df):
 
 ## Daffy vs Alternatives
 
-| Use Case | Daffy | Pandera | Great Expectations |
-|----------|:-----:|:-------:|:------------------:|
-| Function boundary guardrails | ✅ Primary focus | ⚠️ Possible | ❌ Not designed for |
-| Quick column/type checks | ✅ Lightweight | ⚠️ Requires schemas | ⚠️ Requires setup |
-| Complex statistical checks | ⚠️ Limited | ✅ Extensive | ✅ Extensive |
-| Pipeline/warehouse QA | ❌ Not designed for | ⚠️ Some support | ✅ Primary focus |
-| Multi-backend support | ✅ | ⚠️ Varies | ✅ |
+| Use Case                     |        Daffy        |      Pandera       | Great Expectations  |
+| ---------------------------- | :-----------------: | :----------------: | :-----------------: |
+| Function boundary guardrails |  ✅ Primary focus   |     ⚠️ Possible     | ❌ Not designed for |
+| Quick column/type checks     |   ✅ Lightweight    | ⚠️ Requires schemas |  ⚠️ Requires setup   |
+| Complex statistical checks   |      ⚠️ Limited      |    ✅ Extensive    |    ✅ Extensive     |
+| Pipeline/warehouse QA        | ❌ Not designed for |   ⚠️ Some support   |  ✅ Primary focus   |
+| Multi-backend support        |         ✅          |      ⚠️ Varies      |         ✅          |
 
 ---
 

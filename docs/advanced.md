@@ -16,6 +16,7 @@ def process_data(df):
 ```
 
 In this example:
+
 - The DataFrame must have a column named exactly "Brand"
 - The DataFrame must have at least one column matching the pattern "Price_\d+" (e.g., "Price_1", "Price_2", etc.)
 
@@ -39,6 +40,7 @@ def process_data(df):
 ```
 
 In this example:
+
 - The DataFrame must have a column named exactly "Brand" with dtype "object"
 - Any columns matching the pattern "Price_\d+" (e.g., "Price_1", "Price_2") must have dtype "int64"
 
@@ -231,23 +233,23 @@ def process_data(df):
 
 ### Available Checks
 
-| Check | Argument | Description | Example |
-|-------|----------|-------------|---------|
-| `gt` | number | Greater than | `{"gt": 0}` |
-| `ge` | number | Greater than or equal | `{"ge": 0}` |
-| `lt` | number | Less than | `{"lt": 100}` |
-| `le` | number | Less than or equal | `{"le": 100}` |
-| `eq` | value | Equal to | `{"eq": "active"}` |
-| `ne` | value | Not equal to | `{"ne": "deleted"}` |
-| `between` | (lo, hi) | Value in range (inclusive) | `{"between": (0, 100)}` |
-| `isin` | list | Value in set | `{"isin": ["a", "b", "c"]}` |
-| `notin` | list | Value not in set | `{"notin": ["x", "y"]}` |
-| `notnull` | True | No null values | `{"notnull": True}` |
-| `str_regex` | pattern | String matches regex | `{"str_regex": r"^\d+$"}` |
-| `str_startswith` | string | String starts with prefix | `{"str_startswith": "pre_"}` |
-| `str_endswith` | string | String ends with suffix | `{"str_endswith": ".csv"}` |
-| `str_contains` | string | String contains substring | `{"str_contains": "@"}` |
-| `str_length` | (min, max) | String length in range | `{"str_length": (1, 100)}` |
+| Check            | Argument   | Description                | Example                      |
+| ---------------- | ---------- | -------------------------- | ---------------------------- |
+| `gt`             | number     | Greater than               | `{"gt": 0}`                  |
+| `ge`             | number     | Greater than or equal      | `{"ge": 0}`                  |
+| `lt`             | number     | Less than                  | `{"lt": 100}`                |
+| `le`             | number     | Less than or equal         | `{"le": 100}`                |
+| `eq`             | value      | Equal to                   | `{"eq": "active"}`           |
+| `ne`             | value      | Not equal to               | `{"ne": "deleted"}`          |
+| `between`        | (lo, hi)   | Value in range (inclusive) | `{"between": (0, 100)}`      |
+| `isin`           | list       | Value in set               | `{"isin": ["a", "b", "c"]}`  |
+| `notin`          | list       | Value not in set           | `{"notin": ["x", "y"]}`      |
+| `notnull`        | True       | No null values             | `{"notnull": True}`          |
+| `str_regex`      | pattern    | String matches regex       | `{"str_regex": r"^\d+$"}`    |
+| `str_startswith` | string     | String starts with prefix  | `{"str_startswith": "pre_"}` |
+| `str_endswith`   | string     | String ends with suffix    | `{"str_endswith": ".csv"}`   |
+| `str_contains`   | string     | String contains substring  | `{"str_contains": "@"}`      |
+| `str_length`     | (min, max) | String length in range     | `{"str_length": (1, 100)}`   |
 
 ### Multiple Checks
 
@@ -428,6 +430,7 @@ def load_products():
 Row validation includes an early termination optimization. When validation errors are found, scanning stops after collecting `max_errors` failures instead of processing the entire DataFrame.
 
 **Performance impact:**
+
 - **DataFrames with errors:** 71-124x faster (stops early)
 - **DataFrames without errors:** No overhead (must scan all rows)
 

@@ -17,12 +17,12 @@ Validates DataFrame parameters passed to a function.
 
 **Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `name` | `str \| None` | Name of the parameter to validate. If not specified, validates the first DataFrame parameter. |
-| `columns` | `list \| dict \| None` | Column specification. See [Column Specifications](#column-specifications). |
-| `strict` | `bool \| None` | If `True`, raises error for unexpected columns. Defaults to project config or `False`. |
-| `row_validator` | `type[BaseModel] \| None` | Pydantic model for row-level validation. |
+| Parameter       | Type                      | Description                                                                                   |
+| --------------- | ------------------------- | --------------------------------------------------------------------------------------------- |
+| `name`          | `str \| None`             | Name of the parameter to validate. If not specified, validates the first DataFrame parameter. |
+| `columns`       | `list \| dict \| None`    | Column specification. See [Column Specifications](#column-specifications).                    |
+| `strict`        | `bool \| None`            | If `True`, raises error for unexpected columns. Defaults to project config or `False`.        |
+| `row_validator` | `type[BaseModel] \| None` | Pydantic model for row-level validation.                                                      |
 
 **Examples:**
 
@@ -60,11 +60,11 @@ Validates the DataFrame returned by a function.
 
 **Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `columns` | `list \| dict \| None` | Column specification. See [Column Specifications](#column-specifications). |
-| `strict` | `bool \| None` | If `True`, raises error for unexpected columns. Defaults to project config or `False`. |
-| `row_validator` | `type[BaseModel] \| None` | Pydantic model for row-level validation. |
+| Parameter       | Type                      | Description                                                                            |
+| --------------- | ------------------------- | -------------------------------------------------------------------------------------- |
+| `columns`       | `list \| dict \| None`    | Column specification. See [Column Specifications](#column-specifications).             |
+| `strict`        | `bool \| None`            | If `True`, raises error for unexpected columns. Defaults to project config or `False`. |
+| `row_validator` | `type[BaseModel] \| None` | Pydantic model for row-level validation.                                               |
 
 **Examples:**
 
@@ -90,8 +90,8 @@ Logs DataFrame structure when entering and exiting a function.
 
 **Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter        | Type   | Description                                                        |
+| ---------------- | ------ | ------------------------------------------------------------------ |
 | `include_dtypes` | `bool` | If `True`, includes column dtypes in log output. Default: `False`. |
 
 **Examples:**
@@ -166,18 +166,18 @@ columns={"r/score_\\d+/": {"dtype": "float64", "checks": {"between": (0, 100)}}}
 
 Available checks for the `checks` parameter:
 
-| Check | Argument | Description |
-|-------|----------|-------------|
-| `gt` | `number` | Greater than |
-| `ge` | `number` | Greater than or equal |
-| `lt` | `number` | Less than |
-| `le` | `number` | Less than or equal |
-| `eq` | `value` | Equal to |
-| `ne` | `value` | Not equal to |
-| `between` | `(lo, hi)` | Value in range (inclusive) |
-| `isin` | `list` | Value in set |
-| `notnull` | `True` | No null values |
-| `str_regex` | `pattern` | String matches regex |
+| Check       | Argument   | Description                |
+| ----------- | ---------- | -------------------------- |
+| `gt`        | `number`   | Greater than               |
+| `ge`        | `number`   | Greater than or equal      |
+| `lt`        | `number`   | Less than                  |
+| `le`        | `number`   | Less than or equal         |
+| `eq`        | `value`    | Equal to                   |
+| `ne`        | `value`    | Not equal to               |
+| `between`   | `(lo, hi)` | Value in range (inclusive) |
+| `isin`      | `list`     | Value in set               |
+| `notnull`   | `True`     | No null values             |
+| `str_regex` | `pattern`  | String matches regex       |
 
 **Examples:**
 

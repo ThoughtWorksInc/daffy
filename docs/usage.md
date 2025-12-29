@@ -29,6 +29,7 @@ def process_cars(year, style, car_df):
 ```
 
 You can also check columns of multiple arguments if you specify the names:
+
 ```python
 @df_in(name="car_df", columns=["Brand", "Price"])
 @df_in(name="brand_df", columns=["Brand", "BrandName"])
@@ -68,6 +69,7 @@ def filter_cars(car_df):
 ```
 
 Note that error messages will clearly distinguish between input and output validation failures:
+
 - Input validation: `"Missing columns: ['Price'] in function 'filter_cars' parameter 'car_df'. Got columns: ['Brand']"`
 - Output validation: `"Missing columns: ['Price'] in function 'filter_cars' return value. Got columns: ['Brand']"`
 

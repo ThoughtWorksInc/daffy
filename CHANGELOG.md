@@ -160,6 +160,7 @@ Daffy 1.0.0 marks the first stable release. The public API (`df_in`, `df_out`, `
 ### API Stability
 
 As of 1.0.0, Daffy follows semantic versioning:
+
 - Major versions (2.0, 3.0) may contain breaking changes
 - Minor versions (1.1, 1.2) add features without breaking changes
 - Patch versions (1.0.1, 1.0.2) contain bug fixes only
@@ -244,7 +245,7 @@ As of 1.0.0, Daffy follows semantic versioning:
 ## 0.16.0
 
 - Removed Pandas and Polars from required dependencies. Daffy will not pull in Polars if your project just uses Pandas
-and vice versa. All combinations are dynamically supported and require no changes from existing users.
+  and vice versa. All combinations are dynamically supported and require no changes from existing users.
 
 ### Testing & CI
 
