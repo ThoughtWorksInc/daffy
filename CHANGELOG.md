@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.0
+
+### Breaking Changes
+
+- **Dropped Python 3.9 support** - Python 3.10 is now the minimum required version (Python 3.9 reached end-of-life in October 2025)
+
+### Internal Improvements
+
+- Modernized type annotations using Python 3.10 syntax (`X | Y` instead of `Union[X, Y]`, explicit `TypeAlias`)
+- Updated ruff target version to Python 3.10
+
 ## 2.2.0
 
 ### New Features

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, TypeAlias, Union
 
 import narwhals as nw
 
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from pandas import DataFrame as PandasDataFrame
     from polars import DataFrame as PolarsDataFrame
 
-    DataFrameType = Union[PandasDataFrame, PolarsDataFrame]
+    DataFrameType: TypeAlias = PandasDataFrame | PolarsDataFrame
 else:
     # For runtime, build type tuple from available libraries
     _available_types = []

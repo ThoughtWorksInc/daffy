@@ -18,7 +18,7 @@ For testing with isolated optional dependencies, see `TESTING_OPTIONAL_DEPS.md`.
 
 ## Key Constraints
 
-- Python 3.9+ compatibility
+- Python 3.10+ compatibility
 - DataFrame libraries are optional - only narwhals is required
 - 100% test coverage
 - Avoid obvious comments - use good names instead
