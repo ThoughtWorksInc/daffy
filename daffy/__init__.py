@@ -6,7 +6,8 @@ annotate your functions so that they document themselves and that documentation 
 the input and output on runtime.
 """
 
+from .checks import CheckName
 from .decorators import df_in, df_log, df_out
 from .validation import ColumnConstraints
 
-__all__ = ["df_in", "df_out", "df_log", "ColumnConstraints"]
+__all__ = ["df_in", "df_out", "df_log", "ColumnConstraints", "CheckName"]

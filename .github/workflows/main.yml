@@ -58,12 +58,12 @@ jobs:
         run: |
           uv sync --group test --group dev
 
-      - name: Lint with Ruff, Pyrefly, and Deadcode
+      - name: Lint with Ruff, Pyrefly, and Vulture
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --diff
           uv run pyrefly check .
-          uv run deadcode daffy/
+          uv run vulture
 
   # Coverage on latest Python only
   coverage:

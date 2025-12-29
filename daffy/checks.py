@@ -10,7 +10,6 @@ from typing import Any, Literal
 
 import narwhals as nw
 
-# Built-in check names for type safety
 CheckName = Literal[
     "gt",
     "ge",
