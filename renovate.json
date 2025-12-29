@@ -2,6 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:best-practices", ":ignorePresets[helpers:pinGitHubActionDigests]"],
   "mode": "full",
+  "prHourlyLimit": 10,
   "constraints": {
     "python": ">=3.9"
   },
