@@ -1,4 +1,2 @@
 [tools]
-node = "latest"
-poetry = "latest"
-uv = "latest"
+uv = "0.9.17"
