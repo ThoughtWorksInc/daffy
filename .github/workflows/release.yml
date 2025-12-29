@@ -14,12 +14,12 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Install uv
         run: pip install uv
@@ -31,7 +31,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
         with:
           files: dist/*
           generate_release_notes: true
