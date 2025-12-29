@@ -19,23 +19,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+      - uses: jdx/mise-action@v3
 
-      - name: Install uv
-        run: |
-          pip install uv
-
-      - name: Install test dependencies
-        run: |
-          uv sync --group test
+      - name: Set up Python ${{ matrix.python-version }} and dependencies
+        run: uv sync --python ${{ matrix.python-version }} --group test
 
       - name: Test with pytest
-        run: |
-          uv run pytest tests/
+        run: uv run pytest tests/
 
   # Lint and type-check on latest Python only
   lint:
@@ -44,19 +34,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-          cache: 'pip'
+      - uses: jdx/mise-action@v3
 
-      - name: Install uv
-        run: |
-          pip install uv
-
-      - name: Install dev dependencies
-        run: |
-          uv sync --group test --group dev
+      - name: Set up Python and dependencies
+        run: uv sync --group test --group dev
 
       - name: Lint with Ruff, Pyrefly, and Vulture
         run: |
@@ -72,23 +53,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python 3.13
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-          cache: 'pip'
+      - uses: jdx/mise-action@v3
 
-      - name: Install uv
-        run: |
-          pip install uv
-
-      - name: Install dev dependencies
-        run: |
-          uv sync --group test --group dev
+      - name: Set up Python and dependencies
+        run: uv sync --group test --group dev
 
       - name: Test with coverage
-        run: |
-          uv run pytest --cov --cov-report=xml tests/
+        run: uv run pytest --cov --cov-report=xml tests/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -107,20 +78,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+      - uses: jdx/mise-action@v3
 
-      - name: Install uv
-        run: |
-          pip install uv
+      - name: Set up Python ${{ matrix.python-version }} and dependencies
+        run: uv sync --python ${{ matrix.python-version }} --group test
 
-      - name: Run optional dependencies tests with both libraries
-        run: |
-          uv sync --group test
-          uv run pytest tests/test_optional_dependencies.py -v
+      - name: Run optional dependencies tests
+        run: uv run pytest tests/test_optional_dependencies.py -v
 
   # Test true isolation scenarios (manual script testing)
   test-isolation-scenarios:
@@ -133,47 +97,40 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+      - uses: jdx/mise-action@v3
 
-      - name: Install uv
-        run: |
-          pip install uv
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
       - name: Build daffy wheel
-        run: |
-          uv build --wheel
+        run: uv build --wheel
 
       - name: Test pandas-only scenario
         if: matrix.scenario == 'pandas-only'
         run: |
           WHEEL=$(ls dist/daffy-*.whl | head -n1)
-          uv run --no-project --with "pandas>=1.5.1" --with "$WHEEL" python scripts/test_isolated_deps.py pandas
+          uv run --python ${{ matrix.python-version }} --no-project --with "pandas>=1.5.1" --with "$WHEEL" python scripts/test_isolated_deps.py pandas
 
       - name: Test polars-only scenario
         if: matrix.scenario == 'polars-only'
         run: |
           WHEEL=$(ls dist/daffy-*.whl | head -n1)
-          uv run --no-project --with "polars>=1.7.0" --with "$WHEEL" python scripts/test_isolated_deps.py polars
+          uv run --python ${{ matrix.python-version }} --no-project --with "polars>=1.7.0" --with "$WHEEL" python scripts/test_isolated_deps.py polars
 
       - name: Test both libraries scenario
         if: matrix.scenario == 'both'
         run: |
           WHEEL=$(ls dist/daffy-*.whl | head -n1)
-          uv run --no-project --with "pandas>=1.5.1" --with "polars>=1.7.0" --with "$WHEEL" python scripts/test_isolated_deps.py both
+          uv run --python ${{ matrix.python-version }} --no-project --with "pandas>=1.5.1" --with "polars>=1.7.0" --with "$WHEEL" python scripts/test_isolated_deps.py both
 
       - name: Test pandas without pydantic scenario
         if: matrix.scenario == 'pandas-no-pydantic'
         run: |
           WHEEL=$(ls dist/daffy-*.whl | head -n1)
-          uv run --no-project --with "pandas>=1.5.1" --with "$WHEEL" python scripts/test_isolated_deps.py pandas-no-pydantic
+          uv run --python ${{ matrix.python-version }} --no-project --with "pandas>=1.5.1" --with "$WHEEL" python scripts/test_isolated_deps.py pandas-no-pydantic
 
       - name: Test no libraries scenario (expected to fail gracefully)
         if: matrix.scenario == 'none'
         run: |
           WHEEL=$(ls dist/daffy-*.whl | head -n1)
-          uv run --no-project --with "$WHEEL" python scripts/test_isolated_deps.py none
-
+          uv run --python ${{ matrix.python-version }} --no-project --with "$WHEEL" python scripts/test_isolated_deps.py none
