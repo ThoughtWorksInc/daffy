@@ -13,3 +13,8 @@ repos:
         language: system
         types: [python]
         require_serial: true
+      - id: dprint
+        name: dprint
+        entry: dprint fmt
+        language: system
+        types: [markdown]

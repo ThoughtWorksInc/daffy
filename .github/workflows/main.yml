@@ -39,12 +39,13 @@ jobs:
       - name: Set up Python and dependencies
         run: uv sync --group test --group dev
 
-      - name: Lint with Ruff, Pyrefly, and Vulture
+      - name: Lint and type check
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --diff
           uv run pyrefly check .
           uv run vulture
+          dprint check
 
   # Coverage on latest Python only
   coverage:

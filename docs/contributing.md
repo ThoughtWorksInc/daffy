@@ -71,14 +71,14 @@ uv run pytest -k "test_missing_columns"
 
 ### Test Files
 
-| File | Description |
-|------|-------------|
-| `test_df_in.py` | Tests for `@df_in` decorator |
-| `test_df_out.py` | Tests for `@df_out` decorator |
-| `test_df_log.py` | Tests for `@df_log` decorator |
-| `test_decorators.py` | Tests for decorator combinations |
-| `test_config.py` | Tests for configuration |
-| `test_row_validation.py` | Tests for Pydantic row validation |
+| File                         | Description                       |
+| ---------------------------- | --------------------------------- |
+| `test_df_in.py`              | Tests for `@df_in` decorator      |
+| `test_df_out.py`             | Tests for `@df_out` decorator     |
+| `test_df_log.py`             | Tests for `@df_log` decorator     |
+| `test_decorators.py`         | Tests for decorator combinations  |
+| `test_config.py`             | Tests for configuration           |
+| `test_row_validation.py`     | Tests for Pydantic row validation |
 | `test_type_compatibility.py` | Tests for type hint compatibility |
 
 ### Coverage Requirements

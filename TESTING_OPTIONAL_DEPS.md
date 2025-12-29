@@ -23,6 +23,7 @@ The GitHub Actions workflow includes three separate jobs:
 ### Simple Pytest Tests
 
 The file `tests/test_optional_dependencies.py` contains tests that:
+
 - Verify library detection flags work correctly
 - Test that error messages reflect available libraries
 - Ensure decorators work with whatever is installed
@@ -61,21 +62,25 @@ uv run --no-project --with "$WHEEL" python scripts/test_isolated_deps.py none
 ### Expected Behaviors
 
 #### Pandas Only
+
 - `HAS_PANDAS = True`, `HAS_POLARS = False`
 - Only pandas DataFrames are accepted
 - Error messages mention "Pandas DataFrame"
 
 #### Polars Only
+
 - `HAS_PANDAS = False`, `HAS_POLARS = True`
 - Only polars DataFrames are accepted
 - Error messages mention "Polars DataFrame"
 
 #### Both Libraries
+
 - `HAS_PANDAS = True`, `HAS_POLARS = True`
 - Both DataFrame types work
 - Error messages mention available DataFrame types
 
 #### No Libraries
+
 - Import should fail with: `ImportError: No DataFrame library found. Install a supported library: pip install pandas`
 
 ## Implementation Details

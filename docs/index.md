@@ -10,19 +10,19 @@ Also supports Modin and PyArrow DataFrames.
 
 - :material-lightning-bolt: **Lightweight**
 
-    Column & dtype validation with minimal overhead
+  Column & dtype validation with minimal overhead
 
 - :material-check-all: **Value Constraints**
 
-    Nullability, uniqueness, range checks
+  Nullability, uniqueness, range checks
 
 - :material-shield-check: **Row Validation**
 
-    Deep validation with Pydantic models
+  Deep validation with Pydantic models
 
 - :material-swap-horizontal: **Multi-Backend**
 
-    Works with pandas, Polars, Modin, PyArrow
+  Works with pandas, Polars, Modin, PyArrow
 
 </div>
 
@@ -85,18 +85,18 @@ Most DataFrame validation tools are schema-first (define schemas separately) or 
 
 - :material-rocket-launch: **[Getting Started](getting-started.md)**
 
-    Quick introduction to Daffy's core features
+  Quick introduction to Daffy's core features
 
 - :material-book-open-variant: **[Usage Guide](usage.md)**
 
-    Core validation features for everyday use
+  Core validation features for everyday use
 
 - :material-chef-hat: **[Recipes & Patterns](recipes.md)**
 
-    Real-world examples and best practices
+  Real-world examples and best practices
 
 - :material-api: **[API Reference](api.md)**
 
-    Decorator signatures and parameters
+  Decorator signatures and parameters
 
 </div>
