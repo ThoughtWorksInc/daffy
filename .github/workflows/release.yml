@@ -16,13 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: jdx/mise-action@v3
         with:
-          python-version: "3.13"
-
-      - name: Install uv
-        run: pip install uv
+          install_args: uv
 
       - name: Build package
         run: uv build
