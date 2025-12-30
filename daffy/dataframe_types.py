@@ -10,21 +10,19 @@ from narwhals.typing import IntoDataFrame, IntoDataFrameT
 # Re-export narwhals types for use throughout daffy
 __all__ = ["IntoDataFrame", "IntoDataFrameT", "get_available_library_names"]
 
-# Lazy imports - only import what's available (for error messages)
+# Check which DataFrame libraries are available (for error messages and early failure)
 try:
-    from pandas import DataFrame as PandasDataFrame
+    import pandas  # noqa: F401
 
     HAS_PANDAS = True
 except ImportError:  # pragma: no cover
-    PandasDataFrame = None  # type: ignore
     HAS_PANDAS = False
 
 try:
-    from polars import DataFrame as PolarsDataFrame
+    import polars  # noqa: F401
 
     HAS_POLARS = True
 except ImportError:  # pragma: no cover
-    PolarsDataFrame = None  # type: ignore
     HAS_POLARS = False
 
 # Fail early if no DataFrame library is available
