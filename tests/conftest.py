@@ -1,11 +1,13 @@
-from typing import Any, Callable, TypeAlias
+from typing import Any, Callable
 
 import pandas as pd
 import polars as pl
 import pyarrow as pa
 import pytest
 
-DataFrameType: TypeAlias = pd.DataFrame | pl.DataFrame
+from daffy.dataframe_types import IntoDataFrame
+
+__all__ = ["IntoDataFrame", "cars", "extended_cars"]
 
 
 def make_pandas_df(data: dict[str, Any]) -> pd.DataFrame:

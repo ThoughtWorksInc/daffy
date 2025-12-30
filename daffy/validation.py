@@ -9,7 +9,7 @@ import narwhals as nw
 
 from daffy.checks import CheckViolation, validate_checks
 from daffy.config import get_checks_max_samples, get_lazy
-from daffy.dataframe_types import DataFrameType, count_duplicate_rows, count_duplicate_values, count_null_values
+from daffy.dataframe_types import IntoDataFrame, count_duplicate_rows, count_duplicate_values, count_null_values
 from daffy.patterns import (
     RegexColumnDef,
     compile_regex_pattern,
@@ -62,7 +62,7 @@ def _find_missing_columns(column_spec: str | RegexColumnDef, df_columns: list[st
 
 
 def _find_dtype_mismatches(
-    column_spec: str | RegexColumnDef, df: DataFrameType, expected_dtype: Any, df_columns: list[str]
+    column_spec: str | RegexColumnDef, df: IntoDataFrame, expected_dtype: Any, df_columns: list[str]
 ) -> list[tuple[str, Any, Any]]:
     """Find dtype mismatches for a single column specification."""
     mismatches: list[tuple[str, Any, Any]] = []
@@ -100,7 +100,7 @@ def _format_violation_error(
 
 def _find_column_violations(
     column_spec: str | RegexColumnDef,
-    df: DataFrameType,
+    df: IntoDataFrame,
     df_columns: list[str],
     count_fn: Callable[[Any, str], int],
 ) -> list[tuple[str, int]]:
@@ -131,7 +131,7 @@ def _raise_or_collect(msg: str, lazy: bool, errors: list[str]) -> None:
 
 
 def validate_dataframe(
-    df: DataFrameType,
+    df: IntoDataFrame,
     columns: ColumnsList | ColumnsDict,
     strict: bool,
     param_name: str | None = None,

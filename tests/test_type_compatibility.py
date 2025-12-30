@@ -21,7 +21,7 @@ def test_simple_list_columns() -> None:
     assert isinstance(result, pd.DataFrame)
 
 
-# This would test the Union type DataFrameType compatibility
+# This tests DataFrame type compatibility
 @df_out(columns=["Brand", "Price"])
 def return_dataframe() -> pd.DataFrame:
     return pd.DataFrame({"Brand": ["Toyota"], "Price": [25000]})

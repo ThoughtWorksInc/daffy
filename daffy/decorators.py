@@ -8,17 +8,10 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
-    # For static type checking, assume both are available
-    from pandas import DataFrame as PandasDataFrame
-    from polars import DataFrame as PolarsDataFrame
     from pydantic import BaseModel
-else:
-    # For runtime, these will be imported from utils if available
-    PandasDataFrame = None
-    PolarsDataFrame = None
 
 from daffy.config import get_lazy, get_row_validation_max_errors, get_strict
-from daffy.dataframe_types import DataFrameType
+from daffy.dataframe_types import IntoDataFrameT
 from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
     assert_is_dataframe,
@@ -51,10 +44,6 @@ def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None
 
 # Type variables for preserving return types
 LogReturnT = TypeVar("LogReturnT")  # Return type for df_log
-if TYPE_CHECKING:
-    DataFrameT = TypeVar("DataFrameT", bound=PandasDataFrame | PolarsDataFrame)
-else:
-    DataFrameT = TypeVar("DataFrameT", bound=DataFrameType)
 InReturnT = TypeVar("InReturnT")  # Return type for df_in
 
 
@@ -79,7 +68,7 @@ def df_out(
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
-) -> Callable[[Callable[..., DataFrameT]], Callable[..., DataFrameT]]:
+) -> Callable[[Callable[..., IntoDataFrameT]], Callable[..., IntoDataFrameT]]:
     """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
     Document the return value of a function. The return value will be validated in runtime.
@@ -104,9 +93,9 @@ def df_out(
     """
     _validate_composite_unique(composite_unique)
 
-    def wrapper_df_out(func: Callable[..., DataFrameT]) -> Callable[..., DataFrameT]:
+    def wrapper_df_out(func: Callable[..., IntoDataFrameT]) -> Callable[..., IntoDataFrameT]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> DataFrameT:
+        def wrapper(*args: Any, **kwargs: Any) -> IntoDataFrameT:
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
             if columns or composite_unique:

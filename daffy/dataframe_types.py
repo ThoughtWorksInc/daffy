@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeAlias, Union
+from typing import Any
 
 import narwhals as nw
+from narwhals.typing import IntoDataFrame, IntoDataFrameT
 
-# Lazy imports - only import what's available
+# Re-export narwhals types for use throughout daffy
+__all__ = ["IntoDataFrame", "IntoDataFrameT", "get_available_library_names"]
+
+# Lazy imports - only import what's available (for error messages)
 try:
     from pandas import DataFrame as PandasDataFrame
 
@@ -22,26 +26,6 @@ try:
 except ImportError:  # pragma: no cover
     PolarsDataFrame = None  # type: ignore
     HAS_POLARS = False
-
-# Build DataFrame type dynamically based on what's available
-if TYPE_CHECKING:
-    # For static type checking, assume both are available
-    from pandas import DataFrame as PandasDataFrame
-    from polars import DataFrame as PolarsDataFrame
-
-    DataFrameType: TypeAlias = PandasDataFrame | PolarsDataFrame
-else:
-    # For runtime, build type tuple from available libraries
-    _available_types = []
-    if HAS_PANDAS:
-        _available_types.append(PandasDataFrame)
-    if HAS_POLARS:
-        _available_types.append(PolarsDataFrame)
-
-    if not _available_types:
-        raise ImportError("No DataFrame library found. Install a supported library: pip install pandas")
-
-    DataFrameType = Union[tuple(_available_types)]
 
 
 def get_available_library_names() -> list[str]:
