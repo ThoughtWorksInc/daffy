@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.3.1
+
+### Bug Fixes
+
+- Fixed incomplete `DataFrameType` union that only included Pandas and Polars, missing PyArrow and Modin. Now uses narwhals' `IntoDataFrame` Protocol which correctly accepts all supported DataFrame types.
+
 ## 2.3.0
 
 ### Breaking Changes

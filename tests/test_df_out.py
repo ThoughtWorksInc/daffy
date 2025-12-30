@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 
 from daffy import df_out
-from tests.conftest import DataFrameType, cars
+from tests.conftest import IntoDataFrame, cars
 
 
 def test_wrong_return_type() -> None:
@@ -20,45 +20,45 @@ def test_wrong_return_type() -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_return_type_and_no_column_constraints(df: DataFrameType) -> None:
+def test_correct_return_type_and_no_column_constraints(df: IntoDataFrame) -> None:
     @df_out()
-    def test_fn() -> DataFrameType:
+    def test_fn() -> IntoDataFrame:
         return df
 
     test_fn()
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_return_type_and_columns(df: DataFrameType) -> None:
+def test_correct_return_type_and_columns(df: IntoDataFrame) -> None:
     @df_out(columns=["Brand", "Price"])
-    def test_fn() -> DataFrameType:
+    def test_fn() -> IntoDataFrame:
         return df
 
     test_fn()
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_allow_extra_columns_out(df: DataFrameType) -> None:
+def test_allow_extra_columns_out(df: IntoDataFrame) -> None:
     @df_out(columns=["Brand"])
-    def test_fn() -> DataFrameType:
+    def test_fn() -> IntoDataFrame:
         return df
 
     test_fn()
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_return_type_and_columns_strict(df: DataFrameType) -> None:
+def test_correct_return_type_and_columns_strict(df: IntoDataFrame) -> None:
     @df_out(columns=["Brand", "Price"], strict=True)
-    def test_fn() -> DataFrameType:
+    def test_fn() -> IntoDataFrame:
         return df
 
     test_fn()
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_extra_column_in_return_strict(df: DataFrameType) -> None:
+def test_extra_column_in_return_strict(df: IntoDataFrame) -> None:
     @df_out(columns=["Brand"], strict=True)
-    def test_fn() -> DataFrameType:
+    def test_fn() -> IntoDataFrame:
         return df
 
     with pytest.raises(AssertionError) as excinfo:
@@ -68,9 +68,9 @@ def test_extra_column_in_return_strict(df: DataFrameType) -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_missing_column_in_return(df: DataFrameType) -> None:
+def test_missing_column_in_return(df: IntoDataFrame) -> None:
     @df_out(columns=["Brand", "FooColumn"])
-    def test_fn() -> DataFrameType:
+    def test_fn() -> IntoDataFrame:
         return df
 
     with pytest.raises(AssertionError) as excinfo:

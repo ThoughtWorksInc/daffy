@@ -9,7 +9,7 @@ from typing import Any
 
 import narwhals as nw
 
-from daffy.dataframe_types import DataFrameType, get_available_library_names
+from daffy.dataframe_types import get_available_library_names
 from daffy.narwhals_compat import is_supported_dataframe
 
 
@@ -102,7 +102,7 @@ def get_parameter_name(func: Callable[..., Any], name: str | None = None, *args:
     return next(iter(kwargs.keys()), None)
 
 
-def describe_dataframe(df: DataFrameType, include_dtypes: bool = False) -> str:
+def describe_dataframe(df: Any, include_dtypes: bool = False) -> str:
     nw_df = nw.from_native(df, eager_only=True)
     result = f"columns: {nw_df.columns}"
     if include_dtypes:

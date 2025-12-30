@@ -7,7 +7,7 @@ import pytest
 from daffy import df_in
 from daffy.utils import get_parameter_name
 from daffy.validation import validate_dataframe
-from tests.conftest import DataFrameType, cars, extended_cars
+from tests.conftest import IntoDataFrame, cars, extended_cars
 
 
 def test_wrong_input_type_unnamed() -> None:
@@ -34,7 +34,7 @@ def test_wrong_input_type_named() -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_input_with_columns(df: DataFrameType) -> None:
+def test_correct_input_with_columns(df: IntoDataFrame) -> None:
     @df_in(columns=["Brand", "Price"])
     def test_fn(my_input: Any) -> Any:
         return my_input
@@ -43,7 +43,7 @@ def test_correct_input_with_columns(df: DataFrameType) -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_input_with_no_column_constraints(df: DataFrameType) -> None:
+def test_correct_input_with_no_column_constraints(df: IntoDataFrame) -> None:
     @df_in()
     def test_fn(my_input: Any) -> Any:
         return my_input
@@ -64,45 +64,45 @@ def test_dfin_with_no_inputs() -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_named_input_with_columns(df: DataFrameType) -> None:
+def test_correct_named_input_with_columns(df: IntoDataFrame) -> None:
     @df_in(name="_df", columns=["Brand", "Price"])
-    def test_fn(my_input: Any, _df: DataFrameType) -> DataFrameType:
+    def test_fn(my_input: Any, _df: IntoDataFrame) -> IntoDataFrame:
         return _df
 
     test_fn("foo", _df=df)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_named_input_with_columns_strict(df: DataFrameType) -> None:
+def test_correct_named_input_with_columns_strict(df: IntoDataFrame) -> None:
     @df_in(name="_df", columns=["Brand", "Price"], strict=True)
-    def test_fn(my_input: Any, _df: DataFrameType) -> DataFrameType:
+    def test_fn(my_input: Any, _df: IntoDataFrame) -> IntoDataFrame:
         return _df
 
     test_fn("foo", _df=df)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_correct_named_input_with_columns_strict_no_name(df: DataFrameType) -> None:
+def test_correct_named_input_with_columns_strict_no_name(df: IntoDataFrame) -> None:
     @df_in(columns=["Brand", "Price"], strict=True)
-    def test_fn(_df: DataFrameType) -> DataFrameType:
+    def test_fn(_df: IntoDataFrame) -> IntoDataFrame:
         return _df
 
     test_fn(_df=df)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_in_allow_extra_columns(df: DataFrameType) -> None:
+def test_in_allow_extra_columns(df: IntoDataFrame) -> None:
     @df_in(name="_df", columns=["Brand"])
-    def test_fn(my_input: Any, _df: DataFrameType) -> DataFrameType:
+    def test_fn(my_input: Any, _df: IntoDataFrame) -> IntoDataFrame:
         return _df
 
     test_fn("foo", _df=df)
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_in_strict_extra_columns(df: DataFrameType) -> None:
+def test_in_strict_extra_columns(df: IntoDataFrame) -> None:
     @df_in(name="_df", columns=["Brand"], strict=True)
-    def test_fn(my_input: Any, _df: DataFrameType) -> DataFrameType:
+    def test_fn(my_input: Any, _df: IntoDataFrame) -> IntoDataFrame:
         return _df
 
     with pytest.raises(AssertionError) as excinfo:
@@ -156,7 +156,7 @@ def test_dtype_mismatch_polars(basic_polars_df: pl.DataFrame) -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_df_in_missing_column(df: DataFrameType) -> None:
+def test_df_in_missing_column(df: Any) -> None:
     @df_in(columns=["Brand", "Price"])
     def test_fn(my_input: Any) -> Any:
         return my_input
@@ -169,7 +169,7 @@ def test_df_in_missing_column(df: DataFrameType) -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_df_in_missing_multiple_columns(df: DataFrameType) -> None:
+def test_df_in_missing_multiple_columns(df: Any) -> None:
     @df_in(columns=["Brand", "Price", "Extra"])
     def test_fn(my_input: Any) -> Any:
         return my_input
@@ -186,10 +186,10 @@ def test_df_in_missing_multiple_columns(df: DataFrameType) -> None:
     ("basic_df,extended_df"),
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
-def test_multiple_named_inputs_with_names_in_function_call(basic_df: DataFrameType, extended_df: DataFrameType) -> None:
+def test_multiple_named_inputs_with_names_in_function_call(basic_df: IntoDataFrame, extended_df: IntoDataFrame) -> None:
     @df_in(name="cars", columns=["Brand", "Price"], strict=True)
     @df_in(name="ext_cars", columns=["Brand", "Price", "Year"], strict=True)
-    def test_fn(cars: DataFrameType, ext_cars: DataFrameType) -> int:
+    def test_fn(cars: IntoDataFrame, ext_cars: IntoDataFrame) -> int:
         return len(cars) + len(ext_cars)
 
     test_fn(cars=basic_df, ext_cars=extended_df)
@@ -200,7 +200,7 @@ def test_multiple_named_inputs_with_names_in_function_call(basic_df: DataFrameTy
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
 def test_multiple_named_inputs_without_names_in_function_call(
-    basic_df: DataFrameType, extended_df: DataFrameType
+    basic_df: IntoDataFrame, extended_df: IntoDataFrame
 ) -> None:
     @df_in(name="cars", columns=["Brand", "Price"], strict=True)
     @df_in(name="ext_cars", columns=["Brand", "Price", "Year"], strict=True)
@@ -215,11 +215,11 @@ def test_multiple_named_inputs_without_names_in_function_call(
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
 def test_multiple_named_inputs_with_some_of_names_in_function_call(
-    basic_df: DataFrameType, extended_df: DataFrameType
+    basic_df: IntoDataFrame, extended_df: IntoDataFrame
 ) -> None:
     @df_in(name="cars", columns=["Brand", "Price"], strict=True)
     @df_in(name="ext_cars", columns=["Brand", "Price", "Year"], strict=True)
-    def test_fn(cars: DataFrameType, ext_cars: DataFrameType) -> int:
+    def test_fn(cars: IntoDataFrame, ext_cars: IntoDataFrame) -> int:
         return len(cars) + len(ext_cars)
 
     test_fn(basic_df, ext_cars=extended_df)
@@ -329,12 +329,12 @@ def test_regex_column_with_dtype_polars(basic_polars_df: pl.DataFrame) -> None:
     ("basic_df,extended_df"),
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
-def test_multiple_parameters_error_identification(basic_df: DataFrameType, extended_df: DataFrameType) -> None:
+def test_multiple_parameters_error_identification(basic_df: IntoDataFrame, extended_df: IntoDataFrame) -> None:
     """Test that we can identify which parameter has the issue when multiple dataframes are used."""
 
     @df_in(name="cars", columns=["Brand", "Price"], strict=True)
     @df_in(name="ext_cars", columns=["Brand", "Price", "Year", "NonExistent"], strict=True)
-    def test_fn(cars: DataFrameType, ext_cars: DataFrameType) -> int:
+    def test_fn(cars: IntoDataFrame, ext_cars: IntoDataFrame) -> int:
         return len(cars) + len(ext_cars)
 
     # Test missing column in second parameter

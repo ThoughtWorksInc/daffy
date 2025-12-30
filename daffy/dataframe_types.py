@@ -2,46 +2,32 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeAlias, Union
+from typing import Any
 
 import narwhals as nw
+from narwhals.typing import IntoDataFrame, IntoDataFrameT
 
-# Lazy imports - only import what's available
+# Re-export narwhals types for use throughout daffy
+__all__ = ["IntoDataFrame", "IntoDataFrameT", "get_available_library_names"]
+
+# Check which DataFrame libraries are available (for error messages and early failure)
 try:
-    from pandas import DataFrame as PandasDataFrame
+    import pandas  # noqa: F401
 
     HAS_PANDAS = True
 except ImportError:  # pragma: no cover
-    PandasDataFrame = None  # type: ignore
     HAS_PANDAS = False
 
 try:
-    from polars import DataFrame as PolarsDataFrame
+    import polars  # noqa: F401
 
     HAS_POLARS = True
 except ImportError:  # pragma: no cover
-    PolarsDataFrame = None  # type: ignore
     HAS_POLARS = False
 
-# Build DataFrame type dynamically based on what's available
-if TYPE_CHECKING:
-    # For static type checking, assume both are available
-    from pandas import DataFrame as PandasDataFrame
-    from polars import DataFrame as PolarsDataFrame
-
-    DataFrameType: TypeAlias = PandasDataFrame | PolarsDataFrame
-else:
-    # For runtime, build type tuple from available libraries
-    _available_types = []
-    if HAS_PANDAS:
-        _available_types.append(PandasDataFrame)
-    if HAS_POLARS:
-        _available_types.append(PolarsDataFrame)
-
-    if not _available_types:
-        raise ImportError("No DataFrame library found. Install a supported library: pip install pandas")
-
-    DataFrameType = Union[tuple(_available_types)]
+# Fail early if no DataFrame library is available
+if not HAS_PANDAS and not HAS_POLARS:  # pragma: no cover
+    raise ImportError("No DataFrame library found. Install a supported library: pip install pandas")
 
 
 def get_available_library_names() -> list[str]:
