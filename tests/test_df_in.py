@@ -156,7 +156,7 @@ def test_dtype_mismatch_polars(basic_polars_df: pl.DataFrame) -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_df_in_missing_column(df: IntoDataFrame) -> None:
+def test_df_in_missing_column(df: Any) -> None:
     @df_in(columns=["Brand", "Price"])
     def test_fn(my_input: Any) -> Any:
         return my_input
@@ -169,7 +169,7 @@ def test_df_in_missing_column(df: IntoDataFrame) -> None:
 
 
 @pytest.mark.parametrize(("df"), [pd.DataFrame(cars), pl.DataFrame(cars)])
-def test_df_in_missing_multiple_columns(df: IntoDataFrame) -> None:
+def test_df_in_missing_multiple_columns(df: Any) -> None:
     @df_in(columns=["Brand", "Price", "Extra"])
     def test_fn(my_input: Any) -> Any:
         return my_input

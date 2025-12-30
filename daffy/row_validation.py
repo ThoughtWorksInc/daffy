@@ -18,8 +18,6 @@ _PYDANTIC_ROOT_FIELD = "__root__"
 if TYPE_CHECKING:
     from pydantic import BaseModel, ValidationError  # noqa: F401
 
-    from daffy.dataframe_types import IntoDataFrame
-
 if HAS_PYDANTIC:
     from pydantic import ValidationError as PydanticValidationError
 else:
@@ -27,7 +25,7 @@ else:
 
 
 def validate_dataframe_rows(
-    df: IntoDataFrame,
+    df: Any,
     row_validator: type[BaseModel],
     max_errors: int = 5,
     early_termination: bool = True,
@@ -58,7 +56,7 @@ def validate_dataframe_rows(
 
 
 def _validate_optimized(
-    df: IntoDataFrame,
+    df: Any,
     row_validator: type[BaseModel],
     max_errors: int,
     early_termination: bool,
@@ -83,7 +81,7 @@ def _validate_optimized(
 
 
 def _raise_validation_error(
-    df: IntoDataFrame,
+    df: Any,
     errors: list[tuple[Any, Any]],
     total_errors: int,
     stopped_early: bool,

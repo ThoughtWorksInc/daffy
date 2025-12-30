@@ -27,6 +27,10 @@ except ImportError:  # pragma: no cover
     PolarsDataFrame = None  # type: ignore
     HAS_POLARS = False
 
+# Fail early if no DataFrame library is available
+if not HAS_PANDAS and not HAS_POLARS:  # pragma: no cover
+    raise ImportError("No DataFrame library found. Install a supported library: pip install pandas")
+
 
 def get_available_library_names() -> list[str]:
     """
