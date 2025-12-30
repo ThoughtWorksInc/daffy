@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   # Test on all Python versions with minimal dependencies
   test:
@@ -17,9 +20,11 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          persist-credentials: false
 
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
       - name: Set up Python ${{ matrix.python-version }} and dependencies
         run: uv sync --python ${{ matrix.python-version }} --group test
@@ -32,9 +37,11 @@ jobs:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          persist-credentials: false
 
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
       - name: Set up Python and dependencies
         run: uv sync --group test --group dev
@@ -52,9 +59,11 @@ jobs:
     name: Code Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          persist-credentials: false
 
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
       - name: Set up Python and dependencies
         run: uv sync --group test --group dev
@@ -63,7 +72,7 @@ jobs:
         run: uv run pytest --cov --cov-report=xml tests/
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
@@ -77,9 +86,11 @@ jobs:
       matrix:
         python-version: ["3.10", "3.13"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          persist-credentials: false
 
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
       - name: Set up Python ${{ matrix.python-version }} and dependencies
         run: uv sync --python ${{ matrix.python-version }} --group test
@@ -96,9 +107,11 @@ jobs:
         python-version: ["3.10", "3.13"]
         scenario: ["pandas-only", "polars-only", "both", "pandas-no-pydantic", "none"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          persist-credentials: false
 
-      - uses: jdx/mise-action@v3
+      - uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
