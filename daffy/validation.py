@@ -166,7 +166,7 @@ def validate_dataframe(
 
     if isinstance(columns, dict):
         for column, spec_value in columns.items():
-            column_spec = (
+            column_spec: str | RegexColumnDef = (
                 compile_regex_pattern(column) if isinstance(column, str) and is_regex_string(column) else column
             )
             all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
