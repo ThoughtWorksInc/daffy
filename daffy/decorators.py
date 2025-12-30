@@ -99,19 +99,21 @@ def df_out(
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
             if columns or composite_unique:
+                func_name = getattr(func, "__name__", "<unknown>")
                 validate_dataframe(
                     df=result,
                     columns=columns or [],
                     strict=get_strict(strict),
                     param_name=None,
-                    func_name=func.__name__,
+                    func_name=func_name,
                     is_return_value=True,
                     lazy=get_lazy(lazy),
                     composite_unique=composite_unique,
                 )
 
             if row_validator is not None:
-                _validate_rows_with_context(result, row_validator, func.__name__, None, True)
+                func_name = getattr(func, "__name__", "<unknown>")
+                _validate_rows_with_context(result, row_validator, func_name, None, True)
 
             return result
 
@@ -160,19 +162,21 @@ def df_in(
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
             if columns or composite_unique:
+                func_name = getattr(func, "__name__", "<unknown>")
                 validate_dataframe(
                     df=df,
                     columns=columns or [],
                     strict=get_strict(strict),
                     param_name=param_name,
-                    func_name=func.__name__,
+                    func_name=func_name,
                     is_return_value=False,
                     lazy=get_lazy(lazy),
                     composite_unique=composite_unique,
                 )
 
             if row_validator is not None:
-                _validate_rows_with_context(df, row_validator, func.__name__, param_name, False)
+                func_name = getattr(func, "__name__", "<unknown>")
+                _validate_rows_with_context(df, row_validator, func_name, param_name, False)
 
             return func(*args, **kwargs)
 
@@ -199,9 +203,10 @@ def df_log(
     def wrapper_df_log(func: Callable[..., LogReturnT]) -> Callable[..., LogReturnT]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> LogReturnT:
-            log_dataframe_input(level, func.__name__, get_parameter(func, None, *args, **kwargs), include_dtypes)
+            func_name = getattr(func, "__name__", "<unknown>")
+            log_dataframe_input(level, func_name, get_parameter(func, None, *args, **kwargs), include_dtypes)
             result = func(*args, **kwargs)
-            log_dataframe_output(level, func.__name__, result, include_dtypes)
+            log_dataframe_output(level, func_name, result, include_dtypes)
             return result
 
         return wrapper
