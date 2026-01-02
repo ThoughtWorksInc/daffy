@@ -29,7 +29,9 @@ def validate_shape(
     exact_rows: int | None,
     allow_empty: bool,
     param_info: str,
-) -> None:
+    lazy: bool = False,
+    errors: list[str] | None = None,
+) -> list[str]:
     """Validate DataFrame shape constraints.
 
     Args:
@@ -39,24 +41,46 @@ def validate_shape(
         exact_rows: Exact required row count (None means no constraint)
         allow_empty: Whether empty DataFrames (0 rows) are allowed
         param_info: Parameter context string for error messages
+        lazy: If True, collect errors instead of raising immediately
+        errors: List to collect errors (used in lazy mode)
+
+    Returns:
+        List of error messages (empty if no errors)
 
     Raises:
-        AssertionError: If validation fails
+        AssertionError: If validation fails and not in lazy mode
     """
+    if errors is None:
+        errors = []
+
     nw_df = nw.from_native(df, eager_only=True)
     row_count = nw_df.shape[0]
 
     if not allow_empty and row_count == 0:
-        raise AssertionError(f"DataFrame{param_info} is empty but allow_empty=False")
+        msg = f"DataFrame{param_info} is empty but allow_empty=False"
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if exact_rows is not None and row_count != exact_rows:
-        raise AssertionError(f"DataFrame{param_info} has {row_count} rows but exact_rows={exact_rows}")
+        msg = f"DataFrame{param_info} has {row_count} rows but exact_rows={exact_rows}"
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if min_rows is not None and row_count < min_rows:
-        raise AssertionError(f"DataFrame{param_info} has {row_count} rows but min_rows={min_rows}")
+        msg = f"DataFrame{param_info} has {row_count} rows but min_rows={min_rows}"
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
 
     if max_rows is not None and row_count > max_rows:
-        raise AssertionError(f"DataFrame{param_info} has {row_count} rows but max_rows={max_rows}")
+        msg = f"DataFrame{param_info} has {row_count} rows but max_rows={max_rows}"
+        if not lazy:
+            raise AssertionError(msg)
+        errors.append(msg)
+
+    return errors
 
 
 class ColumnConstraints(TypedDict, total=False):
@@ -176,6 +200,7 @@ def validate_dataframe(
     is_return_value: bool = False,
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
+    shape_errors: list[str] | None = None,
 ) -> None:
     """Validate DataFrame columns and optionally data types.
 
@@ -188,6 +213,7 @@ def validate_dataframe(
         is_return_value: True if validating a return value
         lazy: If True, collect all errors before raising. If None, use config value.
         composite_unique: List of column name lists that must be unique together
+        shape_errors: Pre-collected shape validation errors (for lazy mode)
 
     Raises:
         AssertionError: If validation fails (missing columns, dtype mismatch, or extra columns in strict mode)
@@ -242,8 +268,8 @@ def validate_dataframe(
 
     param_info = format_param_context(param_name, func_name, is_return_value)
 
-    # Collect error messages
-    errors: list[str] = []
+    # Collect error messages (include shape errors if provided)
+    errors: list[str] = list(shape_errors) if shape_errors else []
 
     if all_missing_columns:
         msg = f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}"

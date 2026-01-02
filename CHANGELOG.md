@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.0
+
+### New Features
+
+- **Shape validation**: enforce row count constraints on DataFrames
+  - `min_rows`: require a minimum number of rows
+  - `max_rows`: limit the maximum number of rows
+  - `exact_rows`: require an exact number of rows
+  - `allow_empty`: control whether empty DataFrames (0 rows) are allowed
+- New `allow_empty` configuration option in `pyproject.toml` (default: `true`)
+
 ## 2.3.1
 
 ### Bug Fixes

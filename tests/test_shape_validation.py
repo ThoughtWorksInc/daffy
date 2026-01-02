@@ -322,3 +322,29 @@ class TestAllowEmptyConfig:
 
         with pytest.raises(AssertionError, match=r"is empty but allow_empty=False"):
             f()
+
+
+class TestLazyModeIntegration:
+    def test_lazy_mode_collects_shape_and_column_errors(self, make_df: DataFrameFactory) -> None:
+        @df_out(columns=["a", "b"], min_rows=5, lazy=True)
+        def f() -> Any:
+            return make_df({"a": [1, 2]})
+
+        with pytest.raises(AssertionError) as exc_info:
+            f()
+
+        error_msg = str(exc_info.value)
+        assert "min_rows=5" in error_msg
+        assert "Missing columns" in error_msg
+
+    def test_lazy_mode_collects_multiple_shape_errors(self, make_df: DataFrameFactory) -> None:
+        @df_out(exact_rows=10, columns={"a": {"unique": True}}, lazy=True)
+        def f() -> Any:
+            return make_df({"a": [1, 1, 1]})
+
+        with pytest.raises(AssertionError) as exc_info:
+            f()
+
+        error_msg = str(exc_info.value)
+        assert "exact_rows=10" in error_msg
+        assert "duplicate" in error_msg

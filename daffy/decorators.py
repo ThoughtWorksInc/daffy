@@ -110,8 +110,19 @@ def df_out(
 
             func_name = getattr(func, "__name__", "<unknown>")
             param_info = format_param_context(None, func_name, is_return_value=True)
+            lazy_mode = get_lazy(lazy)
+            errors: list[str] = []
 
-            validate_shape(result, min_rows, max_rows, exact_rows, get_allow_empty(allow_empty), param_info)
+            validate_shape(
+                result,
+                min_rows,
+                max_rows,
+                exact_rows,
+                get_allow_empty(allow_empty),
+                param_info,
+                lazy=lazy_mode,
+                errors=errors,
+            )
 
             if columns or composite_unique:
                 validate_dataframe(
@@ -121,9 +132,12 @@ def df_out(
                     param_name=None,
                     func_name=func_name,
                     is_return_value=True,
-                    lazy=get_lazy(lazy),
+                    lazy=lazy_mode,
                     composite_unique=composite_unique,
+                    shape_errors=errors,
                 )
+            elif lazy_mode and errors:
+                raise AssertionError("\n\n".join(errors))
 
             if row_validator is not None:
                 _validate_rows_with_context(result, row_validator, func_name, None, True)
@@ -186,8 +200,19 @@ def df_in(
 
             func_name = getattr(func, "__name__", "<unknown>")
             param_info = format_param_context(param_name, func_name, is_return_value=False)
+            lazy_mode = get_lazy(lazy)
+            errors: list[str] = []
 
-            validate_shape(df, min_rows, max_rows, exact_rows, get_allow_empty(allow_empty), param_info)
+            validate_shape(
+                df,
+                min_rows,
+                max_rows,
+                exact_rows,
+                get_allow_empty(allow_empty),
+                param_info,
+                lazy=lazy_mode,
+                errors=errors,
+            )
 
             if columns or composite_unique:
                 validate_dataframe(
@@ -197,9 +222,12 @@ def df_in(
                     param_name=param_name,
                     func_name=func_name,
                     is_return_value=False,
-                    lazy=get_lazy(lazy),
+                    lazy=lazy_mode,
                     composite_unique=composite_unique,
+                    shape_errors=errors,
                 )
+            elif lazy_mode and errors:
+                raise AssertionError("\n\n".join(errors))
 
             if row_validator is not None:
                 _validate_rows_with_context(df, row_validator, func_name, param_name, False)
