@@ -200,3 +200,55 @@ class TestMinMaxRowsCombined:
 
         with pytest.raises(AssertionError, match=r"max_rows=3"):
             f()
+
+
+class TestExactRowsDfOut:
+    def test_exact_rows_rejects_too_few_rows(self, make_df: DataFrameFactory) -> None:
+        @df_out(exact_rows=5)
+        def f() -> Any:
+            return make_df({"a": [1, 2, 3]})
+
+        with pytest.raises(AssertionError, match=r"has 3 rows but exact_rows=5"):
+            f()
+
+    def test_exact_rows_rejects_too_many_rows(self, make_df: DataFrameFactory) -> None:
+        @df_out(exact_rows=2)
+        def f() -> Any:
+            return make_df({"a": [1, 2, 3, 4]})
+
+        with pytest.raises(AssertionError, match=r"has 4 rows but exact_rows=2"):
+            f()
+
+    def test_exact_rows_passes_exact_count(self, make_df: DataFrameFactory) -> None:
+        @df_out(exact_rows=3)
+        def f() -> Any:
+            return make_df({"a": [1, 2, 3]})
+
+        result = f()
+        assert len(result) == 3
+
+    def test_exact_rows_zero_requires_empty(self, make_df: DataFrameFactory) -> None:
+        @df_out(exact_rows=0)
+        def f() -> Any:
+            return make_df({"a": []})
+
+        result = f()
+        assert len(result) == 0
+
+
+class TestExactRowsDfIn:
+    def test_exact_rows_rejects_wrong_count(self, make_df: DataFrameFactory) -> None:
+        @df_in(exact_rows=3)
+        def f(df: Any) -> Any:
+            return df
+
+        with pytest.raises(AssertionError, match=r"has 5 rows but exact_rows=3"):
+            f(make_df({"a": [1, 2, 3, 4, 5]}))
+
+    def test_exact_rows_passes_exact_count(self, make_df: DataFrameFactory) -> None:
+        @df_in(exact_rows=4)
+        def f(df: Any) -> Any:
+            return df
+
+        result = f(make_df({"a": [1, 2, 3, 4]}))
+        assert len(result) == 4
