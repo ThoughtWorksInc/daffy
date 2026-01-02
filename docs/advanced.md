@@ -171,6 +171,65 @@ When composite uniqueness fails, you get an error like:
 AssertionError: Columns 'first_name' + 'last_name' in function 'process_users' parameter 'df' contain 5 duplicate combinations but composite_unique is set
 ```
 
+## Shape Validation
+
+Enforce row count constraints on your DataFrames.
+
+### Minimum Rows
+
+Require a minimum number of rows:
+
+```python
+@df_in(min_rows=1)  # Reject empty DataFrames
+def process_data(df):
+    ...
+
+@df_out(min_rows=10)  # Ensure at least 10 rows are returned
+def get_results():
+    ...
+```
+
+### Maximum Rows
+
+Limit the maximum number of rows:
+
+```python
+@df_in(max_rows=1000)  # Reject DataFrames with more than 1000 rows
+def process_batch(df):
+    ...
+```
+
+### Exact Row Count
+
+Require an exact number of rows:
+
+```python
+@df_in(exact_rows=5)  # Require exactly 5 rows
+def process_lookup_table(df):
+    ...
+```
+
+### Combining Constraints
+
+```python
+@df_out(min_rows=10, max_rows=100)  # Between 10 and 100 rows
+def transform_data(df):
+    ...
+```
+
+### Error Messages
+
+```
+# min_rows violation
+AssertionError: DataFrame in function 'process_data' parameter 'df' has 0 rows but min_rows=1
+
+# max_rows violation
+AssertionError: DataFrame in function 'process_data' return value has 150 rows but max_rows=100
+
+# exact_rows violation
+AssertionError: DataFrame in function 'process_data' parameter 'df' has 8 rows but exact_rows=5
+```
+
 ## Optional Columns
 
 By default, all specified columns are required. You can mark columns as optional using `required=False`:
@@ -499,6 +558,23 @@ All configuration options can be set in `pyproject.toml`:
 [tool.daffy]
 strict = true                    # Enable strict mode by default
 lazy = true                      # Collect all errors before raising (default: false)
+allow_empty = false              # Reject empty DataFrames by default (default: true)
 row_validation_max_errors = 5    # Max failed rows to show (default: 5)
 checks_max_samples = 5           # Max sample values in check errors (default: 5)
+```
+
+### allow_empty
+
+When set to `false`, all DataFrames will be rejected if they have 0 rows:
+
+```python
+# With allow_empty=false in config, this will raise:
+@df_in()
+def process(df):  # Raises if df is empty
+    ...
+
+# Override for specific decorators:
+@df_in(allow_empty=True)  # Allow empty even if config says false
+def optional_process(df):
+    ...
 ```

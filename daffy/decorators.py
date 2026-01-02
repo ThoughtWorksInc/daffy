@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-from daffy.config import get_lazy, get_row_validation_max_errors, get_strict
+from daffy.config import get_allow_empty, get_lazy, get_row_validation_max_errors, get_strict
 from daffy.dataframe_types import IntoDataFrameT
 from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
@@ -21,7 +21,7 @@ from daffy.utils import (
     log_dataframe_input,
     log_dataframe_output,
 )
-from daffy.validation import ColumnsDef, validate_dataframe
+from daffy.validation import ColumnsDef, validate_dataframe, validate_shape
 
 
 def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None:
@@ -40,6 +40,22 @@ def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None
         for j, col in enumerate(combo):
             if not isinstance(col, str):
                 raise TypeError(f"composite_unique[{i}][{j}] must be a string, got {type(col).__name__}")
+
+
+def _validate_shape_constraints(
+    min_rows: int | None,
+    max_rows: int | None,
+    exact_rows: int | None,
+) -> None:
+    """Validate shape constraint parameters at decorator time."""
+    if min_rows is not None and min_rows < 0:
+        raise ValueError(f"min_rows must be >= 0, got {min_rows}")
+    if max_rows is not None and max_rows < 0:
+        raise ValueError(f"max_rows must be >= 0, got {max_rows}")
+    if exact_rows is not None and exact_rows < 0:
+        raise ValueError(f"exact_rows must be >= 0, got {exact_rows}")
+    if min_rows is not None and max_rows is not None and min_rows > max_rows:
+        raise ValueError(f"min_rows ({min_rows}) cannot be greater than max_rows ({max_rows})")
 
 
 # Type variables for preserving return types
@@ -68,6 +84,10 @@ def df_out(
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
+    min_rows: int | None = None,
+    max_rows: int | None = None,
+    exact_rows: int | None = None,
+    allow_empty: bool | None = None,
 ) -> Callable[[Callable[..., IntoDataFrameT]], Callable[..., IntoDataFrameT]]:
     """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -87,19 +107,41 @@ def df_out(
             E.g., [["first_name", "last_name"]] ensures the combination is unique.
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
+        min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
+        max_rows (int, optional): Maximum number of rows allowed. Defaults to None (no maximum).
+        exact_rows (int, optional): Exact number of rows required. Defaults to None (no constraint).
+        allow_empty (bool, optional): Whether empty DataFrames (0 rows) are allowed.
+            If None, uses the value from [tool.daffy] allow_empty setting in pyproject.toml.
 
     Returns:
         Callable: Decorated function with preserved DataFrame return type
     """
     _validate_composite_unique(composite_unique)
+    _validate_shape_constraints(min_rows, max_rows, exact_rows)
 
     def wrapper_df_out(func: Callable[..., IntoDataFrameT]) -> Callable[..., IntoDataFrameT]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> IntoDataFrameT:
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
+
+            func_name = getattr(func, "__name__", "<unknown>")
+            param_info = format_param_context(None, func_name, is_return_value=True)
+            lazy_mode = get_lazy(lazy)
+            errors: list[str] = []
+
+            validate_shape(
+                result,
+                min_rows,
+                max_rows,
+                exact_rows,
+                get_allow_empty(allow_empty),
+                param_info,
+                lazy=lazy_mode,
+                errors=errors,
+            )
+
             if columns or composite_unique:
-                func_name = getattr(func, "__name__", "<unknown>")
                 validate_dataframe(
                     df=result,
                     columns=columns or [],
@@ -107,12 +149,14 @@ def df_out(
                     param_name=None,
                     func_name=func_name,
                     is_return_value=True,
-                    lazy=get_lazy(lazy),
+                    lazy=lazy_mode,
                     composite_unique=composite_unique,
+                    shape_errors=errors,
                 )
+            elif lazy_mode and errors:
+                raise AssertionError("\n\n".join(errors))
 
             if row_validator is not None:
-                func_name = getattr(func, "__name__", "<unknown>")
                 _validate_rows_with_context(result, row_validator, func_name, None, True)
 
             return result
@@ -129,6 +173,10 @@ def df_in(
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
+    min_rows: int | None = None,
+    max_rows: int | None = None,
+    exact_rows: int | None = None,
+    allow_empty: bool | None = None,
 ) -> Callable[[Callable[..., InReturnT]], Callable[..., InReturnT]]:
     """Decorate a function parameter that is a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -149,11 +197,17 @@ def df_in(
             E.g., [["first_name", "last_name"]] ensures the combination is unique.
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
+        min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
+        max_rows (int, optional): Maximum number of rows allowed. Defaults to None (no maximum).
+        exact_rows (int, optional): Exact number of rows required. Defaults to None (no constraint).
+        allow_empty (bool, optional): Whether empty DataFrames (0 rows) are allowed.
+            If None, uses the value from [tool.daffy] allow_empty setting in pyproject.toml.
 
     Returns:
         Callable: Decorated function with preserved return type
     """
     _validate_composite_unique(composite_unique)
+    _validate_shape_constraints(min_rows, max_rows, exact_rows)
 
     def wrapper_df_in(func: Callable[..., InReturnT]) -> Callable[..., InReturnT]:
         @wraps(func)
@@ -161,8 +215,24 @@ def df_in(
             df = get_parameter(func, name, *args, **kwargs)
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
+
+            func_name = getattr(func, "__name__", "<unknown>")
+            param_info = format_param_context(param_name, func_name, is_return_value=False)
+            lazy_mode = get_lazy(lazy)
+            errors: list[str] = []
+
+            validate_shape(
+                df,
+                min_rows,
+                max_rows,
+                exact_rows,
+                get_allow_empty(allow_empty),
+                param_info,
+                lazy=lazy_mode,
+                errors=errors,
+            )
+
             if columns or composite_unique:
-                func_name = getattr(func, "__name__", "<unknown>")
                 validate_dataframe(
                     df=df,
                     columns=columns or [],
@@ -170,12 +240,14 @@ def df_in(
                     param_name=param_name,
                     func_name=func_name,
                     is_return_value=False,
-                    lazy=get_lazy(lazy),
+                    lazy=lazy_mode,
                     composite_unique=composite_unique,
+                    shape_errors=errors,
                 )
+            elif lazy_mode and errors:
+                raise AssertionError("\n\n".join(errors))
 
             if row_validator is not None:
-                func_name = getattr(func, "__name__", "<unknown>")
                 _validate_rows_with_context(df, row_validator, func_name, param_name, False)
 
             return func(*args, **kwargs)

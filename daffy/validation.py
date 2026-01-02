@@ -22,6 +22,41 @@ from daffy.patterns import (
 from daffy.utils import describe_dataframe, format_param_context
 
 
+def _raise_or_collect(msg: str, lazy: bool, errors: list[str]) -> None:
+    """Raise immediately or collect error for lazy mode."""
+    if not lazy:
+        raise AssertionError(msg)
+    errors.append(msg)
+
+
+def validate_shape(
+    df: Any,
+    min_rows: int | None,
+    max_rows: int | None,
+    exact_rows: int | None,
+    allow_empty: bool,
+    param_info: str,
+    lazy: bool = False,
+    errors: list[str] | None = None,
+) -> list[str]:
+    """Validate DataFrame shape constraints."""
+    if errors is None:  # pragma: no cover
+        errors = []
+
+    row_count = nw.from_native(df, eager_only=True).shape[0]
+
+    if not allow_empty and row_count == 0:
+        _raise_or_collect(f"DataFrame{param_info} is empty but allow_empty=False", lazy, errors)
+    if exact_rows is not None and row_count != exact_rows:
+        _raise_or_collect(f"DataFrame{param_info} has {row_count} rows but exact_rows={exact_rows}", lazy, errors)
+    if min_rows is not None and row_count < min_rows:
+        _raise_or_collect(f"DataFrame{param_info} has {row_count} rows but min_rows={min_rows}", lazy, errors)
+    if max_rows is not None and row_count > max_rows:
+        _raise_or_collect(f"DataFrame{param_info} has {row_count} rows but max_rows={max_rows}", lazy, errors)
+
+    return errors
+
+
 class ColumnConstraints(TypedDict, total=False):
     """Type-safe specification for column constraints.
 
@@ -123,13 +158,6 @@ def _find_column_violations(
     return violations
 
 
-def _raise_or_collect(msg: str, lazy: bool, errors: list[str]) -> None:
-    """Raise immediately or collect error for lazy mode."""
-    if not lazy:
-        raise AssertionError(msg)
-    errors.append(msg)
-
-
 def validate_dataframe(
     df: Any,
     columns: ColumnsList | ColumnsDict,
@@ -139,6 +167,7 @@ def validate_dataframe(
     is_return_value: bool = False,
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
+    shape_errors: list[str] | None = None,
 ) -> None:
     """Validate DataFrame columns and optionally data types.
 
@@ -151,6 +180,7 @@ def validate_dataframe(
         is_return_value: True if validating a return value
         lazy: If True, collect all errors before raising. If None, use config value.
         composite_unique: List of column name lists that must be unique together
+        shape_errors: Pre-collected shape validation errors (for lazy mode)
 
     Raises:
         AssertionError: If validation fails (missing columns, dtype mismatch, or extra columns in strict mode)
@@ -205,8 +235,8 @@ def validate_dataframe(
 
     param_info = format_param_context(param_name, func_name, is_return_value)
 
-    # Collect error messages
-    errors: list[str] = []
+    # Collect error messages (include shape errors if provided)
+    errors: list[str] = list(shape_errors) if shape_errors else []
 
     if all_missing_columns:
         msg = f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}"
