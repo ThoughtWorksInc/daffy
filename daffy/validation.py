@@ -25,6 +25,7 @@ from daffy.utils import describe_dataframe, format_param_context
 def validate_shape(
     df: Any,
     min_rows: int | None,
+    max_rows: int | None,
     param_info: str,
 ) -> None:
     """Validate DataFrame shape constraints.
@@ -32,19 +33,23 @@ def validate_shape(
     Args:
         df: DataFrame to validate
         min_rows: Minimum required row count (None means no constraint)
+        max_rows: Maximum allowed row count (None means no constraint)
         param_info: Parameter context string for error messages
 
     Raises:
         AssertionError: If validation fails
     """
-    if min_rows is None:
+    if min_rows is None and max_rows is None:
         return
 
     nw_df = nw.from_native(df, eager_only=True)
     row_count = nw_df.shape[0]
 
-    if row_count < min_rows:
+    if min_rows is not None and row_count < min_rows:
         raise AssertionError(f"DataFrame{param_info} has {row_count} rows but min_rows={min_rows}")
+
+    if max_rows is not None and row_count > max_rows:
+        raise AssertionError(f"DataFrame{param_info} has {row_count} rows but max_rows={max_rows}")
 
 
 class ColumnConstraints(TypedDict, total=False):

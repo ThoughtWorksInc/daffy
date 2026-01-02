@@ -69,6 +69,7 @@ def df_out(
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
     min_rows: int | None = None,
+    max_rows: int | None = None,
 ) -> Callable[[Callable[..., IntoDataFrameT]], Callable[..., IntoDataFrameT]]:
     """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -89,6 +90,7 @@ def df_out(
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
         min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
+        max_rows (int, optional): Maximum number of rows allowed. Defaults to None (no maximum).
 
     Returns:
         Callable: Decorated function with preserved DataFrame return type
@@ -104,8 +106,8 @@ def df_out(
             func_name = getattr(func, "__name__", "<unknown>")
             param_info = format_param_context(None, func_name, is_return_value=True)
 
-            if min_rows is not None:
-                validate_shape(result, min_rows, param_info)
+            if min_rows is not None or max_rows is not None:
+                validate_shape(result, min_rows, max_rows, param_info)
 
             if columns or composite_unique:
                 validate_dataframe(
@@ -137,6 +139,7 @@ def df_in(
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
     min_rows: int | None = None,
+    max_rows: int | None = None,
 ) -> Callable[[Callable[..., InReturnT]], Callable[..., InReturnT]]:
     """Decorate a function parameter that is a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -158,6 +161,7 @@ def df_in(
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
         min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
+        max_rows (int, optional): Maximum number of rows allowed. Defaults to None (no maximum).
 
     Returns:
         Callable: Decorated function with preserved return type
@@ -174,8 +178,8 @@ def df_in(
             func_name = getattr(func, "__name__", "<unknown>")
             param_info = format_param_context(param_name, func_name, is_return_value=False)
 
-            if min_rows is not None:
-                validate_shape(df, min_rows, param_info)
+            if min_rows is not None or max_rows is not None:
+                validate_shape(df, min_rows, max_rows, param_info)
 
             if columns or composite_unique:
                 validate_dataframe(
