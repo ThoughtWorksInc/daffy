@@ -22,6 +22,31 @@ from daffy.patterns import (
 from daffy.utils import describe_dataframe, format_param_context
 
 
+def validate_shape(
+    df: Any,
+    min_rows: int | None,
+    param_info: str,
+) -> None:
+    """Validate DataFrame shape constraints.
+
+    Args:
+        df: DataFrame to validate
+        min_rows: Minimum required row count (None means no constraint)
+        param_info: Parameter context string for error messages
+
+    Raises:
+        AssertionError: If validation fails
+    """
+    if min_rows is None:
+        return
+
+    nw_df = nw.from_native(df, eager_only=True)
+    row_count = nw_df.shape[0]
+
+    if row_count < min_rows:
+        raise AssertionError(f"DataFrame{param_info} has {row_count} rows but min_rows={min_rows}")
+
+
 class ColumnConstraints(TypedDict, total=False):
     """Type-safe specification for column constraints.
 

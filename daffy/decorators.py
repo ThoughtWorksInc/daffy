@@ -21,7 +21,7 @@ from daffy.utils import (
     log_dataframe_input,
     log_dataframe_output,
 )
-from daffy.validation import ColumnsDef, validate_dataframe
+from daffy.validation import ColumnsDef, validate_dataframe, validate_shape
 
 
 def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None:
@@ -68,6 +68,7 @@ def df_out(
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
+    min_rows: int | None = None,
 ) -> Callable[[Callable[..., IntoDataFrameT]], Callable[..., IntoDataFrameT]]:
     """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -87,6 +88,7 @@ def df_out(
             E.g., [["first_name", "last_name"]] ensures the combination is unique.
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
+        min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
 
     Returns:
         Callable: Decorated function with preserved DataFrame return type
@@ -98,8 +100,14 @@ def df_out(
         def wrapper(*args: Any, **kwargs: Any) -> IntoDataFrameT:
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
+
+            func_name = getattr(func, "__name__", "<unknown>")
+            param_info = format_param_context(None, func_name, is_return_value=True)
+
+            if min_rows is not None:
+                validate_shape(result, min_rows, param_info)
+
             if columns or composite_unique:
-                func_name = getattr(func, "__name__", "<unknown>")
                 validate_dataframe(
                     df=result,
                     columns=columns or [],
@@ -112,7 +120,6 @@ def df_out(
                 )
 
             if row_validator is not None:
-                func_name = getattr(func, "__name__", "<unknown>")
                 _validate_rows_with_context(result, row_validator, func_name, None, True)
 
             return result
