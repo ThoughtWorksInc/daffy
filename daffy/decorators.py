@@ -42,6 +42,22 @@ def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None
                 raise TypeError(f"composite_unique[{i}][{j}] must be a string, got {type(col).__name__}")
 
 
+def _validate_shape_constraints(
+    min_rows: int | None,
+    max_rows: int | None,
+    exact_rows: int | None,
+) -> None:
+    """Validate shape constraint parameters at decorator time."""
+    if min_rows is not None and min_rows < 0:
+        raise ValueError(f"min_rows must be >= 0, got {min_rows}")
+    if max_rows is not None and max_rows < 0:
+        raise ValueError(f"max_rows must be >= 0, got {max_rows}")
+    if exact_rows is not None and exact_rows < 0:
+        raise ValueError(f"exact_rows must be >= 0, got {exact_rows}")
+    if min_rows is not None and max_rows is not None and min_rows > max_rows:
+        raise ValueError(f"min_rows ({min_rows}) cannot be greater than max_rows ({max_rows})")
+
+
 # Type variables for preserving return types
 LogReturnT = TypeVar("LogReturnT")  # Return type for df_log
 InReturnT = TypeVar("InReturnT")  # Return type for df_in
@@ -101,6 +117,7 @@ def df_out(
         Callable: Decorated function with preserved DataFrame return type
     """
     _validate_composite_unique(composite_unique)
+    _validate_shape_constraints(min_rows, max_rows, exact_rows)
 
     def wrapper_df_out(func: Callable[..., IntoDataFrameT]) -> Callable[..., IntoDataFrameT]:
         @wraps(func)
@@ -190,6 +207,7 @@ def df_in(
         Callable: Decorated function with preserved return type
     """
     _validate_composite_unique(composite_unique)
+    _validate_shape_constraints(min_rows, max_rows, exact_rows)
 
     def wrapper_df_in(func: Callable[..., InReturnT]) -> Callable[..., InReturnT]:
         @wraps(func)

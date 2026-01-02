@@ -22,6 +22,13 @@ from daffy.patterns import (
 from daffy.utils import describe_dataframe, format_param_context
 
 
+def _raise_or_collect(msg: str, lazy: bool, errors: list[str]) -> None:
+    """Raise immediately or collect error for lazy mode."""
+    if not lazy:
+        raise AssertionError(msg)
+    errors.append(msg)
+
+
 def validate_shape(
     df: Any,
     min_rows: int | None,
@@ -32,53 +39,20 @@ def validate_shape(
     lazy: bool = False,
     errors: list[str] | None = None,
 ) -> list[str]:
-    """Validate DataFrame shape constraints.
-
-    Args:
-        df: DataFrame to validate
-        min_rows: Minimum required row count (None means no constraint)
-        max_rows: Maximum allowed row count (None means no constraint)
-        exact_rows: Exact required row count (None means no constraint)
-        allow_empty: Whether empty DataFrames (0 rows) are allowed
-        param_info: Parameter context string for error messages
-        lazy: If True, collect errors instead of raising immediately
-        errors: List to collect errors (used in lazy mode)
-
-    Returns:
-        List of error messages (empty if no errors)
-
-    Raises:
-        AssertionError: If validation fails and not in lazy mode
-    """
-    if errors is None:
+    """Validate DataFrame shape constraints."""
+    if errors is None:  # pragma: no cover
         errors = []
 
-    nw_df = nw.from_native(df, eager_only=True)
-    row_count = nw_df.shape[0]
+    row_count = nw.from_native(df, eager_only=True).shape[0]
 
     if not allow_empty and row_count == 0:
-        msg = f"DataFrame{param_info} is empty but allow_empty=False"
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
-
+        _raise_or_collect(f"DataFrame{param_info} is empty but allow_empty=False", lazy, errors)
     if exact_rows is not None and row_count != exact_rows:
-        msg = f"DataFrame{param_info} has {row_count} rows but exact_rows={exact_rows}"
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
-
+        _raise_or_collect(f"DataFrame{param_info} has {row_count} rows but exact_rows={exact_rows}", lazy, errors)
     if min_rows is not None and row_count < min_rows:
-        msg = f"DataFrame{param_info} has {row_count} rows but min_rows={min_rows}"
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
-
+        _raise_or_collect(f"DataFrame{param_info} has {row_count} rows but min_rows={min_rows}", lazy, errors)
     if max_rows is not None and row_count > max_rows:
-        msg = f"DataFrame{param_info} has {row_count} rows but max_rows={max_rows}"
-        if not lazy:
-            raise AssertionError(msg)
-        errors.append(msg)
+        _raise_or_collect(f"DataFrame{param_info} has {row_count} rows but max_rows={max_rows}", lazy, errors)
 
     return errors
 
@@ -182,13 +156,6 @@ def _find_column_violations(
         if count > 0:
             violations.append((col, count))
     return violations
-
-
-def _raise_or_collect(msg: str, lazy: bool, errors: list[str]) -> None:
-    """Raise immediately or collect error for lazy mode."""
-    if not lazy:
-        raise AssertionError(msg)
-    errors.append(msg)
 
 
 def validate_dataframe(
