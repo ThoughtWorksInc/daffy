@@ -136,6 +136,7 @@ def df_in(
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
     row_validator: "type[BaseModel] | None" = None,
+    min_rows: int | None = None,
 ) -> Callable[[Callable[..., InReturnT]], Callable[..., InReturnT]]:
     """Decorate a function parameter that is a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -156,6 +157,7 @@ def df_in(
             E.g., [["first_name", "last_name"]] ensures the combination is unique.
         row_validator (type[BaseModel], optional): Pydantic model for validating row data.
             Requires pydantic >= 2.4.0. Defaults to None.
+        min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
 
     Returns:
         Callable: Decorated function with preserved return type
@@ -168,8 +170,14 @@ def df_in(
             df = get_parameter(func, name, *args, **kwargs)
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
+
+            func_name = getattr(func, "__name__", "<unknown>")
+            param_info = format_param_context(param_name, func_name, is_return_value=False)
+
+            if min_rows is not None:
+                validate_shape(df, min_rows, param_info)
+
             if columns or composite_unique:
-                func_name = getattr(func, "__name__", "<unknown>")
                 validate_dataframe(
                     df=df,
                     columns=columns or [],
@@ -182,7 +190,6 @@ def df_in(
                 )
 
             if row_validator is not None:
-                func_name = getattr(func, "__name__", "<unknown>")
                 _validate_rows_with_context(df, row_validator, func_name, param_name, False)
 
             return func(*args, **kwargs)
