@@ -252,3 +252,73 @@ class TestExactRowsDfIn:
 
         result = f(make_df({"a": [1, 2, 3, 4]}))
         assert len(result) == 4
+
+
+class TestAllowEmptyConfig:
+    def test_allow_empty_false_rejects_empty_df_out(
+        self, make_df: DataFrameFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from daffy import decorators
+
+        monkeypatch.setattr(decorators, "get_allow_empty", lambda x: False if x is None else x)
+
+        @df_out()
+        def f() -> Any:
+            return make_df({"a": []})
+
+        with pytest.raises(AssertionError, match=r"is empty but allow_empty=False"):
+            f()
+
+    def test_allow_empty_false_rejects_empty_df_in(
+        self, make_df: DataFrameFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from daffy import decorators
+
+        monkeypatch.setattr(decorators, "get_allow_empty", lambda x: False if x is None else x)
+
+        @df_in()
+        def f(df: Any) -> Any:
+            return df
+
+        with pytest.raises(AssertionError, match=r"is empty but allow_empty=False"):
+            f(make_df({"a": []}))
+
+    def test_allow_empty_true_allows_empty_df(self, make_df: DataFrameFactory, monkeypatch: pytest.MonkeyPatch) -> None:
+        from daffy import decorators
+
+        monkeypatch.setattr(decorators, "get_allow_empty", lambda x: True if x is None else x)
+
+        @df_out()
+        def f() -> Any:
+            return make_df({"a": []})
+
+        result = f()
+        assert len(result) == 0
+
+    def test_allow_empty_override_true_allows_empty_when_config_false(
+        self, make_df: DataFrameFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from daffy import decorators
+
+        monkeypatch.setattr(decorators, "get_allow_empty", lambda x: False if x is None else x)
+
+        @df_out(allow_empty=True)
+        def f() -> Any:
+            return make_df({"a": []})
+
+        result = f()
+        assert len(result) == 0
+
+    def test_allow_empty_override_false_rejects_when_config_true(
+        self, make_df: DataFrameFactory, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from daffy import decorators
+
+        monkeypatch.setattr(decorators, "get_allow_empty", lambda x: True if x is None else x)
+
+        @df_out(allow_empty=False)
+        def f() -> Any:
+            return make_df({"a": []})
+
+        with pytest.raises(AssertionError, match=r"is empty but allow_empty=False"):
+            f()

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-from daffy.config import get_lazy, get_row_validation_max_errors, get_strict
+from daffy.config import get_allow_empty, get_lazy, get_row_validation_max_errors, get_strict
 from daffy.dataframe_types import IntoDataFrameT
 from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
@@ -71,6 +71,7 @@ def df_out(
     min_rows: int | None = None,
     max_rows: int | None = None,
     exact_rows: int | None = None,
+    allow_empty: bool | None = None,
 ) -> Callable[[Callable[..., IntoDataFrameT]], Callable[..., IntoDataFrameT]]:
     """Decorate a function that returns a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -93,6 +94,8 @@ def df_out(
         min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
         max_rows (int, optional): Maximum number of rows allowed. Defaults to None (no maximum).
         exact_rows (int, optional): Exact number of rows required. Defaults to None (no constraint).
+        allow_empty (bool, optional): Whether empty DataFrames (0 rows) are allowed.
+            If None, uses the value from [tool.daffy] allow_empty setting in pyproject.toml.
 
     Returns:
         Callable: Decorated function with preserved DataFrame return type
@@ -108,8 +111,7 @@ def df_out(
             func_name = getattr(func, "__name__", "<unknown>")
             param_info = format_param_context(None, func_name, is_return_value=True)
 
-            if min_rows is not None or max_rows is not None or exact_rows is not None:
-                validate_shape(result, min_rows, max_rows, exact_rows, param_info)
+            validate_shape(result, min_rows, max_rows, exact_rows, get_allow_empty(allow_empty), param_info)
 
             if columns or composite_unique:
                 validate_dataframe(
@@ -143,6 +145,7 @@ def df_in(
     min_rows: int | None = None,
     max_rows: int | None = None,
     exact_rows: int | None = None,
+    allow_empty: bool | None = None,
 ) -> Callable[[Callable[..., InReturnT]], Callable[..., InReturnT]]:
     """Decorate a function parameter that is a DataFrame (Pandas, Polars, Modin, or PyArrow).
 
@@ -166,6 +169,8 @@ def df_in(
         min_rows (int, optional): Minimum number of rows required. Defaults to None (no minimum).
         max_rows (int, optional): Maximum number of rows allowed. Defaults to None (no maximum).
         exact_rows (int, optional): Exact number of rows required. Defaults to None (no constraint).
+        allow_empty (bool, optional): Whether empty DataFrames (0 rows) are allowed.
+            If None, uses the value from [tool.daffy] allow_empty setting in pyproject.toml.
 
     Returns:
         Callable: Decorated function with preserved return type
@@ -182,8 +187,7 @@ def df_in(
             func_name = getattr(func, "__name__", "<unknown>")
             param_info = format_param_context(param_name, func_name, is_return_value=False)
 
-            if min_rows is not None or max_rows is not None or exact_rows is not None:
-                validate_shape(df, min_rows, max_rows, exact_rows, param_info)
+            validate_shape(df, min_rows, max_rows, exact_rows, get_allow_empty(allow_empty), param_info)
 
             if columns or composite_unique:
                 validate_dataframe(

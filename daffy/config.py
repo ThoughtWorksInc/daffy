@@ -14,12 +14,14 @@ _KEY_STRICT = "strict"
 _KEY_LAZY = "lazy"
 _KEY_ROW_VALIDATION_MAX_ERRORS = "row_validation_max_errors"
 _KEY_CHECKS_MAX_SAMPLES = "checks_max_samples"
+_KEY_ALLOW_EMPTY = "allow_empty"
 
 # Default values
 _DEFAULT_STRICT = False
 _DEFAULT_LAZY = False
 _DEFAULT_MAX_ERRORS = 5
 _DEFAULT_CHECKS_MAX_SAMPLES = 5
+_DEFAULT_ALLOW_EMPTY = True
 
 
 def _validate_bool_config(daffy_config: dict[str, Any], key: str) -> bool | None:
@@ -62,6 +64,7 @@ def load_config() -> dict[str, Any]:
         _KEY_LAZY: _DEFAULT_LAZY,
         _KEY_ROW_VALIDATION_MAX_ERRORS: _DEFAULT_MAX_ERRORS,
         _KEY_CHECKS_MAX_SAMPLES: _DEFAULT_CHECKS_MAX_SAMPLES,
+        _KEY_ALLOW_EMPTY: _DEFAULT_ALLOW_EMPTY,
     }
 
     # Try to find pyproject.toml in the current directory or parent directories
@@ -92,6 +95,10 @@ def load_config() -> dict[str, Any]:
         max_samples = _validate_int_config(daffy_config, _KEY_CHECKS_MAX_SAMPLES)
         if max_samples is not None:
             default_config[_KEY_CHECKS_MAX_SAMPLES] = max_samples
+
+        allow_empty = _validate_bool_config(daffy_config, _KEY_ALLOW_EMPTY)
+        if allow_empty is not None:
+            default_config[_KEY_ALLOW_EMPTY] = allow_empty
 
         return default_config
     except (FileNotFoundError, tomli.TOMLDecodeError):
@@ -168,3 +175,19 @@ def get_checks_max_samples(max_samples: int | None = None) -> int:
     if value < 1:
         raise ValueError(f"checks_max_samples must be >= 1, got {value}")
     return value
+
+
+def get_allow_empty(allow_empty_param: bool | None = None) -> bool:
+    """Get the allow_empty setting, with explicit parameter taking precedence over configuration.
+
+    When allow_empty=False, empty DataFrames (0 rows) will raise an error.
+
+    Args:
+        allow_empty_param: Explicitly provided allow_empty parameter value, or None to use config
+
+    Returns:
+        bool: The effective allow_empty setting
+    """
+    if allow_empty_param is not None:
+        return allow_empty_param
+    return bool(get_config()[_KEY_ALLOW_EMPTY])
