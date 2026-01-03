@@ -200,3 +200,61 @@ checks_max_samples = 0
                 load_config()
             assert "checks_max_samples" in str(exc_info.value)
             assert ">= 1" in str(exc_info.value)
+
+
+def test_config_max_samples_one_passes() -> None:
+    """Test that max_samples = 1 is valid (boundary value)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+checks_max_samples = 1
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import load_config
+
+            clear_config_cache()
+
+            config = load_config()
+            assert config["checks_max_samples"] == 1
+
+
+def test_config_row_validation_max_errors_one_passes() -> None:
+    """Test that row_validation_max_errors = 1 is valid (boundary value)."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+row_validation_max_errors = 1
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import load_config
+
+            clear_config_cache()
+
+            config = load_config()
+            assert config["row_validation_max_errors"] == 1
+
+
+def test_config_row_validation_max_errors_zero_raises_error() -> None:
+    """Test that row_validation_max_errors < 1 raises ValueError."""
+    import pytest
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
+            f.write("""
+[tool.daffy]
+row_validation_max_errors = 0
+            """)
+
+        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+            from daffy.config import load_config
+
+            clear_config_cache()
+
+            with pytest.raises(ValueError) as exc_info:
+                load_config()
+            assert "row_validation_max_errors" in str(exc_info.value)
+            assert ">= 1" in str(exc_info.value)

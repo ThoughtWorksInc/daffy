@@ -365,3 +365,93 @@ def test_early_termination_with_polars() -> None:
 
     # Should indicate stopped early
     assert "stopped scanning early" in message
+
+
+def test_error_count_matches_actual_invalid_rows() -> None:
+    """Error message should report exact count of invalid rows."""
+    df = pd.DataFrame(
+        {
+            "name": ["A", "B", "C", "D", "E", "F", "G"],
+            "age": [-1, -2, -3, 25, 30, -4, -5],  # 5 invalid rows (indices 0,1,2,5,6)
+            "price": [10.0] * 7,
+        }
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        validate_dataframe_rows(df, SimpleValidator, max_errors=10, early_termination=False)
+
+    message = str(exc_info.value)
+    # Should report exactly 5 invalid rows out of 7
+    assert "5 out of 7 rows" in message
+
+
+def test_default_max_errors_is_five() -> None:
+    """Default max_errors should be 5 when not specified."""
+    df = pd.DataFrame(
+        {
+            "name": [str(i) for i in range(20)],
+            "age": [-1] * 20,  # All invalid
+            "price": [10.0] * 20,
+        }
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        # Don't pass max_errors - should use default of 5
+        validate_dataframe_rows(df, SimpleValidator, early_termination=False)
+
+    message = str(exc_info.value)
+
+    # Should show first 5 errors (default max_errors=5)
+    assert "Row 0:" in message
+    assert "Row 4:" in message
+    # Row 5 should NOT be shown (only first 5)
+    assert "Row 5:" not in message
+    # Should indicate 15 more errors (20 total - 5 shown)
+    assert "15 more row(s) with errors" in message
+
+
+def test_default_early_termination_is_true() -> None:
+    """Default early_termination should be True."""
+    df = pd.DataFrame(
+        {
+            "name": [str(i) for i in range(100)],
+            "age": [-1] * 100,  # All invalid
+            "price": [10.0] * 100,
+        }
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        # Don't pass early_termination - should use default of True
+        validate_dataframe_rows(df, SimpleValidator, max_errors=5)
+
+    message = str(exc_info.value)
+
+    # Should indicate stopped early (default early_termination=True)
+    assert "stopped scanning early" in message
+    # Should NOT show exact remaining count since we stopped early
+    assert "95 more row(s) with errors" not in message
+
+
+def test_no_more_rows_message_when_all_errors_shown() -> None:
+    """When total_errors == max_errors, don't show 'more rows' message."""
+    df = pd.DataFrame(
+        {
+            "name": ["A", "B", "C"],
+            "age": [-1, -2, -3],  # All 3 invalid
+            "price": [10.0] * 3,
+        }
+    )
+
+    with pytest.raises(AssertionError) as exc_info:
+        # max_errors=3 and exactly 3 errors - no "more rows" message needed
+        validate_dataframe_rows(df, SimpleValidator, max_errors=3, early_termination=False)
+
+    message = str(exc_info.value)
+
+    # Should show all 3 errors
+    assert "Row 0:" in message
+    assert "Row 1:" in message
+    assert "Row 2:" in message
+    # Should NOT show "more rows" since all errors are shown
+    assert "more row(s) with errors" not in message
+    assert "stopped scanning early" not in message

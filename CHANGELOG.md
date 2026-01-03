@@ -13,6 +13,11 @@ All notable changes to this project will be documented in this file.
   - `allow_empty`: control whether empty DataFrames (0 rows) are allowed
 - New `allow_empty` configuration option in `pyproject.toml` (default: `true`)
 
+### Internal Improvements
+
+- Added property-based tests with Hypothesis for mathematical invariants
+- Added boundary-value and default-parameter tests for improved test coverage
+
 ## 2.3.1
 
 ### Bug Fixes
