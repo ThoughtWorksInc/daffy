@@ -1,8 +1,6 @@
 # API Reference
 
-## Decorators
-
-### @df_in
+## @df_in
 
 Validates DataFrame parameters passed to a function.
 
@@ -46,7 +44,7 @@ Validates DataFrame parameters passed to a function.
 
 ---
 
-### @df_out
+## @df_out
 
 Validates the DataFrame returned by a function.
 
@@ -78,7 +76,7 @@ Validates the DataFrame returned by a function.
 
 ---
 
-### @df_log
+## @df_log
 
 Logs DataFrame structure when entering and exiting a function.
 
