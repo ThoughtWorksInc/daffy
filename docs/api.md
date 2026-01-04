@@ -1,8 +1,6 @@
 # API Reference
 
-## Decorators
-
-### @df_in
+## @df_in
 
 Validates DataFrame parameters passed to a function.
 
@@ -17,12 +15,12 @@ Validates DataFrame parameters passed to a function.
 
 **Parameters:**
 
-| Parameter       | Type                      | Description                                                                                   |
-| --------------- | ------------------------- | --------------------------------------------------------------------------------------------- |
-| `name`          | `str \| None`             | Name of the parameter to validate. If not specified, validates the first DataFrame parameter. |
-| `columns`       | `list \| dict \| None`    | Column specification. See [Column Specifications](#column-specifications).                    |
-| `strict`        | `bool \| None`            | If `True`, raises error for unexpected columns. Defaults to project config or `False`.        |
-| `row_validator` | `type[BaseModel] \| None` | Pydantic model for row-level validation.                                                      |
+| Parameter       | Type                        | Description                                                                                   |
+| --------------- | --------------------------- | --------------------------------------------------------------------------------------------- |
+| `name`          | `str` or `None`             | Name of the parameter to validate. If not specified, validates the first DataFrame parameter. |
+| `columns`       | `list` or `dict` or `None`  | Column specification. See [Column Specifications](#column-specifications).                    |
+| `strict`        | `bool` or `None`            | If `True`, raises error for unexpected columns. Defaults to project config or `False`.        |
+| `row_validator` | `type[BaseModel]` or `None` | Pydantic model for row-level validation.                                                      |
 
 **Examples:**
 
@@ -46,7 +44,7 @@ Validates DataFrame parameters passed to a function.
 
 ---
 
-### @df_out
+## @df_out
 
 Validates the DataFrame returned by a function.
 
@@ -60,11 +58,11 @@ Validates the DataFrame returned by a function.
 
 **Parameters:**
 
-| Parameter       | Type                      | Description                                                                            |
-| --------------- | ------------------------- | -------------------------------------------------------------------------------------- |
-| `columns`       | `list \| dict \| None`    | Column specification. See [Column Specifications](#column-specifications).             |
-| `strict`        | `bool \| None`            | If `True`, raises error for unexpected columns. Defaults to project config or `False`. |
-| `row_validator` | `type[BaseModel] \| None` | Pydantic model for row-level validation.                                               |
+| Parameter       | Type                        | Description                                                                            |
+| --------------- | --------------------------- | -------------------------------------------------------------------------------------- |
+| `columns`       | `list` or `dict` or `None`  | Column specification. See [Column Specifications](#column-specifications).             |
+| `strict`        | `bool` or `None`            | If `True`, raises error for unexpected columns. Defaults to project config or `False`. |
+| `row_validator` | `type[BaseModel]` or `None` | Pydantic model for row-level validation.                                               |
 
 **Examples:**
 
@@ -78,7 +76,7 @@ Validates the DataFrame returned by a function.
 
 ---
 
-### @df_log
+## @df_log
 
 Logs DataFrame structure when entering and exiting a function.
 
