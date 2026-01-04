@@ -61,6 +61,7 @@ dev = [
     "pytest-cov==7.0.0",
     "pre-commit==4.5.1",
     "pydocstyle==6.3.0",
+    "zensical>=0.0.15",
 ]
 
 [build-system]
