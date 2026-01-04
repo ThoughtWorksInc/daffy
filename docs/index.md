@@ -6,31 +6,23 @@ Daffy catches missing columns, wrong data types, and invalid values at runtime â
 
 Also supports Modin and PyArrow DataFrames.
 
-<div class="grid cards" markdown>
+<div class="grid" markdown>
 
-- :material-lightning-bolt: **Lightweight**
+:material-lightning-bolt: **Lightweight**<br>
+Column & dtype validation with minimal overhead
+{ .card }
 
-  ---
+:material-check-all: **Value Constraints**<br>
+Nullability, uniqueness, range checks
+{ .card }
 
-  Column & dtype validation with minimal overhead
+:material-shield-check: **Row Validation**<br>
+Deep validation with Pydantic models
+{ .card }
 
-- :material-check-all: **Value Constraints**
-
-  ---
-
-  Nullability, uniqueness, range checks
-
-- :material-shield-check: **Row Validation**
-
-  ---
-
-  Deep validation with Pydantic models
-
-- :material-swap-horizontal: **Multi-Backend**
-
-  ---
-
-  Works with pandas, Polars, Modin, PyArrow
+:material-swap-horizontal: **Multi-Backend**<br>
+Works with pandas, Polars, Modin, PyArrow
+{ .card }
 
 </div>
 
@@ -89,30 +81,22 @@ Most DataFrame validation tools are schema-first (define schemas separately) or 
 
 ## Next Steps
 
-<div class="grid cards" markdown>
+<div class="grid" markdown>
 
-- :material-rocket-launch: **[Getting Started](getting-started.md)**
+:material-rocket-launch: **[Getting Started](getting-started.md)**<br>
+Quick introduction to Daffy's core features
+{ .card }
 
-  ---
+:material-book-open-variant: **[Usage Guide](usage.md)**<br>
+Core validation features for everyday use
+{ .card }
 
-  Quick introduction to Daffy's core features
+:material-chef-hat: **[Recipes & Patterns](recipes.md)**<br>
+Real-world examples and best practices
+{ .card }
 
-- :material-book-open-variant: **[Usage Guide](usage.md)**
-
-  ---
-
-  Core validation features for everyday use
-
-- :material-chef-hat: **[Recipes & Patterns](recipes.md)**
-
-  ---
-
-  Real-world examples and best practices
-
-- :material-api: **[API Reference](api.md)**
-
-  ---
-
-  Decorator signatures and parameters
+:material-api: **[API Reference](api.md)**<br>
+Decorator signatures and parameters
+{ .card }
 
 </div>
