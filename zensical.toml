@@ -1,6 +1,7 @@
 [project]
 site_name = "Daffy"
 site_url = "https://daffy.readthedocs.io"
+site_dir = "site"
 repo_url = "https://github.com/vertti/daffy"
 repo_name = "vertti/daffy"
 
