@@ -12,14 +12,14 @@ __all__ = ["IntoDataFrame", "IntoDataFrameT", "get_available_library_names"]
 
 # Check which DataFrame libraries are available (for error messages and early failure)
 try:
-    import pandas  # noqa: F401
+    import pandas  # noqa: F401 # pragma: no skylos - optional dependency detection
 
     HAS_PANDAS = True
 except ImportError:  # pragma: no cover
     HAS_PANDAS = False
 
 try:
-    import polars  # noqa: F401
+    import polars  # noqa: F401 # pragma: no skylos - optional dependency detection
 
     HAS_POLARS = True
 except ImportError:  # pragma: no cover

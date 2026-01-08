@@ -51,7 +51,7 @@ jobs:
           uv run ruff check --output-format=github .
           uv run ruff format --diff
           uv run pyrefly check .
-          uv run vulture
+          uv run skylos daffy
           dprint check
 
   # Coverage on latest Python only
