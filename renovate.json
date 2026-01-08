@@ -18,8 +18,7 @@
         "skylos",
         "coverage",
         "pytest-cov",
-        "pre-commit",
-        "pydocstyle"
+        "pre-commit"
       ]
     },
     {
