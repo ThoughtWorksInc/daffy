@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 # Runtime import with availability flag
 try:
-    from pydantic import BaseModel, ValidationError  # pragma: no skylos - optional dependency detection
+    from pydantic import BaseModel, ValidationError  # pragma: no skylos
 
     HAS_PYDANTIC = True
 except ImportError:  # pragma: no cover
