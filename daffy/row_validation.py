@@ -55,6 +55,18 @@ def validate_dataframe_rows(
     _validate_optimized(df, row_validator, max_errors, early_termination)
 
 
+def _validate_single_row(
+    row_validator: type[BaseModel],
+    row: dict[str, Any],
+) -> PydanticValidationError | None:
+    """Validate a single row, returning the error if validation fails."""
+    try:
+        row_validator.model_validate(row)
+    except PydanticValidationError as e:  # type: ignore[misc]
+        return e
+    return None
+
+
 def _validate_optimized(
     df: Any,
     row_validator: type[BaseModel],
@@ -67,12 +79,11 @@ def _validate_optimized(
 
     # Unified iteration using Narwhals - works for pandas, polars, and future backends
     for idx, row in enumerate(nw.from_native(df, eager_only=True).iter_rows(named=True)):
-        try:
-            row_validator.model_validate(row)
-        except PydanticValidationError as e:  # type: ignore[misc]  # noqa: PERF203 - must catch per row
+        error = _validate_single_row(row_validator, row)
+        if error is not None:
             total_errors += 1
             if len(failed_rows) < max_errors:
-                failed_rows.append((idx, e))
+                failed_rows.append((idx, error))
             elif early_termination:
                 break
 
