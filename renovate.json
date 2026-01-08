@@ -18,8 +18,7 @@
         "vulture",
         "coverage",
         "pytest-cov",
-        "pre-commit",
-        "pydocstyle"
+        "pre-commit"
       ]
     },
     {
