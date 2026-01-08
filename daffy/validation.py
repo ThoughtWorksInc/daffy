@@ -160,6 +160,149 @@ def _find_column_violations(
     return violations
 
 
+class _ValidationAccumulator:
+    """Accumulates validation results during DataFrame validation."""
+
+    def __init__(self, df_columns: list[str]) -> None:
+        self.df_columns = df_columns
+        self.missing_columns: list[str] = []
+        self.dtype_mismatches: list[tuple[str, Any, Any]] = []
+        self.nullable_violations: list[tuple[str, int]] = []
+        self.uniqueness_violations: list[tuple[str, int]] = []
+        self.check_violations: list[CheckViolation] = []
+        self.matched_by_regex: set[str] = set()
+
+
+def _process_dict_column_spec(
+    column: str,
+    spec_value: Any,
+    df: Any,
+    acc: _ValidationAccumulator,
+) -> None:
+    """Process a single dict column specification and accumulate violations."""
+    column_spec: str | RegexColumnDef = (
+        compile_regex_pattern(column) if isinstance(column, str) and is_regex_string(column) else column
+    )
+    acc.matched_by_regex.update(find_regex_matches(column_spec, acc.df_columns))
+
+    if isinstance(spec_value, dict):
+        required = spec_value.get("required", True)
+        expected_dtype = spec_value.get("dtype")
+        nullable = spec_value.get("nullable", True)
+        unique = spec_value.get("unique", False)
+        checks = spec_value.get("checks")
+
+        if required:
+            acc.missing_columns.extend(_find_missing_columns(column_spec, acc.df_columns))
+        if expected_dtype is not None:
+            acc.dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, acc.df_columns))
+        if not nullable:
+            acc.nullable_violations.extend(_find_column_violations(column_spec, df, acc.df_columns, count_null_values))
+        if unique:
+            acc.uniqueness_violations.extend(
+                _find_column_violations(column_spec, df, acc.df_columns, count_duplicate_values)
+            )
+        if checks:
+            max_samples = get_checks_max_samples()
+            for col in _get_columns_to_check(column_spec, acc.df_columns):
+                acc.check_violations.extend(validate_checks(df, col, checks, max_samples))
+    else:
+        acc.missing_columns.extend(_find_missing_columns(column_spec, acc.df_columns))
+        acc.dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, spec_value, acc.df_columns))
+
+
+def _validate_composite_unique(
+    df: Any,
+    df_columns: list[str],
+    composite_unique: list[list[str]],
+    param_info: str,
+    lazy: bool,
+    errors: list[str],
+) -> None:
+    """Validate composite unique constraints."""
+    for col_combo in composite_unique:
+        missing_cols = [c for c in col_combo if c not in df_columns]
+        if missing_cols:
+            col_desc = " + ".join(f"'{c}'" for c in col_combo)
+            msg = f"composite_unique references missing columns {missing_cols} in combination [{col_desc}]{param_info}"
+            _raise_or_collect(msg, lazy, errors)
+            continue
+
+        dup_count = count_duplicate_rows(df, col_combo)
+        if dup_count > 0:
+            col_desc = " + ".join(f"'{c}'" for c in col_combo)
+            msg = (
+                f"Columns {col_desc}{param_info} contain {dup_count} duplicate combinations but composite_unique is set"
+            )
+            _raise_or_collect(msg, lazy, errors)
+
+
+def _report_check_violations(
+    check_violations: list[CheckViolation],
+    param_info: str,
+    lazy: bool,
+    errors: list[str],
+) -> None:
+    """Report check violations."""
+    if not check_violations:
+        return
+    if len(check_violations) == 1:
+        col, check, count, samples = check_violations[0]
+        msg = f"Column '{col}'{param_info} failed check {check}: {count} values failed. Examples: {samples}"
+    else:
+        violation_lines = [
+            f"Column '{col}' failed {check}: {count} values. Examples: {samples}"
+            for col, check, count, samples in check_violations
+        ]
+        msg = f"Check violations{param_info}:\n  " + "\n  ".join(violation_lines)
+    _raise_or_collect(msg, lazy, errors)
+
+
+def _validate_strict_mode(
+    columns: ColumnsList | ColumnsDict,
+    df_columns: list[str],
+    matched_by_regex: set[str],
+    param_info: str,
+    lazy: bool,
+    errors: list[str],
+) -> None:
+    """Validate strict mode - no extra columns allowed."""
+    explicit_columns = {col for col in columns if isinstance(col, str)}
+    allowed_columns = explicit_columns.union(matched_by_regex)
+    extra_columns = set(df_columns) - allowed_columns
+    if extra_columns:
+        msg = f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}"
+        _raise_or_collect(msg, lazy, errors)
+
+
+def _report_accumulated_violations(
+    acc: _ValidationAccumulator,
+    df: Any,
+    param_info: str,
+    lazy: bool,
+    errors: list[str],
+) -> None:
+    """Report all accumulated violations from validation."""
+    if acc.missing_columns:
+        msg = f"Missing columns: {acc.missing_columns}{param_info}. Got {describe_dataframe(df)}"
+        _raise_or_collect(msg, lazy, errors)
+
+    if acc.dtype_mismatches:
+        msg = ", ".join(
+            f"Column {col}{param_info} has wrong dtype. Was {was}, expected {expected}"
+            for col, was, expected in acc.dtype_mismatches
+        )
+        _raise_or_collect(msg, lazy, errors)
+
+    if acc.nullable_violations:
+        msg = _format_violation_error(acc.nullable_violations, param_info, "null", "nullable=False")
+        _raise_or_collect(msg, lazy, errors)
+
+    if acc.uniqueness_violations:
+        msg = _format_violation_error(acc.uniqueness_violations, param_info, "duplicate", "unique=True")
+        _raise_or_collect(msg, lazy, errors)
+
+
 def validate_dataframe(
     df: Any,
     columns: ColumnsList | ColumnsDict,
@@ -190,121 +333,29 @@ def validate_dataframe(
     """
     lazy = get_lazy(lazy)
     df_columns = nw.from_native(df, eager_only=True).columns
-    all_missing_columns: list[str] = []
-    all_dtype_mismatches: list[tuple[str, Any, Any]] = []
-    all_nullable_violations: list[tuple[str, int]] = []
-    all_uniqueness_violations: list[tuple[str, int]] = []
-    all_check_violations: list[CheckViolation] = []
-    all_matched_by_regex: set[str] = set()
+    acc = _ValidationAccumulator(df_columns)
 
     if isinstance(columns, dict):
         for column, spec_value in columns.items():
-            column_spec: str | RegexColumnDef = (
-                compile_regex_pattern(column) if isinstance(column, str) and is_regex_string(column) else column
-            )
-            all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
-
-            if isinstance(spec_value, dict):
-                required = spec_value.get("required", True)
-                expected_dtype = spec_value.get("dtype")
-                nullable = spec_value.get("nullable", True)
-                unique = spec_value.get("unique", False)
-                checks = spec_value.get("checks")
-
-                if required:
-                    all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
-                if expected_dtype is not None:
-                    all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, expected_dtype, df_columns))
-                if not nullable:
-                    all_nullable_violations.extend(
-                        _find_column_violations(column_spec, df, df_columns, count_null_values)
-                    )
-                if unique:
-                    all_uniqueness_violations.extend(
-                        _find_column_violations(column_spec, df, df_columns, count_duplicate_values)
-                    )
-                if checks:
-                    max_samples = get_checks_max_samples()
-                    for col in _get_columns_to_check(column_spec, df_columns):
-                        all_check_violations.extend(validate_checks(df, col, checks, max_samples))
-            else:
-                all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
-                all_dtype_mismatches.extend(_find_dtype_mismatches(column_spec, df, spec_value, df_columns))
+            _process_dict_column_spec(column, spec_value, df, acc)
     else:
         processed_columns = compile_regex_patterns(columns)
         for column_spec in processed_columns:
-            all_missing_columns.extend(_find_missing_columns(column_spec, df_columns))
-            all_matched_by_regex.update(find_regex_matches(column_spec, df_columns))
+            acc.missing_columns.extend(_find_missing_columns(column_spec, df_columns))
+            acc.matched_by_regex.update(find_regex_matches(column_spec, df_columns))
 
     param_info = format_param_context(param_name, func_name, is_return_value)
-
-    # Collect error messages (include shape errors if provided)
     errors: list[str] = list(shape_errors) if shape_errors else []
 
-    if all_missing_columns:
-        msg = f"Missing columns: {all_missing_columns}{param_info}. Got {describe_dataframe(df)}"
-        _raise_or_collect(msg, lazy, errors)
-
-    if all_dtype_mismatches:
-        msg = ", ".join(
-            f"Column {col}{param_info} has wrong dtype. Was {was}, expected {expected}"
-            for col, was, expected in all_dtype_mismatches
-        )
-        _raise_or_collect(msg, lazy, errors)
-
-    if all_nullable_violations:
-        msg = _format_violation_error(all_nullable_violations, param_info, "null", "nullable=False")
-        _raise_or_collect(msg, lazy, errors)
-
-    if all_uniqueness_violations:
-        msg = _format_violation_error(all_uniqueness_violations, param_info, "duplicate", "unique=True")
-        _raise_or_collect(msg, lazy, errors)
+    _report_accumulated_violations(acc, df, param_info, lazy, errors)
 
     if composite_unique:
-        # Validate that all referenced columns exist
-        for col_combo in composite_unique:
-            missing_cols = [c for c in col_combo if c not in df_columns]
-            if missing_cols:
-                col_desc = " + ".join(f"'{c}'" for c in col_combo)
-                msg = (
-                    f"composite_unique references missing columns {missing_cols} "
-                    f"in combination [{col_desc}]{param_info}"
-                )
-                if not lazy:
-                    raise AssertionError(msg)
-                errors.append(msg)
-                continue  # Skip duplicate check for this combo since columns don't exist
+        _validate_composite_unique(df, df_columns, composite_unique, param_info, lazy, errors)
 
-            dup_count = count_duplicate_rows(df, col_combo)
-            if dup_count > 0:
-                col_desc = " + ".join(f"'{c}'" for c in col_combo)
-                msg = (
-                    f"Columns {col_desc}{param_info} contain {dup_count} duplicate combinations "
-                    "but composite_unique is set"
-                )
-                if not lazy:
-                    raise AssertionError(msg)
-                errors.append(msg)
-
-    if all_check_violations:
-        if len(all_check_violations) == 1:
-            col, check, count, samples = all_check_violations[0]
-            msg = f"Column '{col}'{param_info} failed check {check}: {count} values failed. Examples: {samples}"
-        else:
-            violation_lines: list[str] = []
-            for col, check, count, samples in all_check_violations:
-                violation_lines.append(f"Column '{col}' failed {check}: {count} values. Examples: {samples}")
-            msg = f"Check violations{param_info}:\n  " + "\n  ".join(violation_lines)
-        _raise_or_collect(msg, lazy, errors)
+    _report_check_violations(acc.check_violations, param_info, lazy, errors)
 
     if strict:
-        explicit_columns = {col for col in columns if isinstance(col, str)}
-        allowed_columns = explicit_columns.union(all_matched_by_regex)
-        extra_columns = set(df_columns) - allowed_columns
-        if extra_columns:
-            msg = f"DataFrame{param_info} contained unexpected column(s): {', '.join(extra_columns)}"
-            _raise_or_collect(msg, lazy, errors)
+        _validate_strict_mode(columns, df_columns, acc.matched_by_regex, param_info, lazy, errors)
 
-    # In lazy mode, raise all collected errors at once
     if lazy and errors:
         raise AssertionError("\n\n".join(errors))
