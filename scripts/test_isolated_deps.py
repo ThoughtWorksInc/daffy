@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manual script to test daffy with different dependency combinations.
+r"""Manual script to test daffy with different dependency combinations.
 
 This script helps verify that the optional dependencies work correctly
 by testing with different combinations of pandas/polars/pydantic.

@@ -11,7 +11,7 @@ from tests.utils import DataFrameFactory
 class TestRowConstraints:
     @pytest.mark.parametrize("decorator", [df_out, df_in])
     @pytest.mark.parametrize(
-        "constraint,value,rows,should_pass",
+        ("constraint", "value", "rows", "should_pass"),
         [
             ("min_rows", 3, [1, 2], False),
             ("min_rows", 3, [1, 2, 3], True),
@@ -138,7 +138,7 @@ class TestLazyMode:
 class TestInvalidConstraints:
     @pytest.mark.parametrize("decorator", [df_out, df_in])
     @pytest.mark.parametrize(
-        "kwargs,error_match",
+        ("kwargs", "error_match"),
         [
             ({"min_rows": -1}, r"min_rows must be >= 0"),
             ({"max_rows": -5}, r"max_rows must be >= 0"),

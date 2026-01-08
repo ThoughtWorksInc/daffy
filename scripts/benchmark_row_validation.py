@@ -37,6 +37,8 @@ from pydantic import BaseModel, ConfigDict, Field
 # Add current directory to path to import daffy
 sys.path.insert(0, ".")
 
+import contextlib
+
 from daffy.row_validation import validate_dataframe_rows
 
 try:
@@ -194,10 +196,8 @@ def benchmark_pydantic_baseline(df: pd.DataFrame, validator: type[BaseModel], ru
     for _ in range(runs):
         start = time.perf_counter()
         for _, row in df.iterrows():
-            try:
+            with contextlib.suppress(Exception):
                 validator.model_validate(row.to_dict())
-            except Exception:
-                pass
         end = time.perf_counter()
         times.append(end - start)
     return sum(times) / len(times)

@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import inspect
 import logging
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import narwhals as nw
 
 from daffy.dataframe_types import get_available_library_names
 from daffy.narwhals_compat import is_supported_dataframe
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def assert_is_dataframe(obj: Any, context: str) -> None:
@@ -115,11 +117,15 @@ def describe_dataframe(df: Any, include_dtypes: bool = False) -> str:
 
 def log_dataframe_input(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if is_supported_dataframe(df):
-        logging.log(
-            level, f"Function {func_name} parameters contained a DataFrame: {describe_dataframe(df, include_dtypes)}"
+        logging.log(  # noqa: LOG015
+            level,
+            f"Function {func_name} parameters contained a DataFrame: {describe_dataframe(df, include_dtypes)}",  # noqa: G004
         )
 
 
 def log_dataframe_output(level: int, func_name: str, df: Any, include_dtypes: bool) -> None:
     if is_supported_dataframe(df):
-        logging.log(level, f"Function {func_name} returned a DataFrame: {describe_dataframe(df, include_dtypes)}")
+        logging.log(  # noqa: LOG015
+            level,
+            f"Function {func_name} returned a DataFrame: {describe_dataframe(df, include_dtypes)}",  # noqa: G004
+        )

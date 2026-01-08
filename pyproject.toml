@@ -152,11 +152,27 @@ ignore = [
     "T201",    # Print statements - legitimate in scripts
     "NPY002",  # Legacy numpy random - not worth modernizing in benchmarks
     "S101",    # Assert used - test scripts use asserts
+    "PLC0415", # Import not at top-level - acceptable in scripts
+    "BLE001",  # Blind exception - acceptable in scripts
+    "SIM105",  # contextlib.suppress - matter of taste
+    "S110",    # try/except/pass - intentional
+    "D401",    # First line imperative - minor
+    "EXE001",  # Shebang without exec permission
+    "PD003",   # isna vs isnull - equivalent
+    "TRY300",  # Return in try block - minor
+    "PLR0915", # Too many statements
+    "PLR0911", # Too many return statements
 ]
 "tests/*" = [
     "S101",    # Assert used - fine in tests
     "ARG001",  # Unused function argument - intentional in test scenarios
     "ARG005",  # Unused lambda argument - intentional in test scenarios
+    "PLC0415", # Import not at top-level - needed for test isolation
+    "PT011",   # pytest.raises without match - not always needed
+    "PT012",   # pytest.raises block complexity
+    "PT019",   # Fixture without return - false positive (not fixtures)
+    "PTH118",  # os.path.join - fine in tests
+    "PTH123",  # open() - fine in tests
 ]
 
 [tool.pyrefly]

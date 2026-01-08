@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import os
 from functools import lru_cache
+from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
@@ -73,7 +73,7 @@ def load_config() -> dict[str, Any]:
         return default_config
 
     try:
-        with open(config_path, "rb") as f:
+        with Path(config_path).open("rb") as f:
             pyproject = tomli.load(f)
 
         # Extract daffy configuration if it exists
@@ -100,15 +100,15 @@ def load_config() -> dict[str, Any]:
         if allow_empty is not None:
             default_config[_KEY_ALLOW_EMPTY] = allow_empty
 
-        return default_config
+        return default_config  # noqa: TRY300 - clearer than else block
     except (FileNotFoundError, tomli.TOMLDecodeError):
         return default_config
 
 
 def find_config_file() -> str | None:
     """Find pyproject.toml in the current working directory."""
-    path = os.path.join(os.getcwd(), "pyproject.toml")
-    return path if os.path.isfile(path) else None
+    path = Path.cwd() / "pyproject.toml"
+    return str(path) if path.is_file() else None
 
 
 @lru_cache(maxsize=1)

@@ -69,7 +69,7 @@ def _validate_optimized(
     for idx, row in enumerate(nw.from_native(df, eager_only=True).iter_rows(named=True)):
         try:
             row_validator.model_validate(row)
-        except PydanticValidationError as e:  # type: ignore[misc]
+        except PydanticValidationError as e:  # type: ignore[misc]  # noqa: PERF203 - must catch per row
             total_errors += 1
             if len(failed_rows) < max_errors:
                 failed_rows.append((idx, e))

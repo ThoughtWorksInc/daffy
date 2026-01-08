@@ -85,9 +85,8 @@ class BioinformaticsFeatures(BaseModel):
     @classmethod
     def dfs_must_be_lte_followup(cls, v: float | None, info: Any) -> float | None:
         """Disease-free survival cannot exceed follow-up time."""
-        if v is not None and info.data.get("months_followup") is not None:
-            if v > info.data["months_followup"]:
-                raise ValueError("DFS cannot exceed follow-up time")
+        if v is not None and info.data.get("months_followup") is not None and v > info.data["months_followup"]:
+            raise ValueError("DFS cannot exceed follow-up time")
         return v
 
 

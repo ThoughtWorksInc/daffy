@@ -11,6 +11,6 @@ def is_supported_dataframe(obj: Any) -> bool:
     """Check if object is a supported eager DataFrame type."""
     try:
         nw.from_native(obj, eager_only=True)
-        return True
+        return True  # noqa: TRY300 - idiomatic for type checking
     except TypeError:
         return False

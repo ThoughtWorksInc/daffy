@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from daffy.config import clear_config_cache, get_checks_max_samples, get_config, get_strict
@@ -43,7 +44,7 @@ strict = true
             """)
 
         # Test loading from this file
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()
@@ -63,7 +64,7 @@ def test_load_config_returns_default_when_toml_malformed() -> None:
         with open(os.path.join(tmpdir, "pyproject.toml"), "w") as f:
             f.write("invalid toml [[[")
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             clear_config_cache()
 
             config = get_config()
@@ -71,7 +72,7 @@ def test_load_config_returns_default_when_toml_malformed() -> None:
 
 
 def test_find_config_file_returns_none_when_no_pyproject_exists() -> None:
-    with tempfile.TemporaryDirectory() as tmpdir, patch("daffy.config.os.getcwd", return_value=tmpdir):
+    with tempfile.TemporaryDirectory() as tmpdir, patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
         from daffy.config import find_config_file
 
         result = find_config_file()
@@ -86,7 +87,7 @@ def test_load_config_without_strict_setting() -> None:
 other_setting = "value"
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             clear_config_cache()
 
             config = get_config()
@@ -101,7 +102,7 @@ def test_load_config_daffy_section_without_strict() -> None:
 some_other_setting = "value"
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             clear_config_cache()
 
             config = get_config()
@@ -126,7 +127,7 @@ def test_checks_max_samples_from_pyproject() -> None:
 checks_max_samples = 10
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()
@@ -146,7 +147,7 @@ def test_config_strict_string_raises_error() -> None:
 strict = "false"
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()
@@ -168,7 +169,7 @@ def test_config_max_samples_string_raises_error() -> None:
 checks_max_samples = "five"
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()
@@ -190,7 +191,7 @@ def test_config_max_samples_zero_raises_error() -> None:
 checks_max_samples = 0
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()
@@ -210,7 +211,7 @@ def test_config_max_samples_one_passes() -> None:
 checks_max_samples = 1
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()
@@ -228,7 +229,7 @@ def test_config_row_validation_max_errors_one_passes() -> None:
 row_validation_max_errors = 1
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()
@@ -248,7 +249,7 @@ def test_config_row_validation_max_errors_zero_raises_error() -> None:
 row_validation_max_errors = 0
             """)
 
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
+        with patch("daffy.config.Path.cwd", return_value=Path(tmpdir)):
             from daffy.config import load_config
 
             clear_config_cache()

@@ -106,9 +106,11 @@ def _find_dtype_mismatches(
             mismatches.append((column_spec, df[column_spec].dtype, expected_dtype))
     elif is_regex_pattern(column_spec):
         matches = match_column_with_regex(column_spec, df_columns)
-        for matched_col in matches:
-            if df[matched_col].dtype != expected_dtype:
-                mismatches.append((matched_col, df[matched_col].dtype, expected_dtype))
+        mismatches.extend(
+            (matched_col, df[matched_col].dtype, expected_dtype)
+            for matched_col in matches
+            if df[matched_col].dtype != expected_dtype
+        )
     return mismatches
 
 

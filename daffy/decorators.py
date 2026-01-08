@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from pydantic import BaseModel
 
+    from daffy.dataframe_types import IntoDataFrameT
+
 from daffy.config import get_allow_empty, get_lazy, get_row_validation_max_errors, get_strict
-from daffy.dataframe_types import IntoDataFrameT
 from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
     assert_is_dataframe,

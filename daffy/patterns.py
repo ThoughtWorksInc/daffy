@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
 from functools import lru_cache
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # Regex column pattern format delimiters
 _REGEX_PREFIX = "r/"
@@ -36,7 +38,7 @@ def is_regex_string(column: str) -> bool:
 
 @lru_cache(maxsize=128)
 def compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
-    """Compile a regex pattern from r/pattern/ format.
+    r"""Compile a regex pattern from r/pattern/ format.
 
     Args:
         pattern_string: Pattern in format "r/pattern/" (e.g., "r/col_\\d+/")
@@ -80,7 +82,7 @@ def compile_regex_patterns(columns: Sequence[Any]) -> list[str | RegexColumnDef]
 
 
 def match_column_with_regex(column_pattern: RegexColumnDef, df_columns: list[str]) -> list[str]:
-    """Find DataFrame columns matching a regex pattern.
+    r"""Find DataFrame columns matching a regex pattern.
 
     Uses ``re.match()`` which anchors at the start of the string. The pattern
     ``r/\\d+/`` will match "123_col" but NOT "col_123". Use ``r/.*\\d+/`` for

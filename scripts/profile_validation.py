@@ -21,6 +21,8 @@ from pydantic import BaseModel, Field, TypeAdapter
 # Add current directory to path to import daffy
 sys.path.insert(0, ".")
 
+import contextlib
+
 from daffy.row_validation import validate_dataframe_rows
 
 
@@ -74,7 +76,7 @@ def profile_validation_steps(n_rows: int, detailed: bool = False) -> dict[str, f
         # itertuples approach
         t0 = time.perf_counter()
         columns = df.columns.tolist()
-        _ = [dict(zip(columns, row)) for row in df.itertuples(index=False, name=None)]
+        _ = [dict(zip(columns, row, strict=False)) for row in df.itertuples(index=False, name=None)]
         t1 = time.perf_counter()
         results["itertuples"] = t1 - t0
         print(f"  itertuples + zip:   {(t1 - t0) * 1000:.1f}ms")
@@ -83,7 +85,7 @@ def profile_validation_steps(n_rows: int, detailed: bool = False) -> dict[str, f
         t0 = time.perf_counter()
         columns = df.columns.tolist()
         values = df.to_numpy()
-        _ = [dict(zip(columns, row)) for row in values]
+        _ = [dict(zip(columns, row, strict=False)) for row in values]
         t1 = time.perf_counter()
         results["numpy"] = t1 - t0
         print(f"  NumPy + zip:        {(t1 - t0) * 1000:.1f}ms")
@@ -121,10 +123,8 @@ def profile_validation_steps(n_rows: int, detailed: bool = False) -> dict[str, f
     # Step 4: Batch validation with TypeAdapter
     print("\nStep 4: Validation methods")
     t0 = time.perf_counter()
-    try:
+    with contextlib.suppress(Exception):
         adapter.validate_python(records_clean)
-    except Exception:
-        pass
     t1 = time.perf_counter()
     step4_time = t1 - t0
     results["batch_validation"] = step4_time
@@ -134,20 +134,16 @@ def profile_validation_steps(n_rows: int, detailed: bool = False) -> dict[str, f
         # Compare with row-by-row validation
         t0 = time.perf_counter()
         for record in records_clean:
-            try:
+            with contextlib.suppress(Exception):
                 SimpleValidator.model_validate(record)
-            except Exception:
-                pass
         t1 = time.perf_counter()
         results["row_by_row"] = t1 - t0
         print(f"  Row-by-row:          {(t1 - t0) * 1000:.1f}ms")
 
         # Test with cached adapter (simulating reuse)
         t0 = time.perf_counter()
-        try:
+        with contextlib.suppress(Exception):
             adapter.validate_python(records_clean)
-        except Exception:
-            pass
         t1 = time.perf_counter()
         results["batch_validation_cached"] = t1 - t0
         print(f"  Batch (reused):      {(t1 - t0) * 1000:.1f}ms")
@@ -186,10 +182,8 @@ def profile_daffy_vs_components(n_rows: int) -> None:
 
     # Time full daffy validation
     t0 = time.perf_counter()
-    try:
+    with contextlib.suppress(Exception):
         validate_dataframe_rows(df, SimpleValidator)
-    except Exception:
-        pass
     t1 = time.perf_counter()
     daffy_time = t1 - t0
 

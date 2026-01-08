@@ -127,6 +127,6 @@ class TestCheckBoundaryInvariants:
         series = pd.Series(values)
 
         base_failures, _ = apply_check(series, "isin", allowed)
-        expanded_failures, _ = apply_check(series, "isin", allowed + [extra])
+        expanded_failures, _ = apply_check(series, "isin", [*allowed, extra])
 
         assert expanded_failures <= base_failures

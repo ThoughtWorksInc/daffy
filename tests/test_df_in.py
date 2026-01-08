@@ -183,7 +183,7 @@ def test_df_in_missing_multiple_columns(df: Any) -> None:
 
 
 @pytest.mark.parametrize(
-    ("basic_df,extended_df"),
+    ("basic_df", "extended_df"),
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
 def test_multiple_named_inputs_with_names_in_function_call(basic_df: IntoDataFrame, extended_df: IntoDataFrame) -> None:
@@ -196,7 +196,7 @@ def test_multiple_named_inputs_with_names_in_function_call(basic_df: IntoDataFra
 
 
 @pytest.mark.parametrize(
-    ("basic_df,extended_df"),
+    ("basic_df", "extended_df"),
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
 def test_multiple_named_inputs_without_names_in_function_call(
@@ -211,7 +211,7 @@ def test_multiple_named_inputs_without_names_in_function_call(
 
 
 @pytest.mark.parametrize(
-    ("basic_df,extended_df"),
+    ("basic_df", "extended_df"),
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
 def test_multiple_named_inputs_with_some_of_names_in_function_call(
@@ -326,7 +326,7 @@ def test_regex_column_with_dtype_polars(basic_polars_df: pl.DataFrame) -> None:
 
 
 @pytest.mark.parametrize(
-    ("basic_df,extended_df"),
+    ("basic_df", "extended_df"),
     [(pd.DataFrame(cars), pd.DataFrame(extended_cars)), (pl.DataFrame(cars), pl.DataFrame(extended_cars))],
 )
 def test_multiple_parameters_error_identification(basic_df: IntoDataFrame, extended_df: IntoDataFrame) -> None:
