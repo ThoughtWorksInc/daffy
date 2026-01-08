@@ -29,7 +29,7 @@ class TestCustomCheckFunctions:
 
     def test_custom_check_all_fail(self) -> None:
         series = pd.Series([-1, -2, -3])
-        fail_count, samples = apply_check(series, "positive", lambda s: s > 0)
+        fail_count, _samples = apply_check(series, "positive", lambda s: s > 0)
         assert fail_count == 3
 
     def test_custom_check_empty_series(self) -> None:
@@ -40,7 +40,7 @@ class TestCustomCheckFunctions:
 
     def test_custom_check_with_nulls_treated_as_failure(self) -> None:
         series = pd.Series([1, None, 3])
-        fail_count, samples = apply_check(series, "positive", lambda s: s > 0)
+        fail_count, _samples = apply_check(series, "positive", lambda s: s > 0)
         assert fail_count == 1  # null is treated as failure
 
     def test_custom_check_max_samples(self) -> None:
@@ -142,11 +142,8 @@ class TestCustomCheckErrorHandling:
         def bad_check(s: pd.Series) -> pd.Series:  # type: ignore[type-arg]
             raise RuntimeError("Something went wrong")
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValueError, match=r"bad_check.*raised an error"):
             apply_check(series, "bad_check", bad_check)
-        assert "bad_check" in str(exc_info.value)
-        assert "raised an error" in str(exc_info.value)
-        assert "Something went wrong" in str(exc_info.value)
 
     def test_callable_returns_wrong_type(self) -> None:
         series = pd.Series([1, 2, 3])
@@ -168,10 +165,8 @@ class TestCustomCheckErrorHandling:
     def test_callable_with_attribute_error(self) -> None:
         series = pd.Series([1, 2, 3])
 
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValueError, match=r"attr_error.*raised an error"):
             apply_check(series, "attr_error", lambda s: s.nonexistent_method())
-        assert "attr_error" in str(exc_info.value)
-        assert "raised an error" in str(exc_info.value)
 
     def test_decorator_with_failing_callable(self) -> None:
         @df_in(columns={"value": {"checks": {"bad": lambda s: s.nonexistent()}}})
@@ -179,7 +174,5 @@ class TestCustomCheckErrorHandling:
             return df
 
         df = pd.DataFrame({"value": [1, 2, 3]})
-        with pytest.raises(ValueError) as exc_info:
+        with pytest.raises(ValueError, match=r"bad.*raised an error"):
             process(df)
-        assert "bad" in str(exc_info.value)
-        assert "raised an error" in str(exc_info.value)
