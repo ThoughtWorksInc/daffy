@@ -125,6 +125,7 @@ def _format_violation_error(
         param_info: Parameter context string (e.g., " in function 'f' parameter 'df'")
         violation_type: Type of violation (e.g., "null", "duplicate")
         constraint: The constraint that was violated (e.g., "nullable=False", "unique=True")
+
     """
     if len(violations) == 1:
         col, count = violations[0]
@@ -149,6 +150,7 @@ def _find_column_violations(
 
     Returns:
         List of (column_name, violation_count) tuples for columns with violations.
+
     """
     violations: list[tuple[str, int]] = []
     for col in _get_columns_to_check(column_spec, df_columns):
@@ -184,6 +186,7 @@ def validate_dataframe(
 
     Raises:
         AssertionError: If validation fails (missing columns, dtype mismatch, or extra columns in strict mode)
+
     """
     lazy = get_lazy(lazy)
     df_columns = nw.from_native(df, eager_only=True).columns

@@ -25,7 +25,6 @@ class TestPandasValidation:
 
     def test_all_valid_rows(self) -> None:
         """Test validation passes when all rows are valid."""
-
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob", "Charlie"],
@@ -39,7 +38,6 @@ class TestPandasValidation:
 
     def test_batch_validation_with_errors(self) -> None:
         """Test batch validation catches multiple errors efficiently."""
-
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob", "Charlie", "David"],
@@ -58,7 +56,6 @@ class TestPandasValidation:
 
     def test_nan_handling(self) -> None:
         """Test NaN values fail validation when they violate constraints."""
-
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob"],
@@ -76,7 +73,6 @@ class TestPandasValidation:
 
     def test_non_integer_index(self) -> None:
         """Test validation works with non-integer DataFrame index (uses row number)."""
-
         df = pd.DataFrame(
             {
                 "name": ["Alice", "Bob"],
@@ -94,7 +90,6 @@ class TestPandasValidation:
 
     def test_datetime_index(self) -> None:
         """Test validation works with datetime index (uses row number)."""
-
         dates = pd.date_range("2025-01-01", periods=2)
         df = pd.DataFrame(
             {
@@ -113,7 +108,6 @@ class TestPandasValidation:
 
     def test_missing_required_field(self) -> None:
         """Test validation fails when required field is missing."""
-
         df = pd.DataFrame(
             {
                 "name": ["Alice"],
@@ -130,7 +124,6 @@ class TestPandasValidation:
 
     def test_type_mismatch(self) -> None:
         """Test validation fails with informative error for type mismatches."""
-
         df = pd.DataFrame(
             {
                 "name": ["Alice"],
@@ -148,7 +141,6 @@ class TestPandasValidation:
 
     def test_empty_dataframe(self) -> None:
         """Test validation passes for empty DataFrame."""
-
         df = pd.DataFrame(columns=["name", "age", "price"])  # type: ignore[arg-type]
 
         # Should not raise for empty DataFrame
@@ -160,7 +152,6 @@ class TestPolarsValidation:
 
     def test_polars_valid_rows(self) -> None:
         """Test validation passes with valid polars DataFrame."""
-
         df = pl.DataFrame(
             {
                 "name": ["Alice", "Bob"],
@@ -173,7 +164,6 @@ class TestPolarsValidation:
 
     def test_polars_invalid_rows(self) -> None:
         """Test validation fails with invalid polars DataFrame."""
-
         df = pl.DataFrame(
             {
                 "name": ["Alice", "Bob"],
@@ -191,7 +181,6 @@ class TestPolarsValidation:
 
     def test_polars_null_handling(self) -> None:
         """Test Polars null values are handled properly."""
-
         df = pl.DataFrame(
             {
                 "name": ["Alice", "Bob"],
@@ -209,7 +198,6 @@ class TestPolarsValidation:
 
 def test_max_errors_limit() -> None:
     """Test that max_errors limits the number of errors shown."""
-
     df = pd.DataFrame(
         {
             "name": [str(i) for i in range(10)],
@@ -234,7 +222,6 @@ def test_max_errors_limit() -> None:
 
 def test_invalid_dataframe_type() -> None:
     """Test that non-DataFrame types raise TypeError."""
-
     with pytest.raises(TypeError, match="Expected DataFrame"):
         validate_dataframe_rows([1, 2, 3], SimpleValidator)  # type: ignore[arg-type]
 
@@ -250,7 +237,6 @@ def test_require_pydantic_error() -> None:
 
 def test_multiple_field_errors() -> None:
     """Test that multiple field errors in same row are reported."""
-
     df = pd.DataFrame(
         {
             "name": ["Alice", "Bob"],
@@ -271,7 +257,6 @@ def test_multiple_field_errors() -> None:
 
 def test_whitespace_stripping() -> None:
     """Test that ConfigDict str_strip_whitespace works."""
-
     df = pd.DataFrame(
         {
             "name": ["  Alice  ", "  Bob  "],  # Extra whitespace

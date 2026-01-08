@@ -1,6 +1,6 @@
 """Test type compatibility issues that might occur in client code."""
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import pandas as pd
 import polars as pl

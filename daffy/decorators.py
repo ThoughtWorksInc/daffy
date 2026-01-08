@@ -65,7 +65,7 @@ InReturnT = TypeVar("InReturnT")  # Return type for df_in
 
 def _validate_rows_with_context(
     df: Any,
-    row_validator: "type[BaseModel]",
+    row_validator: type[BaseModel],
     func_name: str,
     param_name: str | None,
     is_return_value: bool,
@@ -75,7 +75,7 @@ def _validate_rows_with_context(
         validate_dataframe_rows(df, row_validator, max_errors=get_row_validation_max_errors())
     except AssertionError as e:
         context = format_param_context(param_name, func_name, is_return_value)
-        raise AssertionError(f"{str(e)}{context}") from e
+        raise AssertionError(f"{e!s}{context}") from e
 
 
 def df_out(
@@ -83,7 +83,7 @@ def df_out(
     strict: bool | None = None,
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
-    row_validator: "type[BaseModel] | None" = None,
+    row_validator: type[BaseModel] | None = None,
     min_rows: int | None = None,
     max_rows: int | None = None,
     exact_rows: int | None = None,
@@ -115,6 +115,7 @@ def df_out(
 
     Returns:
         Callable: Decorated function with preserved DataFrame return type
+
     """
     _validate_composite_unique(composite_unique)
     _validate_shape_constraints(min_rows, max_rows, exact_rows)
@@ -172,7 +173,7 @@ def df_in(
     strict: bool | None = None,
     lazy: bool | None = None,
     composite_unique: list[list[str]] | None = None,
-    row_validator: "type[BaseModel] | None" = None,
+    row_validator: type[BaseModel] | None = None,
     min_rows: int | None = None,
     max_rows: int | None = None,
     exact_rows: int | None = None,
@@ -205,6 +206,7 @@ def df_in(
 
     Returns:
         Callable: Decorated function with preserved return type
+
     """
     _validate_composite_unique(composite_unique)
     _validate_shape_constraints(min_rows, max_rows, exact_rows)
@@ -270,6 +272,7 @@ def df_log(
 
     Returns:
         Callable: Decorated function with preserved return type.
+
     """
 
     def wrapper_df_log(func: Callable[..., LogReturnT]) -> Callable[..., LogReturnT]:

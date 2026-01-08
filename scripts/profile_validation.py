@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Profile row validation to identify performance bottlenecks.
+"""Profile row validation to identify performance bottlenecks.
 
 This script measures the time spent in each step of the validation process
 to identify where optimizations will have the most impact.

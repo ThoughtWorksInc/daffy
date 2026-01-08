@@ -71,12 +71,11 @@ def test_load_config_returns_default_when_toml_malformed() -> None:
 
 
 def test_find_config_file_returns_none_when_no_pyproject_exists() -> None:
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with patch("daffy.config.os.getcwd", return_value=tmpdir):
-            from daffy.config import find_config_file
+    with tempfile.TemporaryDirectory() as tmpdir, patch("daffy.config.os.getcwd", return_value=tmpdir):
+        from daffy.config import find_config_file
 
-            result = find_config_file()
-            assert result is None
+        result = find_config_file()
+        assert result is None
 
 
 def test_load_config_without_strict_setting() -> None:

@@ -22,6 +22,7 @@ def assert_is_dataframe(obj: Any, context: str) -> None:
 
     Raises:
         AssertionError: If obj is not a DataFrame
+
     """
     if not is_supported_dataframe(obj):
         libs_str = " or ".join(get_available_library_names())
@@ -38,6 +39,7 @@ def format_param_context(param_name: str | None, func_name: str | None = None, i
 
     Returns:
         Formatted context string like " in function 'foo' parameter 'bar'"
+
     """
     context_parts = []
     if func_name:
@@ -67,6 +69,7 @@ def get_parameter(func: Callable[..., Any], name: str | None = None, *args: Any,
 
     Raises:
         ValueError: If the named parameter cannot be found in args or kwargs
+
     """
     if not name:
         # Return first arg/kwarg or None - let downstream code handle validation

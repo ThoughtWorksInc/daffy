@@ -30,8 +30,7 @@ def validate_dataframe_rows(
     max_errors: int = 5,
     early_termination: bool = True,
 ) -> None:
-    """
-    Validate DataFrame rows against a Pydantic model.
+    """Validate DataFrame rows against a Pydantic model.
 
     Args:
         df: DataFrame to validate (Pandas, Polars, Modin, or PyArrow)
@@ -43,6 +42,7 @@ def validate_dataframe_rows(
         AssertionError: If any rows fail validation (consistent with Daffy)
         ImportError: If Pydantic is not installed
         TypeError: If df is not a DataFrame
+
     """
     require_pydantic()
 

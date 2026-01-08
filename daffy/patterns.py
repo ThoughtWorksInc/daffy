@@ -51,6 +51,7 @@ def compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
         Patterns are cached for performance. Complex regex patterns with nested
         quantifiers (e.g., ``r/(a+)+/``) may cause performance issues due to
         catastrophic backtracking. Use simple patterns when possible.
+
     """
     pattern_str = pattern_string[len(_REGEX_PREFIX) : -len(_REGEX_SUFFIX)]
     if not pattern_str:
@@ -73,6 +74,7 @@ def compile_regex_patterns(columns: Sequence[Any]) -> list[str | RegexColumnDef]
 
     Returns:
         List with regex patterns compiled into RegexColumnDef tuples
+
     """
     return [compile_regex_pattern(col) if isinstance(col, str) and is_regex_string(col) else col for col in columns]
 
@@ -90,6 +92,7 @@ def match_column_with_regex(column_pattern: RegexColumnDef, df_columns: list[str
 
     Returns:
         List of column names that match the regex pattern
+
     """
     _, pattern = column_pattern
     return [col for col in df_columns if pattern.match(col)]

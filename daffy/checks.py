@@ -46,6 +46,7 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
 
     Returns:
         Tuple of (fail_count, sample_failing_values)
+
     """
     nws = _nw_series(series)
 
@@ -112,6 +113,7 @@ def validate_checks(df: Any, column: str, checks: dict[str, Any], max_samples: i
 
     Returns:
         List of (column, check_name, fail_count, sample_values) tuples for failures.
+
     """
     violations: list[CheckViolation] = []
     series = df[column]
