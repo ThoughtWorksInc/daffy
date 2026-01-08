@@ -173,6 +173,7 @@ ignore = [
     "PT019",   # Fixture without return - false positive (not fixtures)
     "PTH118",  # os.path.join - fine in tests
     "PTH123",  # open() - fine in tests
+    "D401",    # First line imperative - minor for tests
 ]
 
 [tool.pyrefly]
