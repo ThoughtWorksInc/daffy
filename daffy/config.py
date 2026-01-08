@@ -99,10 +99,10 @@ def load_config() -> dict[str, Any]:
         allow_empty = _validate_bool_config(daffy_config, _KEY_ALLOW_EMPTY)
         if allow_empty is not None:
             default_config[_KEY_ALLOW_EMPTY] = allow_empty
-
-        return default_config  # noqa: TRY300 - clearer than else block
     except (FileNotFoundError, tomli.TOMLDecodeError):
-        return default_config
+        pass  # Use defaults if config file missing or malformed
+
+    return default_config
 
 
 def find_config_file() -> str | None:
