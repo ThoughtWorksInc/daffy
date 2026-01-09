@@ -55,6 +55,8 @@ def compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
         catastrophic backtracking. Use simple patterns when possible.
 
     """
+    if not is_regex_string(pattern_string):
+        raise ValueError(f"Regex pattern must be in 'r/.../' format (got {pattern_string!r})")
     pattern_str = pattern_string[len(_REGEX_PREFIX) : -len(_REGEX_SUFFIX)]
     if not pattern_str:
         raise ValueError("Regex pattern cannot be empty (got 'r//')")
