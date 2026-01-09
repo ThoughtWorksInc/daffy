@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Performance benchmarks for row validation.
+"""Performance benchmarks for row validation.
 
 Compares daffy's row validation performance against Pandantic, a competing library
 for validating pandas DataFrames with Pydantic models.
@@ -37,6 +36,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # Add current directory to path to import daffy
 sys.path.insert(0, ".")
+
+import contextlib
 
 from daffy.row_validation import validate_dataframe_rows
 
@@ -195,10 +196,8 @@ def benchmark_pydantic_baseline(df: pd.DataFrame, validator: type[BaseModel], ru
     for _ in range(runs):
         start = time.perf_counter()
         for _, row in df.iterrows():
-            try:
+            with contextlib.suppress(Exception):
                 validator.model_validate(row.to_dict())
-            except Exception:
-                pass
         end = time.perf_counter()
         times.append(end - start)
     return sum(times) / len(times)
@@ -213,10 +212,9 @@ def format_time(seconds: float) -> str:
     """Format time in appropriate unit."""
     if seconds < 0.001:
         return f"{seconds * 1_000_000:.1f} μs"
-    elif seconds < 1:
+    if seconds < 1:
         return f"{seconds * 1000:.1f} ms"
-    else:
-        return f"{seconds:.2f} s"
+    return f"{seconds:.2f} s"
 
 
 def format_throughput(n_rows: int, seconds: float) -> str:
@@ -224,10 +222,9 @@ def format_throughput(n_rows: int, seconds: float) -> str:
     throughput = n_rows / seconds
     if throughput >= 1_000_000:
         return f"{throughput / 1_000_000:.2f}M rows/s"
-    elif throughput >= 1_000:
+    if throughput >= 1_000:
         return f"{throughput / 1_000:.1f}K rows/s"
-    else:
-        return f"{throughput:.0f} rows/s"
+    return f"{throughput:.0f} rows/s"
 
 
 def print_results(scenario: str, n_rows: int, results: dict[str, float | None]) -> None:
@@ -268,7 +265,6 @@ def print_results(scenario: str, n_rows: int, results: dict[str, float | None]) 
 
 def run_benchmark(scenario: str, n_rows: int) -> None:
     """Run benchmark for a specific scenario and size."""
-
     if scenario == "simple":
         data = generate_simple_data(n_rows)
         validator = SimpleValidator

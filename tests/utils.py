@@ -1,6 +1,7 @@
 """Test utilities for cross-backend assertions."""
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 DataFrameFactory = Callable[[dict[str, Any]], Any]
 

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.4.1
+
+### Internal Improvements
+
+- Enabled ALL Ruff linting rules with selective ignores for comprehensive code quality checks
+- Refactored `validate_dataframe` to reduce cyclomatic complexity
+- Migrated from `os.path` to `pathlib` in configuration module
+- Performance optimization: extracted try/except from validation loop (PERF203)
+
 ## 2.4.0
 
 ### New Features

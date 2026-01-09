@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Manual script to test daffy with different dependency combinations.
+r"""Manual script to test daffy with different dependency combinations.
 
 This script helps verify that the optional dependencies work correctly
 by testing with different combinations of pandas/polars/pydantic.
@@ -43,16 +42,14 @@ def test_pandas_only() -> bool:
     if importlib.util.find_spec("pandas") is None:
         print("❌ Pandas not available")
         return False
-    else:
-        print("✅ Pandas import successful")
+    print("✅ Pandas import successful")
 
     if importlib.util.find_spec("polars") is not None:
         print("❌ Polars should not be available")
         print("   Note: This test requires polars not to be installed")
         print("   This is expected to work only in CI with truly isolated environments")
         return False
-    else:
-        print("✅ Polars correctly not available")
+    print("✅ Polars correctly not available")
 
     try:
         from daffy import df_in, df_out
@@ -94,16 +91,14 @@ def test_polars_only() -> bool:
     if importlib.util.find_spec("polars") is None:
         print("❌ Polars not available")
         return False
-    else:
-        print("✅ Polars import successful")
+    print("✅ Polars import successful")
 
     if importlib.util.find_spec("pandas") is not None:
         print("❌ Pandas should not be available")
         print("   Note: This test requires pandas not to be installed")
         print("   This is expected to work only in CI with truly isolated environments")
         return False
-    else:
-        print("✅ Pandas correctly not available")
+    print("✅ Pandas correctly not available")
 
     try:
         from daffy import df_in, df_out
@@ -145,8 +140,7 @@ def test_both() -> bool:
     if importlib.util.find_spec("pandas") is None or importlib.util.find_spec("polars") is None:
         print("❌ Both libraries should be available")
         return False
-    else:
-        print("✅ Both libraries import successful")
+    print("✅ Both libraries import successful")
 
     try:
         from daffy import df_in
@@ -189,16 +183,14 @@ def test_pandas_no_pydantic() -> bool:
     if importlib.util.find_spec("pandas") is None:
         print("❌ Pandas not available")
         return False
-    else:
-        print("✅ Pandas import successful")
+    print("✅ Pandas import successful")
 
     if importlib.util.find_spec("pydantic") is not None:
         print("❌ Pydantic should not be available")
         print("   Note: This test requires pydantic not to be installed")
         print("   This is expected to work only in CI with truly isolated environments")
         return False
-    else:
-        print("✅ Pydantic correctly not available")
+    print("✅ Pydantic correctly not available")
 
     try:
         from daffy import df_in, df_out
@@ -265,16 +257,14 @@ def test_none() -> bool:
         print("   Note: This test requires a clean environment without pandas/polars")
         print("   This is expected to work only in CI with isolated environments")
         return False
-    else:
-        print("✅ Pandas correctly not available")
+    print("✅ Pandas correctly not available")
 
     if importlib.util.find_spec("polars") is not None:
         print("❌ Polars should not be available")
         print("   Note: This test requires a clean environment without pandas/polars")
         print("   This is expected to work only in CI with isolated environments")
         return False
-    else:
-        print("✅ Polars correctly not available")
+    print("✅ Polars correctly not available")
 
     try:
         from daffy.dataframe_types import HAS_PANDAS, HAS_POLARS  # noqa: F401
@@ -286,9 +276,8 @@ def test_none() -> bool:
         if expected_msg in str(e):
             print("✅ Correctly failed with expected error message")
             return True
-        else:
-            print(f"❌ Wrong error message: {e}")
-            return False
+        print(f"❌ Wrong error message: {e}")
+        return False
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
         return False

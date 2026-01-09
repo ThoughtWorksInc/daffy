@@ -12,14 +12,14 @@ __all__ = ["IntoDataFrame", "IntoDataFrameT", "get_available_library_names"]
 
 # Check which DataFrame libraries are available (for error messages and early failure)
 try:
-    import pandas  # noqa: F401 # pragma: no skylos
+    import pandas as pd  # noqa: F401 # pragma: no skylos
 
     HAS_PANDAS = True
 except ImportError:  # pragma: no cover
     HAS_PANDAS = False
 
 try:
-    import polars  # noqa: F401 # pragma: no skylos
+    import polars as pl  # noqa: F401 # pragma: no skylos
 
     HAS_POLARS = True
 except ImportError:  # pragma: no cover
@@ -31,11 +31,11 @@ if not HAS_PANDAS and not HAS_POLARS:  # pragma: no cover
 
 
 def get_available_library_names() -> list[str]:
-    """
-    Get list of available DataFrame library names for error messages.
+    """Get list of available DataFrame library names for error messages.
 
     Returns:
         list[str]: List of available library names (e.g., ["Pandas", "Polars"])
+
     """
     available_libs = []
     if HAS_PANDAS:

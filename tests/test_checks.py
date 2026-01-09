@@ -21,7 +21,7 @@ class TestComparisonChecks:
 
     def test_ge_passes(self) -> None:
         series = pd.Series([0, 1, 2])
-        fail_count, samples = apply_check(series, "ge", 0)
+        fail_count, _samples = apply_check(series, "ge", 0)
         assert fail_count == 0
 
     def test_ge_fails(self) -> None:
@@ -32,7 +32,7 @@ class TestComparisonChecks:
 
     def test_lt_passes(self) -> None:
         series = pd.Series([1, 2, 3])
-        fail_count, samples = apply_check(series, "lt", 10)
+        fail_count, _samples = apply_check(series, "lt", 10)
         assert fail_count == 0
 
     def test_lt_fails(self) -> None:
@@ -44,7 +44,7 @@ class TestComparisonChecks:
 
     def test_le_passes(self) -> None:
         series = pd.Series([1, 5, 10])
-        fail_count, samples = apply_check(series, "le", 10)
+        fail_count, _samples = apply_check(series, "le", 10)
         assert fail_count == 0
 
     def test_le_fails(self) -> None:
@@ -55,7 +55,7 @@ class TestComparisonChecks:
 
     def test_null_values_treated_as_failures(self) -> None:
         series = pd.Series([1, None, 3])
-        fail_count, samples = apply_check(series, "gt", 0)
+        fail_count, _samples = apply_check(series, "gt", 0)
         assert fail_count == 1
 
     def test_unknown_check_raises(self) -> None:
@@ -67,7 +67,7 @@ class TestComparisonChecks:
 class TestBetweenCheck:
     def test_between_passes(self) -> None:
         series = pd.Series([0, 50, 100])
-        fail_count, samples = apply_check(series, "between", (0, 100))
+        fail_count, _samples = apply_check(series, "between", (0, 100))
         assert fail_count == 0
 
     def test_between_fails_below(self) -> None:
@@ -84,14 +84,14 @@ class TestBetweenCheck:
 
     def test_between_inclusive(self) -> None:
         series = pd.Series([0, 100])
-        fail_count, samples = apply_check(series, "between", (0, 100))
+        fail_count, _samples = apply_check(series, "between", (0, 100))
         assert fail_count == 0
 
 
 class TestEqualityChecks:
     def test_eq_passes(self) -> None:
         series = pd.Series(["active", "active", "active"])
-        fail_count, samples = apply_check(series, "eq", "active")
+        fail_count, _samples = apply_check(series, "eq", "active")
         assert fail_count == 0
 
     def test_eq_fails(self) -> None:
@@ -102,7 +102,7 @@ class TestEqualityChecks:
 
     def test_ne_passes(self) -> None:
         series = pd.Series(["active", "pending", "closed"])
-        fail_count, samples = apply_check(series, "ne", "deleted")
+        fail_count, _samples = apply_check(series, "ne", "deleted")
         assert fail_count == 0
 
     def test_ne_fails(self) -> None:
@@ -115,7 +115,7 @@ class TestEqualityChecks:
 class TestIsinCheck:
     def test_isin_passes(self) -> None:
         series = pd.Series(["active", "pending", "closed"])
-        fail_count, samples = apply_check(series, "isin", ["active", "pending", "closed"])
+        fail_count, _samples = apply_check(series, "isin", ["active", "pending", "closed"])
         assert fail_count == 0
 
     def test_isin_fails(self) -> None:
@@ -135,7 +135,7 @@ class TestIsinCheck:
 class TestNotinCheck:
     def test_notin_passes(self) -> None:
         series = pd.Series(["a", "b", "c"])
-        fail_count, samples = apply_check(series, "notin", ["x", "y", "z"])
+        fail_count, _samples = apply_check(series, "notin", ["x", "y", "z"])
         assert fail_count == 0
 
     def test_notin_fails(self) -> None:
@@ -152,26 +152,26 @@ class TestNotinCheck:
 
     def test_notin_all_forbidden(self) -> None:
         series = pd.Series(["x", "y", "z"])
-        fail_count, samples = apply_check(series, "notin", ["x", "y", "z"])
+        fail_count, _samples = apply_check(series, "notin", ["x", "y", "z"])
         assert fail_count == 3
 
 
 class TestNotnullCheck:
     def test_notnull_passes(self) -> None:
         series = pd.Series([1, 2, 3])
-        fail_count, samples = apply_check(series, "notnull", True)
+        fail_count, _samples = apply_check(series, "notnull", True)
         assert fail_count == 0
 
     def test_notnull_fails(self) -> None:
         series = pd.Series([1, None, 3, None])
-        fail_count, samples = apply_check(series, "notnull", True)
+        fail_count, _samples = apply_check(series, "notnull", True)
         assert fail_count == 2
 
 
 class TestStrRegexCheck:
     def test_str_regex_passes(self) -> None:
         series = pd.Series(["abc123", "def456", "ghi789"])
-        fail_count, samples = apply_check(series, "str_regex", r"^[a-z]+\d+$")
+        fail_count, _samples = apply_check(series, "str_regex", r"^[a-z]+\d+$")
         assert fail_count == 0
 
     def test_str_regex_fails(self) -> None:
@@ -191,7 +191,7 @@ class TestStrRegexCheck:
 class TestStrStartswithCheck:
     def test_str_startswith_passes(self) -> None:
         series = pd.Series(["hello", "hi", "hey"])
-        fail_count, samples = apply_check(series, "str_startswith", "h")
+        fail_count, _samples = apply_check(series, "str_startswith", "h")
         assert fail_count == 0
 
     def test_str_startswith_fails(self) -> None:
@@ -210,7 +210,7 @@ class TestStrStartswithCheck:
 class TestStrEndswithCheck:
     def test_str_endswith_passes(self) -> None:
         series = pd.Series(["test.py", "main.py"])
-        fail_count, samples = apply_check(series, "str_endswith", ".py")
+        fail_count, _samples = apply_check(series, "str_endswith", ".py")
         assert fail_count == 0
 
     def test_str_endswith_fails(self) -> None:
@@ -223,12 +223,12 @@ class TestStrEndswithCheck:
 class TestStrContainsCheck:
     def test_str_contains_passes(self) -> None:
         series = pd.Series(["hello world", "world peace"])
-        fail_count, samples = apply_check(series, "str_contains", "world")
+        fail_count, _samples = apply_check(series, "str_contains", "world")
         assert fail_count == 0
 
     def test_str_contains_fails(self) -> None:
         series = pd.Series(["hello", "goodbye"])
-        fail_count, samples = apply_check(series, "str_contains", "world")
+        fail_count, _samples = apply_check(series, "str_contains", "world")
         assert fail_count == 2
 
     def test_str_contains_literal_not_regex(self) -> None:
@@ -248,7 +248,7 @@ class TestStrContainsCheck:
 class TestStrLengthCheck:
     def test_str_length_passes(self) -> None:
         series = pd.Series(["ab", "abc", "abcd"])
-        fail_count, samples = apply_check(series, "str_length", (2, 4))
+        fail_count, _samples = apply_check(series, "str_length", (2, 4))
         assert fail_count == 0
 
     def test_str_length_fails_too_short(self) -> None:
@@ -265,13 +265,13 @@ class TestStrLengthCheck:
 
     def test_str_length_inclusive(self) -> None:
         series = pd.Series(["ab", "abcd"])
-        fail_count, samples = apply_check(series, "str_length", (2, 4))
+        fail_count, _samples = apply_check(series, "str_length", (2, 4))
         assert fail_count == 0
 
     def test_str_length_exact(self) -> None:
         # Can use same min/max for exact length
         series = pd.Series(["abc", "ab", "abcd"])
-        fail_count, samples = apply_check(series, "str_length", (3, 3))
+        fail_count, _samples = apply_check(series, "str_length", (3, 3))
         assert fail_count == 2
 
 
@@ -316,12 +316,12 @@ class TestEdgeCases:
 
     def test_all_null_series_fails_notnull(self) -> None:
         series = pd.Series([None, None, None])
-        fail_count, samples = apply_check(series, "notnull", True)
+        fail_count, _samples = apply_check(series, "notnull", True)
         assert fail_count == 3
 
     def test_all_null_series_comparison_check(self) -> None:
         series = pd.Series([None, None, None])
-        fail_count, samples = apply_check(series, "gt", 0)
+        fail_count, _samples = apply_check(series, "gt", 0)
         assert fail_count == 3
 
 

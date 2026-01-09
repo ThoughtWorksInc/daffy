@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
 from functools import lru_cache
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # Regex column pattern format delimiters
 _REGEX_PREFIX = "r/"
@@ -36,7 +38,7 @@ def is_regex_string(column: str) -> bool:
 
 @lru_cache(maxsize=128)
 def compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
-    """Compile a regex pattern from r/pattern/ format.
+    r"""Compile a regex pattern from r/pattern/ format.
 
     Args:
         pattern_string: Pattern in format "r/pattern/" (e.g., "r/col_\\d+/")
@@ -51,7 +53,10 @@ def compile_regex_pattern(pattern_string: str) -> RegexColumnDef:
         Patterns are cached for performance. Complex regex patterns with nested
         quantifiers (e.g., ``r/(a+)+/``) may cause performance issues due to
         catastrophic backtracking. Use simple patterns when possible.
+
     """
+    if not is_regex_string(pattern_string):
+        raise ValueError(f"Regex pattern must be in 'r/.../' format (got {pattern_string!r})")
     pattern_str = pattern_string[len(_REGEX_PREFIX) : -len(_REGEX_SUFFIX)]
     if not pattern_str:
         raise ValueError("Regex pattern cannot be empty (got 'r//')")
@@ -73,12 +78,13 @@ def compile_regex_patterns(columns: Sequence[Any]) -> list[str | RegexColumnDef]
 
     Returns:
         List with regex patterns compiled into RegexColumnDef tuples
+
     """
     return [compile_regex_pattern(col) if isinstance(col, str) and is_regex_string(col) else col for col in columns]
 
 
 def match_column_with_regex(column_pattern: RegexColumnDef, df_columns: list[str]) -> list[str]:
-    """Find DataFrame columns matching a regex pattern.
+    r"""Find DataFrame columns matching a regex pattern.
 
     Uses ``re.match()`` which anchors at the start of the string. The pattern
     ``r/\\d+/`` will match "123_col" but NOT "col_123". Use ``r/.*\\d+/`` for
@@ -90,6 +96,7 @@ def match_column_with_regex(column_pattern: RegexColumnDef, df_columns: list[str
 
     Returns:
         List of column names that match the regex pattern
+
     """
     _, pattern = column_pattern
     return [col for col in df_columns if pattern.match(col)]

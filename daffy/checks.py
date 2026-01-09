@@ -46,6 +46,7 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
 
     Returns:
         Tuple of (fail_count, sample_failing_values)
+
     """
     nws = _nw_series(series)
 
@@ -60,7 +61,7 @@ def apply_check(series: Any, check_name: str, check_value: Any, max_samples: int
         # Validate return type - must be Series-like with boolean values
         try:
             nw_result = _nw_series(result)
-        except Exception:
+        except Exception:  # noqa: BLE001 - intentionally catch any conversion failure
             # Any conversion failure means the return type is wrong
             raise TypeError(
                 f"Custom check '{check_name}' must return a Series-like object, got {type(result).__name__}"
@@ -112,6 +113,7 @@ def validate_checks(df: Any, column: str, checks: dict[str, Any], max_samples: i
 
     Returns:
         List of (column, check_name, fail_count, sample_values) tuples for failures.
+
     """
     violations: list[CheckViolation] = []
     series = df[column]

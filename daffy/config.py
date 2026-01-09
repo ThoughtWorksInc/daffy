@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import os
 from functools import lru_cache
+from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
@@ -53,11 +53,11 @@ def _validate_int_config(daffy_config: dict[str, Any], key: str, min_value: int 
 
 
 def load_config() -> dict[str, Any]:
-    """
-    Load daffy configuration from pyproject.toml.
+    """Load daffy configuration from pyproject.toml.
 
     Returns:
         dict: Configuration dictionary with daffy settings
+
     """
     default_config = {
         _KEY_STRICT: _DEFAULT_STRICT,
@@ -73,7 +73,7 @@ def load_config() -> dict[str, Any]:
         return default_config
 
     try:
-        with open(config_path, "rb") as f:
+        with Path(config_path).open("rb") as f:
             pyproject = tomli.load(f)
 
         # Extract daffy configuration if it exists
@@ -99,16 +99,16 @@ def load_config() -> dict[str, Any]:
         allow_empty = _validate_bool_config(daffy_config, _KEY_ALLOW_EMPTY)
         if allow_empty is not None:
             default_config[_KEY_ALLOW_EMPTY] = allow_empty
-
-        return default_config
     except (FileNotFoundError, tomli.TOMLDecodeError):
-        return default_config
+        pass  # Use defaults if config file missing or malformed
+
+    return default_config
 
 
 def find_config_file() -> str | None:
     """Find pyproject.toml in the current working directory."""
-    path = os.path.join(os.getcwd(), "pyproject.toml")
-    return path if os.path.isfile(path) else None
+    path = Path.cwd() / "pyproject.toml"
+    return str(path) if path.is_file() else None
 
 
 @lru_cache(maxsize=1)
@@ -126,14 +126,14 @@ def clear_config_cache() -> None:
 
 
 def get_strict(strict_param: bool | None = None) -> bool:
-    """
-    Get the strict mode setting, with explicit parameter taking precedence over configuration.
+    """Get the strict mode setting, with explicit parameter taking precedence over configuration.
 
     Args:
         strict_param: Explicitly provided strict parameter value, or None to use config
 
     Returns:
         bool: The effective strict mode setting
+
     """
     if strict_param is not None:
         return strict_param
@@ -141,8 +141,7 @@ def get_strict(strict_param: bool | None = None) -> bool:
 
 
 def get_lazy(lazy_param: bool | None = None) -> bool:
-    """
-    Get the lazy mode setting, with explicit parameter taking precedence over configuration.
+    """Get the lazy mode setting, with explicit parameter taking precedence over configuration.
 
     When lazy=True, validation collects all errors before raising instead of stopping at the first.
 
@@ -151,6 +150,7 @@ def get_lazy(lazy_param: bool | None = None) -> bool:
 
     Returns:
         bool: The effective lazy mode setting
+
     """
     if lazy_param is not None:
         return lazy_param
@@ -187,6 +187,7 @@ def get_allow_empty(allow_empty_param: bool | None = None) -> bool:
 
     Returns:
         bool: The effective allow_empty setting
+
     """
     if allow_empty_param is not None:
         return allow_empty_param

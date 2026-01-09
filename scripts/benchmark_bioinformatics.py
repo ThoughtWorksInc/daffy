@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Benchmark row validation with realistic bioinformatics feature engineering scenario.
+"""Benchmark row validation with realistic bioinformatics feature engineering scenario.
 
 This simulates validating a cancer research feature store with:
 - Gene expression levels
@@ -13,7 +12,7 @@ This simulates validating a cancer research feature store with:
 
 import sys
 import time
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -38,9 +37,9 @@ class BioinformaticsFeatures(BaseModel):
     cohort: Literal["training", "validation", "test"]
 
     # Clinical measurements (often missing)
-    age: Optional[int] = Field(None, ge=0, le=120)
-    bmi: Optional[float] = Field(None, ge=10.0, le=60.0)
-    tumor_size_mm: Optional[float] = Field(None, ge=0.0, le=300.0)
+    age: int | None = Field(None, ge=0, le=120)
+    bmi: float | None = Field(None, ge=10.0, le=60.0)
+    tumor_size_mm: float | None = Field(None, ge=0.0, le=300.0)
 
     # Gene expression levels (log2 normalized, common range)
     gene_tp53_expr: float = Field(ge=-10.0, le=15.0)
@@ -50,10 +49,10 @@ class BioinformaticsFeatures(BaseModel):
     gene_erbb2_expr: float = Field(ge=-10.0, le=15.0)
 
     # Protein markers (often missing in real data)
-    protein_ki67_percent: Optional[float] = Field(None, ge=0.0, le=100.0)
-    protein_er_status: Optional[Literal["positive", "negative", "unknown"]] = None
-    protein_pr_status: Optional[Literal["positive", "negative", "unknown"]] = None
-    protein_her2_status: Optional[Literal["positive", "negative", "equivocal"]] = None
+    protein_ki67_percent: float | None = Field(None, ge=0.0, le=100.0)
+    protein_er_status: Literal["positive", "negative", "unknown"] | None = None
+    protein_pr_status: Literal["positive", "negative", "unknown"] | None = None
+    protein_her2_status: Literal["positive", "negative", "equivocal"] | None = None
 
     # Mutation markers (boolean flags)
     mutation_tp53: bool
@@ -69,13 +68,13 @@ class BioinformaticsFeatures(BaseModel):
     # Treatment and outcomes
     received_chemotherapy: bool
     received_radiotherapy: bool
-    months_followup: Optional[float] = Field(None, ge=0.0, le=240.0)
-    disease_free_survival_months: Optional[float] = Field(None, ge=0.0, le=240.0)
-    overall_survival_months: Optional[float] = Field(None, ge=0.0, le=240.0)
+    months_followup: float | None = Field(None, ge=0.0, le=240.0)
+    disease_free_survival_months: float | None = Field(None, ge=0.0, le=240.0)
+    overall_survival_months: float | None = Field(None, ge=0.0, le=240.0)
 
     # Derived features
     risk_score: float = Field(ge=0.0, le=1.0)
-    treatment_response: Optional[Literal["complete", "partial", "stable", "progressive"]] = None
+    treatment_response: Literal["complete", "partial", "stable", "progressive"] | None = None
 
     # Quality metrics
     sample_quality_score: float = Field(ge=0.0, le=100.0)
@@ -84,11 +83,10 @@ class BioinformaticsFeatures(BaseModel):
 
     @field_validator("disease_free_survival_months")
     @classmethod
-    def dfs_must_be_lte_followup(cls, v: Optional[float], info: Any) -> Optional[float]:
+    def dfs_must_be_lte_followup(cls, v: float | None, info: Any) -> float | None:
         """Disease-free survival cannot exceed follow-up time."""
-        if v is not None and info.data.get("months_followup") is not None:
-            if v > info.data["months_followup"]:
-                raise ValueError("DFS cannot exceed follow-up time")
+        if v is not None and info.data.get("months_followup") is not None and v > info.data["months_followup"]:
+            raise ValueError("DFS cannot exceed follow-up time")
         return v
 
 
@@ -98,12 +96,12 @@ class BioinformaticsFeatures(BaseModel):
 
 
 def generate_bioinformatics_data(n_rows: int, missing_rate: float = 0.15) -> pd.DataFrame:
-    """
-    Generate realistic bioinformatics feature data.
+    """Generate realistic bioinformatics feature data.
 
     Args:
         n_rows: Number of samples to generate
         missing_rate: Proportion of optional fields that are missing (typical in real data)
+
     """
     np.random.seed(42)
 

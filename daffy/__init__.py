@@ -10,4 +10,4 @@ from .checks import CheckName
 from .decorators import df_in, df_log, df_out
 from .validation import ColumnConstraints
 
-__all__ = ["df_in", "df_out", "df_log", "ColumnConstraints", "CheckName"]
+__all__ = ["CheckName", "ColumnConstraints", "df_in", "df_log", "df_out"]
