@@ -176,7 +176,7 @@ class _ValidationAccumulator:
 
 
 def _process_dict_column_spec(
-    column: str,
+    column: str | RegexColumnDef,
     spec_value: Any,
     df: Any,
     acc: _ValidationAccumulator,
