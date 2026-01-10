@@ -201,6 +201,28 @@ class TestBuildValidationPipeline:
 
         assert any(isinstance(v, RowValidator) for v in pipeline.validators)
 
+    def test_row_validator_with_empty_dataframe(self) -> None:
+        from pydantic import BaseModel
+
+        class TestModel(BaseModel):
+            a: int
+
+        pipeline = build_validation_pipeline(
+            columns=None,
+            strict=False,
+            lazy=False,
+            composite_unique=None,
+            row_validator=TestModel,
+            min_rows=None,
+            max_rows=None,
+            exact_rows=None,
+            allow_empty=True,
+            df_columns=[],
+        )
+
+        ctx = ValidationContext(df=pd.DataFrame({"a": pd.array([], dtype="Int64")}))
+        pipeline.run(ctx)  # Should pass - empty dataframe skips validation
+
     def test_sets_lazy_mode(self) -> None:
         pipeline = build_validation_pipeline(
             columns=None,
@@ -260,6 +282,23 @@ class TestPipelineIntegration:
         )
 
         ctx = ValidationContext(df=pd.DataFrame({"id": pd.array([1, 2, 3], dtype="Int64"), "name": ["a", "b", "c"]}))
+        pipeline.run(ctx)
+
+    def test_strict_mode_with_optional_columns(self) -> None:
+        pipeline = build_validation_pipeline(
+            columns={"a": {}, "b": {"required": False}},
+            strict=True,
+            lazy=False,
+            composite_unique=None,
+            row_validator=None,
+            min_rows=None,
+            max_rows=None,
+            exact_rows=None,
+            allow_empty=True,
+            df_columns=["a", "b"],
+        )
+
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1], "b": [2]}))
         pipeline.run(ctx)
 
     def test_pipeline_fails_on_invalid_data(self) -> None:
