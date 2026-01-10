@@ -2,6 +2,7 @@
 
 import pandas as pd
 import pytest
+from pydantic import BaseModel
 
 from daffy.validators.builder import build_validation_pipeline
 from daffy.validators.checks import ChecksValidator
@@ -181,8 +182,6 @@ class TestBuildValidationPipeline:
         assert any(isinstance(v, CompositeUniqueValidator) for v in pipeline.validators)
 
     def test_adds_row_validator(self) -> None:
-        from pydantic import BaseModel
-
         class TestModel(BaseModel):
             a: int
 
@@ -202,8 +201,6 @@ class TestBuildValidationPipeline:
         assert any(isinstance(v, RowValidator) for v in pipeline.validators)
 
     def test_row_validator_with_empty_dataframe(self) -> None:
-        from pydantic import BaseModel
-
         class TestModel(BaseModel):
             a: int
 
@@ -262,8 +259,6 @@ class TestRegexExpansion:
 
 class TestPipelineIntegration:
     def test_full_pipeline_execution(self) -> None:
-        from pydantic import BaseModel
-
         class RowModel(BaseModel):
             id: int
             name: str
