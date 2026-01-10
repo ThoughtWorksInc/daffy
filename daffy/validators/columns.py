@@ -6,17 +6,17 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from daffy.validators.columns_resolver import ResolvedColumns
     from daffy.validators.context import ValidationContext
 
 
 @dataclass
 class ColumnsExistValidator:
-    resolved: ResolvedColumns
+    missing_columns: list[str]
+    available_columns: list[str]
 
     def validate(self, ctx: ValidationContext) -> list[str]:
-        if self.resolved.missing_specs:
-            return [f"Missing columns: {self.resolved.missing_specs}{ctx.param_info}. Got columns: {list(ctx.columns)}"]
+        if self.missing_columns:
+            return [f"Missing columns: {self.missing_columns}{ctx.param_info}. Got columns: {self.available_columns}"]
         return []
 
 
@@ -30,7 +30,6 @@ _DTYPE_ALIASES = {
 
 
 def _normalize_dtype(dtype: str) -> str:
-    """Normalize dtype string for comparison."""
     dtype_lower = str(dtype).lower()
     return _DTYPE_ALIASES.get(dtype_lower, dtype_lower)
 
@@ -41,17 +40,13 @@ class DtypeValidator:
 
     def validate(self, ctx: ValidationContext) -> list[str]:
         errors = []
-
         for col, expected_dtype in self.expected.items():
             if ctx.has_column(col):
                 actual = ctx.get_dtype(col)
                 if _normalize_dtype(actual) != _normalize_dtype(expected_dtype):
-                    # Use native dtype for error message to match old behavior
-                    native_dtype = ctx.df[col].dtype
-                    errors.append(
-                        f"Column {col}{ctx.param_info} has wrong dtype. Was {native_dtype}, expected {expected_dtype}"
-                    )
-
+                    actual_str = str(actual).lower()
+                    msg = f"Column {col}{ctx.param_info} has wrong dtype. Was {actual_str}, expected {expected_dtype}"
+                    errors.append(msg)
         return errors
 
 

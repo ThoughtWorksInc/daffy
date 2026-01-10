@@ -8,22 +8,19 @@ from daffy.validators.columns import (
     NullableValidator,
     StrictModeValidator,
 )
-from daffy.validators.columns_resolver import ResolvedColumns
 from daffy.validators.context import ValidationContext
 
 
 class TestColumnsExistValidator:
-    def test_passes_when_all_columns_exist(self) -> None:
+    def test_passes_when_no_missing_columns(self) -> None:
         ctx = ValidationContext(df=pd.DataFrame({"a": [1], "b": [2]}))
-        resolved = ResolvedColumns.from_specs(["a", "b"], list(ctx.columns))
-        validator = ColumnsExistValidator(resolved)
+        validator = ColumnsExistValidator(missing_columns=[], available_columns=["a", "b"])
 
         assert validator.validate(ctx) == []
 
-    def test_fails_when_column_missing(self) -> None:
+    def test_fails_when_columns_missing(self) -> None:
         ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
-        resolved = ResolvedColumns.from_specs(["a", "b", "c"], list(ctx.columns))
-        validator = ColumnsExistValidator(resolved)
+        validator = ColumnsExistValidator(missing_columns=["b", "c"], available_columns=["a"])
 
         errors = validator.validate(ctx)
         assert len(errors) == 1
@@ -33,8 +30,7 @@ class TestColumnsExistValidator:
 
     def test_includes_available_columns(self) -> None:
         ctx = ValidationContext(df=pd.DataFrame({"x": [1], "y": [2]}))
-        resolved = ResolvedColumns.from_specs(["z"], list(ctx.columns))
-        validator = ColumnsExistValidator(resolved)
+        validator = ColumnsExistValidator(missing_columns=["z"], available_columns=["x", "y"])
 
         errors = validator.validate(ctx)
         assert "Got columns:" in errors[0]

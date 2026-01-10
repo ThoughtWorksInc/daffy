@@ -149,7 +149,7 @@ def test_dtype_mismatch_polars(basic_polars_df: pl.DataFrame) -> None:
         test_fn(basic_polars_df)
 
     assert (
-        "Column Price in function 'test_fn' parameter 'my_input' has wrong dtype. Was Int64, expected Float64"
+        "Column Price in function 'test_fn' parameter 'my_input' has wrong dtype. Was int64, expected Float64"
         in str(excinfo.value)
     )
 
