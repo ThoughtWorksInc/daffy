@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class UniqueValidator:
-    """Validates columns contain unique values."""
-
     unique_columns: list[str]
 
     def validate(self, ctx: ValidationContext) -> list[str]:
@@ -31,8 +29,6 @@ class UniqueValidator:
 
 @dataclass
 class CompositeUniqueValidator:
-    """Validates multi-column uniqueness constraints."""
-
     column_combinations: list[list[str]]
 
     def validate(self, ctx: ValidationContext) -> list[str]:

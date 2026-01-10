@@ -11,15 +11,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class ShapeValidator:
-    """Validates DataFrame row count constraints.
-
-    Example:
-        ShapeValidator(min_rows=1, max_rows=1000)
-        ShapeValidator(exact_rows=100)
-        ShapeValidator(allow_empty=False)
-
-    """
-
     min_rows: int | None = None
     max_rows: int | None = None
     exact_rows: int | None = None

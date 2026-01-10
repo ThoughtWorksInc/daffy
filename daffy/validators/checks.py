@@ -14,16 +14,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class ChecksValidator:
-    """Validates column values against check constraints.
-
-    Example:
-        ChecksValidator({
-            "price": {"gt": 0, "lt": 10000},
-            "status": {"isin": ["active", "inactive"]},
-        })
-
-    """
-
     checks_by_column: dict[str, dict[str, Any]]
     max_samples: int | None = None
 

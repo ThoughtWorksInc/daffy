@@ -13,16 +13,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class ValidationPipeline:
-    """Orchestrates validation execution with lazy/eager error handling.
-
-    Example:
-        pipeline = ValidationPipeline(lazy=True)
-        pipeline.add(ShapeValidator(min_rows=1))
-        pipeline.add(ColumnsExistValidator(resolved))
-        pipeline.run(ctx)  # Raises AssertionError if any fail
-
-    """
-
     lazy: bool = False
     validators: list[Validator] = field(default_factory=list)
 
@@ -31,11 +21,7 @@ class ValidationPipeline:
         return self
 
     def run(self, ctx: ValidationContext) -> None:
-        """Execute all validators.
-
-        In lazy mode: collect all errors, raise once at end.
-        In eager mode: raise on first error.
-        """
+        """In lazy mode: collect all errors, raise once. In eager mode: raise on first error."""
         all_errors: list[str] = []
 
         for validator in self.validators:

@@ -12,8 +12,6 @@ if TYPE_CHECKING:
 
 @dataclass
 class ColumnsExistValidator:
-    """Validates that required columns exist."""
-
     resolved: ResolvedColumns
 
     def validate(self, ctx: ValidationContext) -> list[str]:
@@ -39,8 +37,6 @@ def _normalize_dtype(dtype: str) -> str:
 
 @dataclass
 class DtypeValidator:
-    """Validates column data types."""
-
     expected: dict[str, Any]
 
     def validate(self, ctx: ValidationContext) -> list[str]:
@@ -61,8 +57,6 @@ class DtypeValidator:
 
 @dataclass
 class NullableValidator:
-    """Validates columns don't contain null values."""
-
     non_nullable_columns: list[str]
 
     def validate(self, ctx: ValidationContext) -> list[str]:
@@ -87,8 +81,6 @@ class NullableValidator:
 
 @dataclass
 class StrictModeValidator:
-    """Validates no unexpected columns exist."""
-
     allowed_columns: set[str]
 
     def validate(self, ctx: ValidationContext) -> list[str]:
