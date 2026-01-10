@@ -11,7 +11,7 @@ from daffy.validators.pipeline import ValidationPipeline
 
 @dataclass
 class AlwaysPassValidator:
-    def validate(self, _ctx: ValidationContext) -> list[str]:
+    def validate(self, ctx: ValidationContext) -> list[str]:  # noqa: ARG002
         return []
 
 
@@ -19,13 +19,13 @@ class AlwaysPassValidator:
 class AlwaysFailValidator:
     message: str = "Validation failed"
 
-    def validate(self, _ctx: ValidationContext) -> list[str]:
+    def validate(self, ctx: ValidationContext) -> list[str]:  # noqa: ARG002
         return [self.message]
 
 
 @dataclass
 class MultiErrorValidator:
-    def validate(self, _ctx: ValidationContext) -> list[str]:
+    def validate(self, ctx: ValidationContext) -> list[str]:  # noqa: ARG002
         return ["Error 1", "Error 2"]
 
 
@@ -107,10 +107,10 @@ class TestSkippableValidator:
     def test_skips_when_should_skip_returns_true(self) -> None:
         @dataclass
         class SkippableFailValidator:
-            def should_skip(self, _ctx: ValidationContext) -> bool:
+            def should_skip(self, ctx: ValidationContext) -> bool:  # noqa: ARG002
                 return True
 
-            def validate(self, _ctx: ValidationContext) -> list[str]:
+            def validate(self, ctx: ValidationContext) -> list[str]:  # noqa: ARG002
                 return ["Should not see this"]
 
         ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
@@ -122,10 +122,10 @@ class TestSkippableValidator:
     def test_runs_when_should_skip_returns_false(self) -> None:
         @dataclass
         class NonSkippableFailValidator:
-            def should_skip(self, _ctx: ValidationContext) -> bool:
+            def should_skip(self, ctx: ValidationContext) -> bool:  # noqa: ARG002
                 return False
 
-            def validate(self, _ctx: ValidationContext) -> list[str]:
+            def validate(self, ctx: ValidationContext) -> list[str]:  # noqa: ARG002
                 return ["Expected error"]
 
         ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
