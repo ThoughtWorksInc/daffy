@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
     from daffy.dataframe_types import IntoDataFrameT
 
-from daffy.config import get_allow_empty, get_lazy, get_row_validation_max_errors, get_strict
+from daffy.config import get_allow_empty, get_lazy, get_row_validation_max_errors, get_strict, get_use_pipeline
 from daffy.row_validation import validate_dataframe_rows
 from daffy.utils import (
     assert_is_dataframe,
@@ -80,6 +80,50 @@ def _validate_rows_with_context(
         raise AssertionError(f"{e!s}{context}") from e
 
 
+def _run_pipeline_validations(
+    df: Any,
+    func_name: str,
+    columns: ColumnsDef,
+    strict: bool | None,
+    lazy: bool | None,
+    composite_unique: list[list[str]] | None,
+    row_validator: type[BaseModel] | None,
+    min_rows: int | None,
+    max_rows: int | None,
+    exact_rows: int | None,
+    allow_empty: bool | None,
+    param_name: str | None,
+    is_return_value: bool,
+) -> None:
+    """Run all validations using the new pipeline architecture."""
+    import narwhals as nw  # noqa: PLC0415
+
+    from daffy.validators.builder import build_validation_pipeline  # noqa: PLC0415
+    from daffy.validators.context import ValidationContext  # noqa: PLC0415
+
+    nw_df = nw.from_native(df, eager_only=True)
+    ctx = ValidationContext(
+        df=df,
+        func_name=func_name,
+        param_name=param_name,
+        is_return_value=is_return_value,
+    )
+
+    pipeline = build_validation_pipeline(
+        columns=columns,
+        strict=get_strict(strict),
+        lazy=get_lazy(lazy),
+        composite_unique=composite_unique,
+        row_validator=row_validator,
+        min_rows=min_rows,
+        max_rows=max_rows,
+        exact_rows=exact_rows,
+        allow_empty=get_allow_empty(allow_empty),
+        df_columns=list(nw_df.columns),
+    )
+    pipeline.run(ctx)
+
+
 def _run_validations(
     df: Any,
     func_name: str,
@@ -96,6 +140,24 @@ def _run_validations(
     is_return_value: bool,
 ) -> None:
     """Run all validations on a DataFrame."""
+    if get_use_pipeline():
+        _run_pipeline_validations(
+            df,
+            func_name,
+            columns,
+            strict,
+            lazy,
+            composite_unique,
+            row_validator,
+            min_rows,
+            max_rows,
+            exact_rows,
+            allow_empty,
+            param_name,
+            is_return_value,
+        )
+        return
+
     param_info = format_param_context(param_name, func_name, is_return_value)
     lazy_mode = get_lazy(lazy)
     errors: list[str] = []
