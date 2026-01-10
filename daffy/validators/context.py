@@ -8,7 +8,7 @@ from typing import Any
 import narwhals as nw
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValidationContext:
     """Immutable context created once per validation, shared by all validators.
 
@@ -28,11 +28,12 @@ class ValidationContext:
     schema: dict[str, Any] = field(init=False)
 
     def __post_init__(self) -> None:
-        self.nw_df = nw.from_native(self.df, eager_only=True)
-        self.columns = tuple(self.nw_df.columns)
-        self.column_set = frozenset(self.columns)
-        self.row_count = self.nw_df.shape[0]
-        self.schema = {col: self.nw_df[col].dtype for col in self.columns}
+        nw_df = nw.from_native(self.df, eager_only=True)
+        object.__setattr__(self, "nw_df", nw_df)
+        object.__setattr__(self, "columns", tuple(nw_df.columns))
+        object.__setattr__(self, "column_set", frozenset(nw_df.columns))
+        object.__setattr__(self, "row_count", nw_df.shape[0])
+        object.__setattr__(self, "schema", {col: nw_df[col].dtype for col in nw_df.columns})
 
     @property
     def param_info(self) -> str:

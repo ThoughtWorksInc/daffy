@@ -79,12 +79,9 @@ def _run_validations(
     is_return_value: bool,
 ) -> None:
     """Run all validations on a DataFrame using the validation pipeline."""
-    import narwhals as nw  # noqa: PLC0415
-
     from daffy.validators.builder import build_validation_pipeline  # noqa: PLC0415
     from daffy.validators.context import ValidationContext  # noqa: PLC0415
 
-    nw_df = nw.from_native(df, eager_only=True)
     ctx = ValidationContext(
         df=df,
         func_name=func_name,
@@ -102,7 +99,7 @@ def _run_validations(
         max_rows=max_rows,
         exact_rows=exact_rows,
         allow_empty=get_allow_empty(allow_empty),
-        df_columns=list(nw_df.columns),
+        df_columns=list(ctx.columns),
     )
     pipeline.run(ctx)
 

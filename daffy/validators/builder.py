@@ -101,19 +101,27 @@ def build_validation_pipeline(
 
 
 def _expand_regex_specs(specs: dict[str, Any], resolved: ResolvedColumns) -> dict[str, Any]:
-    """Expand regex column specs to actual column names."""
+    """Expand regex column specs to actual column names.
+
+    Specs that don't match any columns are skipped (not added as literals).
+    """
     result: dict[str, Any] = {}
     for spec, value in specs.items():
         columns = resolved.get_columns_for_spec(spec)
-        for col in columns if columns else [spec]:
-            result[col] = value
+        if columns:
+            for col in columns:
+                result[col] = value
     return result
 
 
 def _expand_regex_list(specs: list[str], resolved: ResolvedColumns) -> list[str]:
-    """Expand regex column specs to actual column names."""
+    """Expand regex column specs to actual column names.
+
+    Specs that don't match any columns are skipped (not added as literals).
+    """
     result: list[str] = []
     for spec in specs:
         cols = resolved.get_columns_for_spec(spec)
-        result.extend(cols if cols else [spec])
+        if cols:
+            result.extend(cols)
     return result

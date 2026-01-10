@@ -28,6 +28,7 @@ class ResolvedColumns:
     """
 
     resolved: list[ResolvedColumn] = field(default_factory=list)
+    _by_spec: dict[str, list[str]] = field(default_factory=dict, repr=False)
     all_matched: set[str] = field(default_factory=set)
     missing_specs: list[str] = field(default_factory=list)
 
@@ -46,6 +47,7 @@ class ResolvedColumns:
                 resolved = ResolvedColumn(spec, is_regex=False, matched_columns=matched)
 
             result.resolved.append(resolved)
+            result._by_spec[spec] = matched
             result.all_matched.update(matched)
 
             if not resolved.exists:
@@ -54,8 +56,5 @@ class ResolvedColumns:
         return result
 
     def get_columns_for_spec(self, spec: str) -> list[str]:
-        """Get matched columns for a specific spec."""
-        for r in self.resolved:
-            if r.spec == spec:
-                return r.matched_columns
-        return []
+        """Get matched columns for a specific spec (O(1) lookup)."""
+        return self._by_spec.get(spec, [])

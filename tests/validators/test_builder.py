@@ -233,7 +233,8 @@ class TestRegexExpansion:
             df_columns=["col_1", "col_2", "col_3"],
         )
 
-        nullable_validator = next(v for v in pipeline.validators if isinstance(v, NullableValidator))
+        nullable_validator = next((v for v in pipeline.validators if isinstance(v, NullableValidator)), None)
+        assert nullable_validator is not None, "NullableValidator not found in pipeline"
         assert set(nullable_validator.non_nullable_columns) == {"col_1", "col_2", "col_3"}
 
 
@@ -258,7 +259,7 @@ class TestPipelineIntegration:
             df_columns=["id", "name"],
         )
 
-        ctx = ValidationContext(df=pd.DataFrame({"id": [1, 2, 3], "name": ["a", "b", "c"]}))
+        ctx = ValidationContext(df=pd.DataFrame({"id": pd.array([1, 2, 3], dtype="Int64"), "name": ["a", "b", "c"]}))
         pipeline.run(ctx)
 
     def test_pipeline_fails_on_invalid_data(self) -> None:

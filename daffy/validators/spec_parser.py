@@ -31,13 +31,13 @@ def _get_col_name(col_spec: Any) -> str | None:
 
     Handles:
     - Plain strings: "column_name" -> "column_name"
-    - Regex tuples: ("column_name", compiled_pattern) -> "column_name"
+    - Regex tuples: ("column_name", compiled_pattern) -> "column_name" (only if first element is str)
     - Invalid types (int, etc): None (skip silently for backwards compatibility)
     """
     if isinstance(col_spec, str):
         return col_spec
-    if isinstance(col_spec, tuple) and len(col_spec) >= 1:
-        return str(col_spec[0])
+    if isinstance(col_spec, tuple) and len(col_spec) >= 1 and isinstance(col_spec[0], str):
+        return col_spec[0]
     return None
 
 
@@ -86,6 +86,7 @@ def parse_column_spec(columns: Sequence[Any] | dict[Any, Any] | None) -> ParsedC
 
     Handles:
     - List: ["col1", "col2"] → required columns
+    - String: "col1" → single required column (not split into characters)
     - Dict with dtype: {"col1": "int64"} → required + dtype check
     - Dict with constraints: {"col1": {"dtype": ..., "nullable": False, "required": False, ...}}
 
@@ -98,6 +99,9 @@ def parse_column_spec(columns: Sequence[Any] | dict[Any, Any] | None) -> ParsedC
 
     if isinstance(columns, dict):
         _parse_dict_spec(columns, result)
+    elif isinstance(columns, str):
+        # Treat a single string as a single column name, not a character sequence
+        _parse_list_spec([columns], result)
     else:
         _parse_list_spec(columns, result)
 

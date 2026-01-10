@@ -36,7 +36,7 @@ class TestValidationContext:
         ctx = ValidationContext(df=df)
 
         series = ctx.get_series("a")
-        assert list(series.to_list()) == [1, 2, 3]
+        assert series.to_list() == [1, 2, 3]
 
     def test_get_dtype(self) -> None:
         df = pd.DataFrame({"a": [1, 2, 3]})

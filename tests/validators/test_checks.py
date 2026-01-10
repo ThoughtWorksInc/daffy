@@ -49,3 +49,4 @@ class TestChecksValidator:
 
         errors = validator.validate(ctx)
         assert len(errors) == 1
+        assert "Examples:" in errors[0]

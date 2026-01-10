@@ -39,6 +39,7 @@ class RowValidator:
         max_errors = self.max_errors if self.max_errors is not None else get_row_validation_max_errors()
         failed_rows: list[tuple[int, Any]] = []
         total_errors = 0
+        terminated_early = False
 
         for idx, row in enumerate(ctx.nw_df.iter_rows(named=True)):
             try:
@@ -48,20 +49,23 @@ class RowValidator:
                 if len(failed_rows) < max_errors:
                     failed_rows.append((idx, e))
                 elif self.early_termination:
+                    terminated_early = True
                     break
 
         if not failed_rows:
             return []
 
-        return [self._format_errors(failed_rows, total_errors, ctx)]
+        return [self._format_errors(failed_rows, total_errors, terminated_early, ctx)]
 
     def _format_errors(
         self,
         failed_rows: list[tuple[int, Any]],
         total_errors: int,
+        terminated_early: bool,
         ctx: ValidationContext,
     ) -> str:
-        lines = [f"Row validation failed for {total_errors} out of {ctx.row_count} rows:", ""]
+        count_prefix = "at least " if terminated_early else ""
+        lines = [f"Row validation failed for {count_prefix}{total_errors} out of {ctx.row_count} rows:", ""]
 
         for idx, error in failed_rows:
             lines.append(f"  Row {idx}:")

@@ -71,3 +71,16 @@ class TestParseColumnSpec:
         assert result.non_nullable_columns == ["id"]
         assert result.unique_columns == ["id"]
         assert result.checks_by_column == {"price": {"gt": 0}}
+
+    def test_dict_with_required_false(self) -> None:
+        result = parse_column_spec({"a": {"dtype": "int64", "required": False}})
+
+        assert result.required_columns == []
+        assert result.optional_columns == ["a"]
+        assert result.dtype_constraints == {"a": "int64"}
+
+    def test_single_string_treated_as_column(self) -> None:
+        result = parse_column_spec("column_name")
+
+        assert result.required_columns == ["column_name"]
+        assert len(result.required_columns) == 1
