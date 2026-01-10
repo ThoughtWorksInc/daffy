@@ -82,16 +82,6 @@ class TestValidationPipeline:
         result = pipeline.add(AlwaysPassValidator())
         assert result is pipeline
 
-    def test_add_if_adds_when_condition_true(self) -> None:
-        pipeline = ValidationPipeline()
-        pipeline.add_if(True, AlwaysFailValidator())
-        assert len(pipeline) == 1
-
-    def test_add_if_skips_when_condition_false(self) -> None:
-        pipeline = ValidationPipeline()
-        pipeline.add_if(False, AlwaysFailValidator())
-        assert len(pipeline) == 0
-
     def test_len_returns_validator_count(self) -> None:
         pipeline = ValidationPipeline()
         assert len(pipeline) == 0

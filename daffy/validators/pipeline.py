@@ -27,14 +27,7 @@ class ValidationPipeline:
     validators: list[Validator] = field(default_factory=list)
 
     def add(self, validator: Validator) -> ValidationPipeline:
-        """Add validator to pipeline. Returns self for chaining."""
         self.validators.append(validator)
-        return self
-
-    def add_if(self, condition: bool, validator: Validator) -> ValidationPipeline:
-        """Conditionally add validator."""
-        if condition:
-            self.validators.append(validator)
         return self
 
     def run(self, ctx: ValidationContext) -> None:
