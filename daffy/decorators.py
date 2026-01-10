@@ -80,6 +80,56 @@ def _validate_rows_with_context(
         raise AssertionError(f"{e!s}{context}") from e
 
 
+def _run_validations(
+    df: Any,
+    func_name: str,
+    columns: ColumnsDef,
+    strict: bool | None,
+    lazy: bool | None,
+    composite_unique: list[list[str]] | None,
+    row_validator: type[BaseModel] | None,
+    min_rows: int | None,
+    max_rows: int | None,
+    exact_rows: int | None,
+    allow_empty: bool | None,
+    param_name: str | None,
+    is_return_value: bool,
+) -> None:
+    """Run all validations on a DataFrame."""
+    param_info = format_param_context(param_name, func_name, is_return_value)
+    lazy_mode = get_lazy(lazy)
+    errors: list[str] = []
+
+    validate_shape(
+        df,
+        min_rows,
+        max_rows,
+        exact_rows,
+        get_allow_empty(allow_empty),
+        param_info,
+        lazy=lazy_mode,
+        errors=errors,
+    )
+
+    if columns or composite_unique:
+        validate_dataframe(
+            df=df,
+            columns=columns or [],
+            strict=get_strict(strict),
+            param_name=param_name,
+            func_name=func_name,
+            is_return_value=is_return_value,
+            lazy=lazy_mode,
+            composite_unique=composite_unique,
+            shape_errors=errors,
+        )
+    elif lazy_mode and errors:
+        raise AssertionError("\n\n".join(errors))
+
+    if row_validator is not None:
+        _validate_rows_with_context(df, row_validator, func_name, param_name, is_return_value)
+
+
 def df_out(
     columns: ColumnsDef = None,
     strict: bool | None = None,
@@ -127,41 +177,21 @@ def df_out(
         def wrapper(*args: Any, **kwargs: Any) -> IntoDataFrameT:
             result = func(*args, **kwargs)
             assert_is_dataframe(result, "return type")
-
-            func_name = getattr(func, "__name__", "<unknown>")
-            param_info = format_param_context(None, func_name, is_return_value=True)
-            lazy_mode = get_lazy(lazy)
-            errors: list[str] = []
-
-            validate_shape(
+            _run_validations(
                 result,
+                getattr(func, "__name__", "<unknown>"),
+                columns,
+                strict,
+                lazy,
+                composite_unique,
+                row_validator,
                 min_rows,
                 max_rows,
                 exact_rows,
-                get_allow_empty(allow_empty),
-                param_info,
-                lazy=lazy_mode,
-                errors=errors,
+                allow_empty,
+                param_name=None,
+                is_return_value=True,
             )
-
-            if columns or composite_unique:
-                validate_dataframe(
-                    df=result,
-                    columns=columns or [],
-                    strict=get_strict(strict),
-                    param_name=None,
-                    func_name=func_name,
-                    is_return_value=True,
-                    lazy=lazy_mode,
-                    composite_unique=composite_unique,
-                    shape_errors=errors,
-                )
-            elif lazy_mode and errors:
-                raise AssertionError("\n\n".join(errors))
-
-            if row_validator is not None:
-                _validate_rows_with_context(result, row_validator, func_name, None, True)
-
             return result
 
         return wrapper
@@ -219,41 +249,21 @@ def df_in(
             df = get_parameter(func, name, *args, **kwargs)
             param_name = get_parameter_name(func, name, *args, **kwargs)
             assert_is_dataframe(df, "parameter type")
-
-            func_name = getattr(func, "__name__", "<unknown>")
-            param_info = format_param_context(param_name, func_name, is_return_value=False)
-            lazy_mode = get_lazy(lazy)
-            errors: list[str] = []
-
-            validate_shape(
+            _run_validations(
                 df,
+                getattr(func, "__name__", "<unknown>"),
+                columns,
+                strict,
+                lazy,
+                composite_unique,
+                row_validator,
                 min_rows,
                 max_rows,
                 exact_rows,
-                get_allow_empty(allow_empty),
-                param_info,
-                lazy=lazy_mode,
-                errors=errors,
+                allow_empty,
+                param_name=param_name,
+                is_return_value=False,
             )
-
-            if columns or composite_unique:
-                validate_dataframe(
-                    df=df,
-                    columns=columns or [],
-                    strict=get_strict(strict),
-                    param_name=param_name,
-                    func_name=func_name,
-                    is_return_value=False,
-                    lazy=lazy_mode,
-                    composite_unique=composite_unique,
-                    shape_errors=errors,
-                )
-            elif lazy_mode and errors:
-                raise AssertionError("\n\n".join(errors))
-
-            if row_validator is not None:
-                _validate_rows_with_context(df, row_validator, func_name, param_name, False)
-
             return func(*args, **kwargs)
 
         return wrapper
