@@ -7,30 +7,38 @@ import pytest
 
 from daffy import df_in, df_out
 from daffy.config import clear_config_cache
-from daffy.validation import validate_dataframe
 
 
 class TestLazyValidationDirect:
-    """Test lazy validation via validate_dataframe directly."""
+    """Test lazy validation behavior."""
 
     def test_lazy_false_raises_on_first_error(self) -> None:
+        @df_in(columns=["c", "d"], lazy=False)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
         df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
         # Missing column "c" and "d" - should raise on first
         with pytest.raises(AssertionError) as exc_info:
-            validate_dataframe(df, ["c", "d"], strict=False, lazy=False)
+            process(df)
         assert "Missing columns" in str(exc_info.value)
         # Should only mention the missing columns, not other errors
         assert "dtype" not in str(exc_info.value).lower()
 
     def test_lazy_true_collects_all_errors(self) -> None:
-        df = pd.DataFrame({"a": [1, None], "b": ["x", "y"]})
         columns: Any = {
             "a": {"dtype": "float64", "nullable": False},
             "b": {"dtype": "int64"},  # Wrong dtype
             "c": "object",  # Missing column
         }
+
+        @df_in(columns=columns, lazy=True)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, None], "b": ["x", "y"]})
         with pytest.raises(AssertionError) as exc_info:
-            validate_dataframe(df, columns, strict=False, lazy=True)
+            process(df)
         error = str(exc_info.value)
         # Should contain all three types of errors
         assert "Missing columns" in error
@@ -38,40 +46,61 @@ class TestLazyValidationDirect:
         assert "null" in error
 
     def test_lazy_true_multiple_errors_separated_by_newlines(self) -> None:
-        df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
         columns: Any = {
             "a": {"dtype": "str"},  # Wrong dtype
             "c": "int64",  # Missing column
         }
+
+        @df_in(columns=columns, lazy=True)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
         with pytest.raises(AssertionError) as exc_info:
-            validate_dataframe(df, columns, strict=False, lazy=True)
+            process(df)
         error = str(exc_info.value)
         # Errors should be separated by double newlines
         assert "\n\n" in error
 
     def test_lazy_true_no_errors_passes(self) -> None:
-        df = pd.DataFrame({"a": [1, 2], "b": [3.0, 4.0]})
         columns: Any = {"a": "int64", "b": "float64"}
+
+        @df_in(columns=columns, lazy=True)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, 2], "b": [3.0, 4.0]})
         # Should not raise
-        validate_dataframe(df, columns, strict=False, lazy=True)
+        result = process(df)
+        assert len(result) == 2
 
     def test_lazy_true_strict_mode_extra_columns(self) -> None:
-        df = pd.DataFrame({"a": [1, 2], "b": [3, 4], "extra": [5, 6]})
         columns: Any = {"a": {"dtype": "str"}}  # Wrong dtype + extra column
+
+        @df_in(columns=columns, strict=True, lazy=True)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, 2], "b": [3, 4], "extra": [5, 6]})
         with pytest.raises(AssertionError) as exc_info:
-            validate_dataframe(df, columns, strict=True, lazy=True)
+            process(df)
         error = str(exc_info.value)
         assert "wrong dtype" in error
         assert "unexpected column" in error
 
     def test_lazy_includes_check_violations(self) -> None:
-        df = pd.DataFrame({"price": [-1, 0, 5]})
         columns: Any = {
             "price": {"checks": {"gt": 0}},
             "missing": "int64",  # Missing column
         }
+
+        @df_in(columns=columns, lazy=True)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"price": [-1, 0, 5]})
         with pytest.raises(AssertionError) as exc_info:
-            validate_dataframe(df, columns, strict=False, lazy=True)
+            process(df)
         error = str(exc_info.value)
         assert "Missing columns" in error
         assert "failed check gt" in error
@@ -151,29 +180,45 @@ class TestLazyValidationErrorMessages:
     """Test error message formatting in lazy mode."""
 
     def test_single_error_same_as_non_lazy(self) -> None:
-        df = pd.DataFrame({"a": [1, 2]})
         columns: Any = {"missing": "int64"}
+
+        @df_in(columns=columns, lazy=True)
+        def process_lazy(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        @df_in(columns=columns, lazy=False)
+        def process_eager(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, 2]})
 
         # Lazy mode with single error
         with pytest.raises(AssertionError) as lazy_exc:
-            validate_dataframe(df, columns, strict=False, lazy=True)
+            process_lazy(df)
 
         # Non-lazy mode
         with pytest.raises(AssertionError) as normal_exc:
-            validate_dataframe(df, columns, strict=False, lazy=False)
+            process_eager(df)
 
-        # Error messages should be identical for single error
-        assert str(lazy_exc.value) == str(normal_exc.value)
+        # Error messages should have the same structure (minus function name)
+        # Both should contain the same error type
+        assert "Missing columns: ['missing']" in str(lazy_exc.value)
+        assert "Missing columns: ['missing']" in str(normal_exc.value)
 
     def test_multiple_errors_readable_format(self) -> None:
-        df = pd.DataFrame({"a": [1, None], "b": [1, 1]})
         columns: Any = {
             "a": {"nullable": False},
             "b": {"unique": True},
             "c": "int64",
         }
+
+        @df_in(columns=columns, lazy=True)
+        def process(df: pd.DataFrame) -> pd.DataFrame:
+            return df
+
+        df = pd.DataFrame({"a": [1, None], "b": [1, 1]})
         with pytest.raises(AssertionError) as exc_info:
-            validate_dataframe(df, columns, strict=False, lazy=True)
+            process(df)
         error = str(exc_info.value)
 
         # Each error type should be on its own line(s)

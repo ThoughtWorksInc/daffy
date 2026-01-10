@@ -26,16 +26,59 @@ class ParsedColumnSpec:
         return self.required_columns + self.optional_columns
 
 
-def _col_to_str(col_spec: Any) -> str:
-    """Convert column specification to string.
+def _get_col_name(col_spec: Any) -> str | None:
+    """Get column name from specification, or None if invalid.
 
     Handles:
-    - Plain strings: "column_name"
-    - Regex tuples: ("column_name", compiled_pattern)
+    - Plain strings: "column_name" -> "column_name"
+    - Regex tuples: ("column_name", compiled_pattern) -> "column_name"
+    - Invalid types (int, etc): None (skip silently for backwards compatibility)
     """
-    if isinstance(col_spec, tuple):
+    if isinstance(col_spec, str):
+        return col_spec
+    if isinstance(col_spec, tuple) and len(col_spec) >= 1:
         return str(col_spec[0])
-    return str(col_spec)
+    return None
+
+
+def _parse_dict_constraints(col_name: str, constraints: dict[str, Any], result: ParsedColumnSpec) -> None:
+    """Parse a dict constraint specification for a column."""
+    is_required = constraints.get("required", True)
+    if is_required:
+        result.required_columns.append(col_name)
+    else:
+        result.optional_columns.append(col_name)
+
+    if "dtype" in constraints:
+        result.dtype_constraints[col_name] = constraints["dtype"]
+    if constraints.get("nullable") is False:
+        result.non_nullable_columns.append(col_name)
+    if constraints.get("unique") is True:
+        result.unique_columns.append(col_name)
+    if "checks" in constraints:
+        result.checks_by_column[col_name] = constraints["checks"]
+
+
+def _parse_list_spec(columns: Sequence[Any], result: ParsedColumnSpec) -> None:
+    """Parse a list column specification."""
+    for c in columns:
+        col_name = _get_col_name(c)
+        if col_name is not None:
+            result.required_columns.append(col_name)
+
+
+def _parse_dict_spec(columns: dict[Any, Any], result: ParsedColumnSpec) -> None:
+    """Parse a dict column specification."""
+    for col_spec, value in columns.items():
+        col_name = _get_col_name(col_spec)
+        if col_name is None:
+            continue  # Skip invalid column types
+
+        if isinstance(value, dict):
+            _parse_dict_constraints(col_name, value, result)
+        else:
+            result.required_columns.append(col_name)
+            result.dtype_constraints[col_name] = value
 
 
 def parse_column_spec(columns: Sequence[Any] | dict[Any, Any] | None) -> ParsedColumnSpec:
@@ -45,36 +88,17 @@ def parse_column_spec(columns: Sequence[Any] | dict[Any, Any] | None) -> ParsedC
     - List: ["col1", "col2"] → required columns
     - Dict with dtype: {"col1": "int64"} → required + dtype check
     - Dict with constraints: {"col1": {"dtype": ..., "nullable": False, "required": False, ...}}
+
+    Invalid column types (like integers) are silently ignored for backwards compatibility.
     """
     result = ParsedColumnSpec()
 
     if columns is None:
         return result
 
-    if not isinstance(columns, dict):
-        result.required_columns = [_col_to_str(c) for c in columns]
-        return result
-
-    for col_spec, value in columns.items():
-        col_name = _col_to_str(col_spec)
-
-        if isinstance(value, dict):
-            is_required = value.get("required", True)
-            if is_required:
-                result.required_columns.append(col_name)
-            else:
-                result.optional_columns.append(col_name)
-
-            if "dtype" in value:
-                result.dtype_constraints[col_name] = value["dtype"]
-            if value.get("nullable") is False:
-                result.non_nullable_columns.append(col_name)
-            if value.get("unique") is True:
-                result.unique_columns.append(col_name)
-            if "checks" in value:
-                result.checks_by_column[col_name] = value["checks"]
-        else:
-            result.required_columns.append(col_name)
-            result.dtype_constraints[col_name] = value
+    if isinstance(columns, dict):
+        _parse_dict_spec(columns, result)
+    else:
+        _parse_list_spec(columns, result)
 
     return result
