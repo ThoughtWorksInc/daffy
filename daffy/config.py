@@ -23,7 +23,7 @@ _DEFAULT_LAZY = False
 _DEFAULT_MAX_ERRORS = 5
 _DEFAULT_CHECKS_MAX_SAMPLES = 5
 _DEFAULT_ALLOW_EMPTY = True
-_DEFAULT_USE_PIPELINE = False
+_DEFAULT_USE_PIPELINE = True
 
 
 def _validate_bool_config(daffy_config: dict[str, Any], key: str) -> bool | None:

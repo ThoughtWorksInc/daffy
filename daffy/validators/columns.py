@@ -22,6 +22,21 @@ class ColumnsExistValidator:
         return []
 
 
+_DTYPE_ALIASES = {
+    "object": "string",
+    "str": "string",
+    "int": "int64",
+    "float": "float64",
+    "bool": "boolean",
+}
+
+
+def _normalize_dtype(dtype: str) -> str:
+    """Normalize dtype string for comparison."""
+    dtype_lower = str(dtype).lower()
+    return _DTYPE_ALIASES.get(dtype_lower, dtype_lower)
+
+
 @dataclass
 class DtypeValidator:
     """Validates column data types."""
@@ -34,9 +49,11 @@ class DtypeValidator:
         for col, expected_dtype in self.expected.items():
             if ctx.has_column(col):
                 actual = ctx.get_dtype(col)
-                if str(actual) != str(expected_dtype):
+                if _normalize_dtype(actual) != _normalize_dtype(expected_dtype):
+                    # Use native dtype for error message to match old behavior
+                    native_dtype = ctx.df[col].dtype
                     errors.append(
-                        f"Column {col}{ctx.param_info} has wrong dtype. Was {actual}, expected {expected_dtype}"
+                        f"Column {col}{ctx.param_info} has wrong dtype. Was {native_dtype}, expected {expected_dtype}"
                     )
 
         return errors
@@ -49,17 +66,23 @@ class NullableValidator:
     non_nullable_columns: list[str]
 
     def validate(self, ctx: ValidationContext) -> list[str]:
-        errors = []
+        violations: list[tuple[str, int]] = []
 
         for col in self.non_nullable_columns:
             if ctx.has_column(col):
                 null_count = int(ctx.get_series(col).is_null().sum())
                 if null_count > 0:
-                    errors.append(
-                        f"Column '{col}'{ctx.param_info} contains {null_count} null values but nullable=False"
-                    )
+                    violations.append((col, null_count))
 
-        return errors
+        if not violations:
+            return []
+
+        if len(violations) == 1:
+            col, count = violations[0]
+            return [f"Column '{col}'{ctx.param_info} contains {count} null values but nullable=False"]
+
+        violation_desc = ", ".join(f"Column '{col}' contains {count} null values" for col, count in violations)
+        return [f"Null violations: {violation_desc}{ctx.param_info}"]
 
 
 @dataclass

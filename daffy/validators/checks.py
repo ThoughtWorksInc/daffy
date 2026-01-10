@@ -28,19 +28,25 @@ class ChecksValidator:
     max_samples: int | None = None
 
     def validate(self, ctx: ValidationContext) -> list[str]:
-        errors = []
         max_samples = self.max_samples if self.max_samples is not None else get_checks_max_samples()
+        all_violations: list[tuple[str, str, int, list[Any]]] = []
 
         for col, checks in self.checks_by_column.items():
             if not ctx.has_column(col):
                 continue
 
             violations = run_checks(ctx.df, col, checks, max_samples)
+            all_violations.extend(violations)
 
-            for col_name, check_name, fail_count, samples in violations:
-                errors.append(
-                    f"Column '{col_name}'{ctx.param_info} failed check {check_name}: "
-                    f"{fail_count} values failed. Examples: {samples}"
-                )
+        if not all_violations:
+            return []
 
-        return errors
+        if len(all_violations) == 1:
+            col, check, count, samples = all_violations[0]
+            return [f"Column '{col}'{ctx.param_info} failed check {check}: {count} values failed. Examples: {samples}"]
+
+        violation_lines = [
+            f"Column '{col}' failed {check}: {count} values. Examples: {samples}"
+            for col, check, count, samples in all_violations
+        ]
+        return [f"Check violations{ctx.param_info}:\n  " + "\n  ".join(violation_lines)]

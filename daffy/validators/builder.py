@@ -57,14 +57,21 @@ def build_validation_pipeline(
     # 2. Column-based validation
     if columns:
         spec = parse_column_spec(columns)
-        resolved = ResolvedColumns.from_specs(spec.required_columns, df_columns)
 
-        pipeline.add(ColumnsExistValidator(resolved))
+        # Resolve required columns (must exist)
+        resolved_required = ResolvedColumns.from_specs(spec.required_columns, df_columns)
+        pipeline.add(ColumnsExistValidator(resolved_required))
 
-        expanded_dtypes = _expand_regex_specs(spec.dtype_constraints, resolved)
-        expanded_non_nullable = _expand_regex_list(spec.non_nullable_columns, resolved)
-        expanded_unique = _expand_regex_list(spec.unique_columns, resolved)
-        expanded_checks = _expand_regex_specs(spec.checks_by_column, resolved)
+        # Resolve optional columns (may exist) for constraints
+        resolved_optional = ResolvedColumns.from_specs(spec.optional_columns, df_columns)
+
+        # Combine both for expanding constraints
+        all_resolved = ResolvedColumns.from_specs(spec.all_columns, df_columns)
+
+        expanded_dtypes = _expand_regex_specs(spec.dtype_constraints, all_resolved)
+        expanded_non_nullable = _expand_regex_list(spec.non_nullable_columns, all_resolved)
+        expanded_unique = _expand_regex_list(spec.unique_columns, all_resolved)
+        expanded_checks = _expand_regex_specs(spec.checks_by_column, all_resolved)
 
         if expanded_dtypes:
             pipeline.add(DtypeValidator(expanded_dtypes))
@@ -79,7 +86,7 @@ def build_validation_pipeline(
             pipeline.add(ChecksValidator(expanded_checks))
 
         if strict:
-            allowed = set(spec.required_columns) | resolved.all_matched
+            allowed = set(spec.all_columns) | resolved_required.all_matched | resolved_optional.all_matched
             pipeline.add(StrictModeValidator(allowed))
 
     # 3. Composite unique

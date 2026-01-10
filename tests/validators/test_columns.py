@@ -99,7 +99,10 @@ class TestNullableValidator:
         validator = NullableValidator(["a", "b"])
 
         errors = validator.validate(ctx)
-        assert len(errors) == 2
+        assert len(errors) == 1
+        assert "Null violations" in errors[0]
+        assert "a" in errors[0]
+        assert "b" in errors[0]
 
 
 class TestStrictModeValidator:

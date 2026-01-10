@@ -38,7 +38,10 @@ class TestChecksValidator:
         validator = ChecksValidator({"a": {"gt": 0}, "b": {"gt": 0}})
 
         errors = validator.validate(ctx)
-        assert len(errors) == 2
+        assert len(errors) == 1
+        assert "Check violations" in errors[0]
+        assert "a" in errors[0]
+        assert "b" in errors[0]
 
     def test_uses_config_max_samples_when_not_set(self) -> None:
         ctx = ValidationContext(df=pd.DataFrame({"price": list(range(100))}))
