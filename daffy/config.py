@@ -125,6 +125,13 @@ def clear_config_cache() -> None:
     get_config.cache_clear()
 
 
+def _get_bool_config(param: bool | None, key: str) -> bool:
+    """Return param if provided, otherwise config value."""
+    if param is not None:
+        return param
+    return bool(get_config()[key])
+
+
 def get_strict(strict_param: bool | None = None) -> bool:
     """Get the strict mode setting, with explicit parameter taking precedence over configuration.
 
@@ -135,9 +142,7 @@ def get_strict(strict_param: bool | None = None) -> bool:
         bool: The effective strict mode setting
 
     """
-    if strict_param is not None:
-        return strict_param
-    return bool(get_config()[_KEY_STRICT])
+    return _get_bool_config(strict_param, _KEY_STRICT)
 
 
 def get_lazy(lazy_param: bool | None = None) -> bool:
@@ -152,9 +157,7 @@ def get_lazy(lazy_param: bool | None = None) -> bool:
         bool: The effective lazy mode setting
 
     """
-    if lazy_param is not None:
-        return lazy_param
-    return bool(get_config()[_KEY_LAZY])
+    return _get_bool_config(lazy_param, _KEY_LAZY)
 
 
 def get_row_validation_max_errors() -> int:
@@ -189,6 +192,4 @@ def get_allow_empty(allow_empty_param: bool | None = None) -> bool:
         bool: The effective allow_empty setting
 
     """
-    if allow_empty_param is not None:
-        return allow_empty_param
-    return bool(get_config()[_KEY_ALLOW_EMPTY])
+    return _get_bool_config(allow_empty_param, _KEY_ALLOW_EMPTY)
