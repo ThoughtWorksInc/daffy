@@ -8,6 +8,25 @@ import pytest
 
 from daffy.dataframe_types import IntoDataFrame
 
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption("--use-pipeline", action="store_true", help="Run tests with validation pipeline enabled")
+
+
+@pytest.fixture(autouse=True)
+def _enable_pipeline_if_requested(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Enable pipeline mode when --use-pipeline flag is passed."""
+    if request.config.getoption("--use-pipeline"):
+        from daffy import config
+
+        config.clear_config_cache()
+        monkeypatch.setattr(config, "get_use_pipeline", lambda: True)
+        yield
+        config.clear_config_cache()
+    else:
+        yield
+
+
 __all__ = ["IntoDataFrame", "cars", "extended_cars"]
 
 
