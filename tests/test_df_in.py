@@ -6,7 +6,6 @@ import pytest
 
 from daffy import df_in
 from daffy.utils import get_parameter_name
-from daffy.validation import validate_dataframe
 from tests.conftest import IntoDataFrame, cars, extended_cars
 
 
@@ -150,7 +149,7 @@ def test_dtype_mismatch_polars(basic_polars_df: pl.DataFrame) -> None:
         test_fn(basic_polars_df)
 
     assert (
-        "Column Price in function 'test_fn' parameter 'my_input' has wrong dtype. Was Int64, expected Float64"
+        "Column Price in function 'test_fn' parameter 'my_input' has wrong dtype. Was int64, expected Float64"
         in str(excinfo.value)
     )
 
@@ -345,24 +344,42 @@ def test_multiple_parameters_error_identification(basic_df: IntoDataFrame, exten
 
 
 def test_check_columns_handles_invalid_column_type_in_list() -> None:
-    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    """Invalid column types in list spec are silently ignored."""
     columns: Any = ["A", 123]
 
-    validate_dataframe(df, columns, False)
+    @df_in(columns=columns)
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    result = process(df)
+    assert len(result) == 2
 
 
 def test_check_columns_handles_invalid_column_key_in_dict() -> None:
-    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    """Invalid column keys in dict spec are silently ignored."""
     columns: Any = {"A": "int64", 123: "int64"}
 
-    validate_dataframe(df, columns, False)
+    @df_in(columns=columns)
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    result = process(df)
+    assert len(result) == 2
 
 
 def test_check_columns_handles_invalid_column_key_with_constraints() -> None:
-    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    """Invalid column keys with constraints in dict spec are silently ignored."""
     columns: Any = {"A": {"nullable": False}, 123: {"nullable": False}}
 
-    validate_dataframe(df, columns, False)
+    @df_in(columns=columns)
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
+
+    df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+    result = process(df)
+    assert len(result) == 2
 
 
 def test_get_parameter_name_returns_none_when_no_params() -> None:
@@ -382,21 +399,25 @@ def test_get_parameter_name_returns_none_when_no_args_or_kwargs() -> None:
 
 
 def test_missing_column_in_dict_specification() -> None:
-    df = pd.DataFrame({"A": [1, 2]})
-    columns: Any = {"A": "int64", "MissingCol": "int64"}
+    @df_in(columns={"A": "int64", "MissingCol": "int64"})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
 
+    df = pd.DataFrame({"A": [1, 2]})
     with pytest.raises(AssertionError) as excinfo:
-        validate_dataframe(df, columns, False)
+        process(df)
 
     assert "Missing columns: ['MissingCol']" in str(excinfo.value)
 
 
 def test_missing_regex_pattern_in_dict_specification() -> None:
-    df = pd.DataFrame({"A": [1, 2]})
-    columns: Any = {"A": "int64", "r/Missing_[0-9]/": "int64"}
+    @df_in(columns={"A": "int64", "r/Missing_[0-9]/": "int64"})
+    def process(df: pd.DataFrame) -> pd.DataFrame:
+        return df
 
+    df = pd.DataFrame({"A": [1, 2]})
     with pytest.raises(AssertionError) as excinfo:
-        validate_dataframe(df, columns, False)
+        process(df)
 
     assert "Missing columns: ['r/Missing_[0-9]/']" in str(excinfo.value)
 

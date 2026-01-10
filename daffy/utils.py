@@ -31,32 +31,6 @@ def assert_is_dataframe(obj: Any, context: str) -> None:
         raise AssertionError(f"Wrong {context}. Expected {libs_str} DataFrame, got {type(obj).__name__} instead.")
 
 
-def format_param_context(param_name: str | None, func_name: str | None = None, is_return_value: bool = False) -> str:
-    """Format context information for error messages.
-
-    Args:
-        param_name: Name of the parameter being validated
-        func_name: Name of the function being validated
-        is_return_value: True if validating a return value
-
-    Returns:
-        Formatted context string like " in function 'foo' parameter 'bar'"
-
-    """
-    context_parts = []
-    if func_name:
-        context_parts.append(f"function '{func_name}'")
-
-    if is_return_value:
-        context_parts.append("return value")
-    elif param_name:
-        context_parts.append(f"parameter '{param_name}'")
-
-    if context_parts:
-        return f" in {' '.join(context_parts)}"
-    return ""
-
-
 def get_parameter(func: Callable[..., Any], name: str | None = None, *args: Any, **kwargs: Any) -> Any:
     """Extract a parameter value from function arguments.
 
