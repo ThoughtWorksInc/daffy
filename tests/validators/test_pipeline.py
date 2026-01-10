@@ -1,0 +1,136 @@
+"""Tests for ValidationPipeline."""
+
+from dataclasses import dataclass
+
+import pandas as pd
+import pytest
+
+from daffy.validators.context import ValidationContext
+from daffy.validators.pipeline import ValidationPipeline
+
+
+@dataclass
+class AlwaysPassValidator:
+    def validate(self, _ctx: ValidationContext) -> list[str]:
+        return []
+
+
+@dataclass
+class AlwaysFailValidator:
+    message: str = "Validation failed"
+
+    def validate(self, _ctx: ValidationContext) -> list[str]:
+        return [self.message]
+
+
+@dataclass
+class MultiErrorValidator:
+    def validate(self, _ctx: ValidationContext) -> list[str]:
+        return ["Error 1", "Error 2"]
+
+
+class TestValidationPipeline:
+    def test_empty_pipeline_passes(self) -> None:
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
+        pipeline = ValidationPipeline()
+
+        pipeline.run(ctx)
+
+    def test_passing_validators(self) -> None:
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
+        pipeline = ValidationPipeline()
+        pipeline.add(AlwaysPassValidator())
+        pipeline.add(AlwaysPassValidator())
+
+        pipeline.run(ctx)
+
+    def test_eager_mode_fails_on_first_error(self) -> None:
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
+        pipeline = ValidationPipeline(lazy=False)
+        pipeline.add(AlwaysFailValidator(message="First error"))
+        pipeline.add(AlwaysFailValidator(message="Second error"))
+
+        with pytest.raises(AssertionError, match="First error"):
+            pipeline.run(ctx)
+
+    def test_lazy_mode_collects_all_errors(self) -> None:
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
+        pipeline = ValidationPipeline(lazy=True)
+        pipeline.add(AlwaysFailValidator(message="First error"))
+        pipeline.add(AlwaysFailValidator(message="Second error"))
+
+        with pytest.raises(AssertionError) as exc_info:
+            pipeline.run(ctx)
+
+        error = str(exc_info.value)
+        assert "First error" in error
+        assert "Second error" in error
+
+    def test_lazy_mode_separates_errors(self) -> None:
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
+        pipeline = ValidationPipeline(lazy=True)
+        pipeline.add(AlwaysFailValidator(message="Error A"))
+        pipeline.add(AlwaysFailValidator(message="Error B"))
+
+        with pytest.raises(AssertionError) as exc_info:
+            pipeline.run(ctx)
+
+        assert "\n\n" in str(exc_info.value)
+
+    def test_add_returns_self_for_chaining(self) -> None:
+        pipeline = ValidationPipeline()
+        result = pipeline.add(AlwaysPassValidator())
+        assert result is pipeline
+
+    def test_add_if_adds_when_condition_true(self) -> None:
+        pipeline = ValidationPipeline()
+        pipeline.add_if(True, AlwaysFailValidator())
+        assert len(pipeline) == 1
+
+    def test_add_if_skips_when_condition_false(self) -> None:
+        pipeline = ValidationPipeline()
+        pipeline.add_if(False, AlwaysFailValidator())
+        assert len(pipeline) == 0
+
+    def test_len_returns_validator_count(self) -> None:
+        pipeline = ValidationPipeline()
+        assert len(pipeline) == 0
+
+        pipeline.add(AlwaysPassValidator())
+        assert len(pipeline) == 1
+
+        pipeline.add(AlwaysPassValidator())
+        assert len(pipeline) == 2
+
+
+class TestSkippableValidator:
+    def test_skips_when_should_skip_returns_true(self) -> None:
+        @dataclass
+        class SkippableFailValidator:
+            def should_skip(self, _ctx: ValidationContext) -> bool:
+                return True
+
+            def validate(self, _ctx: ValidationContext) -> list[str]:
+                return ["Should not see this"]
+
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
+        pipeline = ValidationPipeline()
+        pipeline.add(SkippableFailValidator())
+
+        pipeline.run(ctx)
+
+    def test_runs_when_should_skip_returns_false(self) -> None:
+        @dataclass
+        class NonSkippableFailValidator:
+            def should_skip(self, _ctx: ValidationContext) -> bool:
+                return False
+
+            def validate(self, _ctx: ValidationContext) -> list[str]:
+                return ["Expected error"]
+
+        ctx = ValidationContext(df=pd.DataFrame({"a": [1]}))
+        pipeline = ValidationPipeline()
+        pipeline.add(NonSkippableFailValidator())
+
+        with pytest.raises(AssertionError, match="Expected error"):
+            pipeline.run(ctx)
