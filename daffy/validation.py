@@ -29,6 +29,11 @@ def _raise_or_collect(msg: str, lazy: bool, errors: list[str]) -> None:
     errors.append(msg)
 
 
+def _format_column_list(columns: list[str]) -> str:
+    """Format column names as 'a' + 'b' + 'c'."""
+    return " + ".join(f"'{c}'" for c in columns)
+
+
 def validate_shape(
     df: Any,
     min_rows: int | None,
@@ -223,16 +228,15 @@ def _validate_composite_unique(
 ) -> None:
     """Validate composite unique constraints."""
     for col_combo in composite_unique:
+        col_desc = _format_column_list(col_combo)
         missing_cols = [c for c in col_combo if c not in df_columns]
         if missing_cols:
-            col_desc = " + ".join(f"'{c}'" for c in col_combo)
             msg = f"composite_unique references missing columns {missing_cols} in combination [{col_desc}]{param_info}"
             _raise_or_collect(msg, lazy, errors)
             continue
 
         dup_count = count_duplicate_rows(df, col_combo)
         if dup_count > 0:
-            col_desc = " + ".join(f"'{c}'" for c in col_combo)
             msg = (
                 f"Columns {col_desc}{param_info} contain {dup_count} duplicate combinations but composite_unique is set"
             )
