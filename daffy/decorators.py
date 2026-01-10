@@ -12,18 +12,16 @@ if TYPE_CHECKING:
     from pydantic import BaseModel
 
     from daffy.dataframe_types import IntoDataFrameT
+    from daffy.validation import ColumnsDef
 
-from daffy.config import get_allow_empty, get_lazy, get_row_validation_max_errors, get_strict, get_use_pipeline
-from daffy.row_validation import validate_dataframe_rows
+from daffy.config import get_allow_empty, get_lazy, get_strict
 from daffy.utils import (
     assert_is_dataframe,
-    format_param_context,
     get_parameter,
     get_parameter_name,
     log_dataframe_input,
     log_dataframe_output,
 )
-from daffy.validation import ColumnsDef, validate_dataframe, validate_shape
 
 
 def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None:
@@ -65,22 +63,7 @@ LogReturnT = TypeVar("LogReturnT")  # Return type for df_log
 InReturnT = TypeVar("InReturnT")  # Return type for df_in
 
 
-def _validate_rows_with_context(
-    df: Any,
-    row_validator: type[BaseModel],
-    func_name: str,
-    param_name: str | None,
-    is_return_value: bool,
-) -> None:
-    """Validate DataFrame rows with Pydantic model and add context to errors."""
-    try:
-        validate_dataframe_rows(df, row_validator, max_errors=get_row_validation_max_errors())
-    except AssertionError as e:
-        context = format_param_context(param_name, func_name, is_return_value)
-        raise AssertionError(f"{e!s}{context}") from e
-
-
-def _run_pipeline_validations(
+def _run_validations(
     df: Any,
     func_name: str,
     columns: ColumnsDef,
@@ -95,7 +78,7 @@ def _run_pipeline_validations(
     param_name: str | None,
     is_return_value: bool,
 ) -> None:
-    """Run all validations using the new pipeline architecture."""
+    """Run all validations on a DataFrame using the validation pipeline."""
     import narwhals as nw  # noqa: PLC0415
 
     from daffy.validators.builder import build_validation_pipeline  # noqa: PLC0415
@@ -122,74 +105,6 @@ def _run_pipeline_validations(
         df_columns=list(nw_df.columns),
     )
     pipeline.run(ctx)
-
-
-def _run_validations(
-    df: Any,
-    func_name: str,
-    columns: ColumnsDef,
-    strict: bool | None,
-    lazy: bool | None,
-    composite_unique: list[list[str]] | None,
-    row_validator: type[BaseModel] | None,
-    min_rows: int | None,
-    max_rows: int | None,
-    exact_rows: int | None,
-    allow_empty: bool | None,
-    param_name: str | None,
-    is_return_value: bool,
-) -> None:
-    """Run all validations on a DataFrame."""
-    if get_use_pipeline():
-        _run_pipeline_validations(
-            df,
-            func_name,
-            columns,
-            strict,
-            lazy,
-            composite_unique,
-            row_validator,
-            min_rows,
-            max_rows,
-            exact_rows,
-            allow_empty,
-            param_name,
-            is_return_value,
-        )
-        return
-
-    param_info = format_param_context(param_name, func_name, is_return_value)
-    lazy_mode = get_lazy(lazy)
-    errors: list[str] = []
-
-    validate_shape(
-        df,
-        min_rows,
-        max_rows,
-        exact_rows,
-        get_allow_empty(allow_empty),
-        param_info,
-        lazy=lazy_mode,
-        errors=errors,
-    )
-
-    if columns or composite_unique:
-        validate_dataframe(
-            df=df,
-            columns=columns or [],
-            strict=get_strict(strict),
-            param_name=param_name,
-            func_name=func_name,
-            is_return_value=is_return_value,
-            lazy=lazy_mode,
-            composite_unique=composite_unique,
-            shape_errors=errors,
-        )
-    elif lazy_mode and errors:
-        raise AssertionError("\n\n".join(errors))
-
-    if row_validator is not None:
-        _validate_rows_with_context(df, row_validator, func_name, param_name, is_return_value)
 
 
 def df_out(
