@@ -22,6 +22,8 @@ from daffy.utils import (
     log_dataframe_input,
     log_dataframe_output,
 )
+from daffy.validators.builder import build_validation_pipeline
+from daffy.validators.context import ValidationContext
 
 
 def _validate_composite_unique(composite_unique: list[list[str]] | None) -> None:
@@ -79,9 +81,6 @@ def _run_validations(
     is_return_value: bool,
 ) -> None:
     """Run all validations on a DataFrame using the validation pipeline."""
-    from daffy.validators.builder import build_validation_pipeline  # noqa: PLC0415
-    from daffy.validators.context import ValidationContext  # noqa: PLC0415
-
     ctx = ValidationContext(
         df=df,
         func_name=func_name,
