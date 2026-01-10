@@ -15,7 +15,6 @@ _KEY_LAZY = "lazy"
 _KEY_ROW_VALIDATION_MAX_ERRORS = "row_validation_max_errors"
 _KEY_CHECKS_MAX_SAMPLES = "checks_max_samples"
 _KEY_ALLOW_EMPTY = "allow_empty"
-_KEY_USE_PIPELINE = "use_pipeline"
 
 # Default values
 _DEFAULT_STRICT = False
@@ -23,7 +22,6 @@ _DEFAULT_LAZY = False
 _DEFAULT_MAX_ERRORS = 5
 _DEFAULT_CHECKS_MAX_SAMPLES = 5
 _DEFAULT_ALLOW_EMPTY = True
-_DEFAULT_USE_PIPELINE = True
 
 
 def _validate_bool_config(daffy_config: dict[str, Any], key: str) -> bool | None:
@@ -67,7 +65,6 @@ def load_config() -> dict[str, Any]:
         _KEY_ROW_VALIDATION_MAX_ERRORS: _DEFAULT_MAX_ERRORS,
         _KEY_CHECKS_MAX_SAMPLES: _DEFAULT_CHECKS_MAX_SAMPLES,
         _KEY_ALLOW_EMPTY: _DEFAULT_ALLOW_EMPTY,
-        _KEY_USE_PIPELINE: _DEFAULT_USE_PIPELINE,
     }
 
     # Try to find pyproject.toml in the current directory or parent directories
@@ -102,10 +99,6 @@ def load_config() -> dict[str, Any]:
         allow_empty = _validate_bool_config(daffy_config, _KEY_ALLOW_EMPTY)
         if allow_empty is not None:
             default_config[_KEY_ALLOW_EMPTY] = allow_empty
-
-        use_pipeline = _validate_bool_config(daffy_config, _KEY_USE_PIPELINE)
-        if use_pipeline is not None:
-            default_config[_KEY_USE_PIPELINE] = use_pipeline
     except (FileNotFoundError, tomli.TOMLDecodeError):
         pass  # Use defaults if config file missing or malformed
 
@@ -200,16 +193,3 @@ def get_allow_empty(allow_empty_param: bool | None = None) -> bool:
 
     """
     return _get_bool_config(allow_empty_param, _KEY_ALLOW_EMPTY)
-
-
-def get_use_pipeline() -> bool:
-    """Get whether to use the new validation pipeline.
-
-    When use_pipeline=True, uses the new composable validator pipeline architecture.
-    Default is False for backward compatibility.
-
-    Returns:
-        bool: Whether to use the new pipeline
-
-    """
-    return bool(get_config()[_KEY_USE_PIPELINE])

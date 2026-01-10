@@ -6,18 +6,6 @@ import pandas as pd
 import pytest
 
 from daffy import df_in, df_out
-from daffy.config import clear_config_cache
-
-
-@pytest.fixture(autouse=True)
-def use_pipeline(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Enable pipeline mode for all tests in this file."""
-    from daffy import config
-
-    clear_config_cache()
-    monkeypatch.setattr(config, "get_use_pipeline", lambda: True)
-    yield
-    clear_config_cache()
 
 
 class TestPipelineDecorators:
