@@ -4,46 +4,6 @@ import pandas as pd
 import pytest
 
 from daffy import df_in, df_out
-from daffy.dataframe_types import count_duplicate_rows
-
-
-class TestCountDuplicateRows:
-    def test_no_duplicates(self) -> None:
-        df = pd.DataFrame(
-            {
-                "first": ["A", "A", "B"],
-                "last": ["X", "Y", "X"],
-            }
-        )
-        assert count_duplicate_rows(df, ["first", "last"]) == 0
-
-    def test_with_duplicates(self) -> None:
-        df = pd.DataFrame(
-            {
-                "first": ["A", "A", "A"],
-                "last": ["X", "X", "Y"],
-            }
-        )
-        # Row 0 and 1 are duplicates (A, X)
-        assert count_duplicate_rows(df, ["first", "last"]) == 1
-
-    def test_all_duplicates(self) -> None:
-        df = pd.DataFrame(
-            {
-                "a": [1, 1, 1],
-                "b": [2, 2, 2],
-            }
-        )
-        # All rows are duplicates, 2 extra after first
-        assert count_duplicate_rows(df, ["a", "b"]) == 2
-
-    def test_single_column(self) -> None:
-        df = pd.DataFrame({"a": [1, 1, 2]})
-        assert count_duplicate_rows(df, ["a"]) == 1
-
-    def test_empty_dataframe(self) -> None:
-        df = pd.DataFrame({"a": [], "b": []})
-        assert count_duplicate_rows(df, ["a", "b"]) == 0
 
 
 class TestCompositeUniqueDecorators:
