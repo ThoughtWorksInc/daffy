@@ -22,6 +22,4 @@ class ColumnConstraints(TypedDict, total=False):
     checks: dict[str, Any]
 
 
-ColumnsList: TypeAlias = Sequence[str | RegexColumnDef]
-ColumnsDict: TypeAlias = dict[str | RegexColumnDef, Any]
-ColumnsDef: TypeAlias = ColumnsList | ColumnsDict | None
+ColumnsDef: TypeAlias = Sequence[str | RegexColumnDef] | dict[str | RegexColumnDef, Any] | None

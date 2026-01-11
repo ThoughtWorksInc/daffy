@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## 2.5.0
+
+### Internal Improvements
+
+- **Major architecture refactoring**: Introduced validation pipeline with protocol-based validators
+  - New `ValidationPipeline` orchestrates all validation steps
+  - New `ValidationContext` provides single narwhals conversion point for efficiency
+  - Validators follow a clean protocol (`Validator`, `SkippableValidator`)
+  - Pipeline builder assembles validators from column specs
+- Removed dead code and unused helper functions
+- Removed unused type aliases (`ColumnsList`, `ColumnsDict`)
+- Replaced skylos with vulture for dead code detection in CI
+
 ## 2.4.1
 
 ### Internal Improvements
