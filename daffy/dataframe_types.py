@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import narwhals as nw
 from narwhals.typing import IntoDataFrame, IntoDataFrameT
 
 # Re-export narwhals types for use throughout daffy
@@ -43,22 +40,3 @@ def get_available_library_names() -> list[str]:
     if HAS_POLARS:
         available_libs.append("Polars")
     return available_libs
-
-
-def count_null_values(df: Any, column: str) -> int:
-    """Count null values in a DataFrame column."""
-    return int(nw.from_native(df, eager_only=True)[column].is_null().sum())
-
-
-def count_duplicate_values(df: Any, column: str) -> int:
-    """Count duplicate values in a DataFrame column (excludes first occurrence)."""
-    nw_df = nw.from_native(df, eager_only=True)
-    return len(nw_df) - nw_df[column].n_unique()
-
-
-def count_duplicate_rows(df: Any, columns: list[str]) -> int:
-    """Count rows with duplicate values across a column combination (excludes first occurrence)."""
-    nw_df = nw.from_native(df, eager_only=True)
-    total = len(nw_df)
-    unique = nw_df.select(columns).unique().shape[0]
-    return total - unique
